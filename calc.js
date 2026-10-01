@@ -112,7 +112,8 @@
       flour: Math.round(split.flour),
     };
     const diff = total - (parts.seed + parts.water + parts.flour);
-    if (split.seed > 0) parts.seed += diff;
+    // A sobra vai para a isca, a menos que a deixe negativa.
+    if (split.seed > 0 && parts.seed + diff >= 0) parts.seed += diff;
     else if (parts.flour >= parts.water) parts.flour += diff;
     else parts.water += diff;
     return { ...split, ...parts };
