@@ -89,11 +89,19 @@
           <div>
             <div class="ing-top">
               <template v-if="item.role === 'ferment'">
-                <select class="ferment-select" :value="item.ferment" @change="setFerment($event.target.value)" aria-label="Tipo de fermento">
-                  <option value="seco">Fermento seco</option>
-                  <option value="fresco">Fermento fresco</option>
-                  <option value="levain">Levain</option>
-                </select>
+                <div class="ferment-wrap">
+                  <select class="ferment-select" :class="{ 'is-levain': item.ferment === 'levain' }" :value="item.ferment" @change="setFerment($event.target.value)" aria-label="Tipo de fermento">
+                    <option value="seco">Fermento seco</option>
+                    <option value="fresco">Fermento fresco</option>
+                    <option value="levain">Levain</option>
+                  </select>
+                  <template v-if="item.ferment === 'levain'">
+                    <button type="button" class="edit-levain" @click="openLevain" aria-label="Editar o levain">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3z"/><path d="M13.5 8.5l3 3"/></svg>
+                    </button>
+                    <span class="levain-info" data-levain-ratio>{{ state.levain.L || 0 }}:{{ state.levain.A || 0 }}:{{ state.levain.F || 0 }}</span>
+                  </template>
+                </div>
               </template>
               <input v-else-if="item.custom" class="name-input" v-model="item.name" placeholder="Ingrediente" aria-label="Nome do ingrediente">
               <div v-else class="ing-name">{{ item.name }}</div>
@@ -103,6 +111,7 @@
               <input v-if="isEditing(item, 'pct')" v-focus type="number" min="0" step="0.5" inputmode="decimal" :value="editing.text" @input="onEdit(item, 'pct', $event.target.value)" @blur="endEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc="cancelEdit(item)" :aria-label="'Percentual de ' + (item.name || 'ingrediente')">
               <button v-else type="button" class="pct-value" @click="startEdit(item, 'pct')" :aria-label="'Editar percentual de ' + (item.name || 'ingrediente')">{{ formatPctFine(item.pct) }}</button>
               <span>%</span>
+              <span v-if="item.role === 'ferment' && item.ferment === 'levain'" class="levain-info">Hidratação {{ result.levain && result.levain.hydration != null ? formatPct(result.levain.hydration) + '%' : '—' }}</span>
             </div>
             <label v-if="item.custom" class="water-edit">Teor de água
               <input type="number" min="0" max="100" step="1" v-model.number="item.water" @blur="settleWater(item)" aria-label="Teor de água do ingrediente">
@@ -111,49 +120,13 @@
             <p v-else-if="item.water > 0 && item.water < 100" class="moisture">{{ formatPct(item.water) }}% de água</p>
             <p v-else-if="item.role === 'ferment' && item.ferment === 'seco'" class="moisture">Equivale a {{ formatPct(yeastEquivalent(item.pct, 'seco', 'fresco')) }}% de fresco</p>
             <p v-else-if="item.role === 'ferment' && item.ferment === 'fresco'" class="moisture">Equivale a {{ formatPct(yeastEquivalent(item.pct, 'fresco', 'seco')) }}% de seco</p>
+            <p v-else-if="item.role === 'ferment' && item.ferment === 'levain' && result.levain && result.levain.valid" class="moisture">{{ formatG(result.levain.seed) }} g de isca · {{ formatG(result.levain.water) }} g de água · {{ formatG(result.levain.flour) }} g de farinha</p>
             <div class="bar" aria-hidden="true"><span :style="{ width: barWidth(item.pct) }"></span></div>
           </div>
           <div class="grams" :data-grams="item.role">
             <input v-if="isEditing(item, 'grams')" v-focus class="grams-input" type="number" min="0" step="1" inputmode="decimal" :value="editing.text" @input="onEdit(item, 'grams', $event.target.value)" @blur="endEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc="cancelEdit(item)" :aria-label="'Gramas de ' + (item.name || 'ingrediente')">
             <button v-else type="button" class="grams-value" :disabled="result.flour <= 0" @click="startEdit(item, 'grams')" :aria-label="'Editar gramas de ' + (item.name || 'ingrediente')">{{ formatG(rowOf(item.id).grams) }}</button><small>g</small>
           </div>
-        </div>
-
-        <div v-if="item.role === 'ferment' && item.ferment === 'levain'" class="levain">
-          <h2>Ativar o levain</h2>
-          <p class="levain-grams">{{ formatG(result.levainGrams) }}<small> g na massa</small></p>
-          <label class="kicker" for="ratio">Proporção L : A : F</label>
-          <select id="ratio" class="ratio-select" :value="ratioId" @change="onRatio($event.target.value)">
-            <option v-for="ratio in ratios" :key="ratio.id" :value="ratio.id">{{ ratio.id }}</option>
-            <option value="custom">Personalizado</option>
-          </select>
-          <div class="parts">
-            <div class="part">
-              <label for="part-l">Levain</label>
-              <input id="part-l" type="number" min="0" step="1" :value="state.levain.L" @input="setPart('L', $event.target.value)" @blur="settlePart('L')">
-            </div>
-            <span class="colon">:</span>
-            <div class="part">
-              <label for="part-a">Água</label>
-              <input id="part-a" type="number" min="0" step="1" :value="state.levain.A" @input="setPart('A', $event.target.value)" @blur="settlePart('A')">
-            </div>
-            <span class="colon">:</span>
-            <div class="part">
-              <label for="part-f">Farinha</label>
-              <input id="part-f" type="number" min="0" step="1" :value="state.levain.F" @input="setPart('F', $event.target.value)" @blur="settlePart('F')">
-            </div>
-          </div>
-          <dl class="split" v-if="result.levain && result.levain.valid">
-            <div><dt>Levain</dt><dd data-levain-seed>{{ formatG(result.levain.seed) }} g</dd></div>
-            <div><dt>Água</dt><dd data-levain-water>{{ formatG(result.levain.water) }} g</dd></div>
-            <div><dt>Farinha</dt><dd data-levain-flour>{{ formatG(result.levain.flour) }} g</dd></div>
-          </dl>
-          <div class="levain-hyd">
-            <span class="kicker">Hidratação do levain</span>
-            <strong data-levain-hyd>{{ result.levain && result.levain.hydration != null ? formatPct(result.levain.hydration) + '%' : '—' }}</strong>
-          </div>
-          <p class="hint">A hidratação é a água dividida pela farinha desta alimentação. A água da isca não entra.</p>
-          <p class="hint" v-if="result.levain && result.levain.valid">{{ formatG(result.levain.water) }} g dessa água entram na hidratação final da massa.</p>
         </div>
       </div>
 
@@ -171,6 +144,49 @@
         </div>
       </div>
     </section>
+
+    <dialog ref="levainDialog" class="levain-dialog" @click="onDialogClick" aria-labelledby="levain-title">
+      <article v-if="result.levainOn" class="levain" tabindex="-1" autofocus>
+        <header class="levain-head">
+          <h2 id="levain-title">Ativar o levain</h2>
+          <button type="button" class="del" @click="closeLevain" aria-label="Fechar">×</button>
+        </header>
+        <p class="levain-grams">{{ formatG(result.levainGrams) }}<small> g na massa</small></p>
+        <label class="kicker" for="ratio">Proporção L : A : F</label>
+        <select id="ratio" class="ratio-select" :value="ratioId" @change="onRatio($event.target.value)">
+          <option v-for="ratio in ratios" :key="ratio.id" :value="ratio.id">{{ ratio.id }}</option>
+          <option value="custom">Personalizado</option>
+        </select>
+        <div class="parts">
+          <div class="part">
+            <label for="part-l">Levain</label>
+            <input id="part-l" type="number" min="0" step="1" :value="state.levain.L" @input="setPart('L', $event.target.value)" @blur="settlePart('L')">
+          </div>
+          <span class="colon">:</span>
+          <div class="part">
+            <label for="part-a">Água</label>
+            <input id="part-a" type="number" min="0" step="1" :value="state.levain.A" @input="setPart('A', $event.target.value)" @blur="settlePart('A')">
+          </div>
+          <span class="colon">:</span>
+          <div class="part">
+            <label for="part-f">Farinha</label>
+            <input id="part-f" type="number" min="0" step="1" :value="state.levain.F" @input="setPart('F', $event.target.value)" @blur="settlePart('F')">
+          </div>
+        </div>
+        <dl class="split" v-if="result.levain && result.levain.valid">
+          <div><dt>Levain</dt><dd data-levain-seed>{{ formatG(result.levain.seed) }} g</dd></div>
+          <div><dt>Água</dt><dd data-levain-water>{{ formatG(result.levain.water) }} g</dd></div>
+          <div><dt>Farinha</dt><dd data-levain-flour>{{ formatG(result.levain.flour) }} g</dd></div>
+        </dl>
+        <div class="levain-hyd">
+          <span class="kicker">Hidratação do levain</span>
+          <strong data-levain-hyd>{{ result.levain && result.levain.hydration != null ? formatPct(result.levain.hydration) + '%' : '—' }}</strong>
+        </div>
+        <p class="hint">A hidratação é a água dividida pela farinha desta alimentação. A água da isca não entra.</p>
+        <p class="hint" v-if="result.levain && result.levain.valid">{{ formatG(result.levain.water) }} g dessa água entram na hidratação total da massa.</p>
+        <button type="button" class="levain-done" @click="closeLevain">Concluir</button>
+      </article>
+    </dialog>
 
   </div>
   <script src="vendor/vue.global.prod.js"></script>

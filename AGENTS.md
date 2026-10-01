@@ -25,7 +25,7 @@ O service worker só registra em HTTP. Sirva a pasta e abra no navegador:
 python3 -m http.server 8769 --bind 127.0.0.1
 ```
 
-`file://` não instala o app. Depois de mudar HTML, CSS, JS ou imagens cacheadas, suba a constante `CACHE` em `ServiceWorker.js` (`padeiro-v12` hoje). A estratégia é rede primeiro, cache se a rede falhar.
+`file://` não instala o app. Depois de mudar HTML, CSS, JS ou imagens cacheadas, suba a constante `CACHE` em `ServiceWorker.js` (`padeiro-v13` hoje). A estratégia é rede primeiro, cache se a rede falhar.
 
 Não há suíte de testes. `node -e` consegue importar `calc.js`. Mudança de tela precisa ser exercida no navegador, no celular (cerca de 390 px) e na largura máxima do app (560 px).
 
@@ -39,7 +39,7 @@ A hidratação total é a água contada ÷ farinha da receita × 100. Entra a á
 
 O fermento biológico é seco (padrão, 1%) ou fresco. A mesma força pesa o triplo no fresco: `convertYeast` multiplica ou divide por 3 e arredonda a 2 casas. Trocar seco ↔ fresco converte o percentual. O levain fica no mesmo seletor; sair e voltar restaura o fermento anterior. Fermento não contribui água.
 
-O levain não é outra tela. Com o fermento em Levain, o painel usa o percentual já digitado, em gramas, e pede a proporção L:A:F (levain : água : farinha), ordem brasileira. Os presets só preenchem os campos: 1:1:1, 1:2:2, 1:2:3, 2:4:5, 1:3:3, 1:4:4, 1:5:5, 1:10:10, ou personalizado. A hidratação do levain é água da alimentação ÷ farinha da alimentação. A água já presente na isca não entra. A água da alimentação entra na hidratação total da massa. Os gramas exibidos são inteiros que somam o total arredondado; a sobra vai para a isca.
+O levain não é outra tela. Com o fermento em Levain, a ativação abre num modal (`<dialog>`): ao escolher Levain no seletor ou pelo lápis ao lado dele. Na linha do fermento ficam a proporção (à direita do lápis), a hidratação do levain (à direita do percentual) e os gramas de isca, água e farinha. O modal usa o percentual já digitado, em gramas, e pede a proporção L:A:F (levain : água : farinha), ordem brasileira. Os presets só preenchem os campos: 1:1:1, 1:2:2, 1:2:3, 2:4:5, 1:3:3, 1:4:4, 1:5:5, 1:10:10, ou personalizado. A hidratação do levain é água da alimentação ÷ farinha da alimentação. A água já presente na isca não entra. A água da alimentação entra na hidratação total da massa. Os gramas exibidos são inteiros que somam o total arredondado; a sobra vai para a isca.
 
 `BANDS` escolhe textura, pão típico e foto do miolo a partir da hidratação total. As fotos são 3:2 (`img/miolo-*.jpg`). Não repita textura nem tipo de pão em outro ponto da tela.
 

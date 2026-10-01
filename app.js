@@ -1,4 +1,4 @@
-const { createApp, reactive, computed, watch, ref, onMounted } = Vue;
+const { createApp, reactive, computed, watch, ref, onMounted, nextTick } = Vue;
 
 const STORAGE_KEY = "percentual-padeiro-v1";
 const FLOUR_MAX = 99999;
@@ -90,6 +90,7 @@ createApp({
   setup() {
     const state = reactive(loadState());
     const menuOpen = ref(false);
+    const levainDialog = ref(null);
     const canInstall = ref(false);
     let deferredPrompt = null;
     const gramsFormat = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
@@ -213,6 +214,7 @@ createApp({
         row.pct = row.levainPct != null ? row.levainPct : 20;
         row.ferment = "levain";
         row.name = "Levain";
+        nextTick(openLevain);
         return;
       }
       let sourceKind = row.ferment === "fresco" ? "fresco" : "seco";
@@ -232,6 +234,22 @@ createApp({
 
     function yeastEquivalent(pct, from, to) {
       return Padeiro.convertYeast(pct, from, to);
+    }
+
+    // A ativação do levain fica num modal; a linha do fermento mostra o resumo.
+    function openLevain() {
+      const dialog = levainDialog.value;
+      if (dialog && !dialog.open) dialog.showModal();
+    }
+
+    function closeLevain() {
+      const dialog = levainDialog.value;
+      if (dialog && dialog.open) dialog.close();
+    }
+
+    // Clique fora do conteúdo (no fundo escurecido) fecha.
+    function onDialogClick(event) {
+      if (event.target === levainDialog.value) closeLevain();
     }
 
     function onRatio(id) {
@@ -323,6 +341,10 @@ createApp({
       ratios: Padeiro.RATIOS,
       menuGroups,
       menuOpen,
+      levainDialog,
+      openLevain,
+      closeLevain,
+      onDialogClick,
       canInstall,
       formatG,
       formatPct,
