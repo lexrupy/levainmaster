@@ -25,7 +25,7 @@ O service worker só registra em HTTP. Sirva a pasta e abra no navegador:
 python3 -m http.server 8769 --bind 127.0.0.1
 ```
 
-`file://` não instala o app. Depois de mudar HTML, CSS, JS ou imagens cacheadas, suba a constante `CACHE` em `ServiceWorker.js` (`padeiro-v13` hoje). A estratégia é rede primeiro, cache se a rede falhar.
+`file://` não instala o app. Depois de mudar HTML, CSS, JS ou imagens cacheadas, suba a constante `CACHE` em `ServiceWorker.js` (`padeiro-v14` hoje). A estratégia é rede primeiro, cache se a rede falhar.
 
 Não há suíte de testes. `node -e` consegue importar `calc.js`. Mudança de tela precisa ser exercida no navegador, no celular (cerca de 390 px) e na largura máxima do app (560 px).
 
@@ -49,7 +49,7 @@ O estado fica em `localStorage`, chave `percentual-padeiro-v1`.
 
 O card de cima reúne a farinha e o resumo. Ele rola com a página para os ingredientes aparecerem. Não deixe esse card `position: sticky`.
 
-À direita da farinha: foto retangular 3:2, barra de composição na vertical encostada na foto, e o texto **Hidratação total** com o percentual, a textura, o pão e o peso da massa. O rótulo não é "hidratação final": isso soaria como pão assado. A barra separa o resumo da farinha. A legenda Farinha / Água / Outros fica abaixo dos dois. O slider da água da receita permanece embaixo, como controle, e não é a hidratação total.
+À direita da farinha: foto retangular 3:2 e, abaixo dela, o texto **Hidratação total** com o percentual, a textura, o pão e o peso da massa. O rótulo não é "hidratação final": isso soaria como pão assado. Abaixo dos gramas de farinha fica a meia lua da composição da massa (farinha, água e outros, da esquerda para a direita), com a legenda logo embaixo. Os nomes da legenda têm a cor do trecho correspondente, num tom mais escuro para chegar a 4,5:1; o valor fica na cor do texto. As cores ficam em `--comp-*`, em `app.css`, e passaram pelo validador de paleta. O slider da água da receita permanece embaixo, como controle, e não é a hidratação total.
 
 O campo da farinha não reserva espaço para 999999 g. Há um vão entre os botões ▲▼ e a foto.
 

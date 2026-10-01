@@ -23,6 +23,14 @@
   --wet-bg: #f6e0d4;
   --wet: #8a3e28;
   --water: #6e9eb4;
+  /* Composição da massa. Validadas com o validador de paleta (dataviz).
+     As versões -text são o mesmo matiz escurecido para 4,5:1 no texto. */
+  --comp-flour: #b8792e;
+  --comp-water: #2f80c0;
+  --comp-other: #6e9a35;
+  --comp-flour-text: #9e6828;
+  --comp-water-text: #2c78b4;
+  --comp-other-text: #5a7e2b;
   --shadow: 0 12px 32px rgba(70, 48, 24, 0.06);
   --pico-font-family: Outfit, "Segoe UI", sans-serif;
   --pico-background-color: var(--paper);
@@ -106,7 +114,7 @@ input[type="number"] {
   margin-bottom: 14px;
 }
 
-.field-head, .ing-top, .final-head, .total-row, .legend {
+.field-head, .ing-top, .final-head, .total-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -152,40 +160,6 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   align-items: center;
   min-width: 0;
 }
-
-.crumb-visual {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 11px;
-  gap: 8px;
-  align-items: stretch;
-  min-width: 0;
-}
-
-.crumb-thumb {
-  display: block;
-  width: 100%;
-  aspect-ratio: 3 / 2;
-  height: auto;
-  object-fit: cover;
-  object-position: center;
-  border-radius: 14px;
-  margin: 0;
-  background: #f6f1e8;
-}
-
-.comp-vert {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  border-radius: 99px;
-  overflow: hidden;
-  background: #f0e8dc;
-}
-
-.comp-vert span { display: block; min-height: 0; }
-.comp-vert .flour { background: #c4a574; }
-.comp-vert .water { background: var(--water); }
-.comp-vert .other { background: #ddd4c8; }
 
 .side-kicker {
   margin: 0 0 2px;
@@ -654,10 +628,6 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   letter-spacing: -0.04em;
 }
 
-.comp { margin-top: 12px; }
-
-.legend { margin-top: 0; font-size: 0.8rem; color: var(--muted); }
-.legend b { color: var(--ink); font-weight: 650; }
 
 .water-edit {
   display: flex;
@@ -815,3 +785,34 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   font-weight: 650;
   cursor: pointer;
 }
+
+/* Meia lua da composição, abaixo dos gramas de farinha */
+.comp-arc {
+  width: 150px;
+  margin: 10px 0 0;
+}
+
+.comp-arc svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+.comp-arc path { fill: none; stroke-width: 12; }
+.comp-arc .track { stroke: #f0e8dc; }
+.comp-arc path.flour { stroke: var(--comp-flour); }
+.comp-arc path.water { stroke: var(--comp-water); }
+.comp-arc path.other { stroke: var(--comp-other); }
+
+.arc-legend {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 0.7rem;
+  font-weight: 650;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.arc-legend span { display: flex; flex-direction: column; }
+.arc-legend b { color: var(--ink); font-size: 0.82rem; font-weight: 680; }
+.arc-legend .flour { color: var(--comp-flour-text); }
+.arc-legend .water { color: var(--comp-water-text); }
+.arc-legend .other { color: var(--comp-other-text); }
