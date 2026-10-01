@@ -1,21 +1,26 @@
 #!/usr/bin/env python3
 """Gera as ilustrações de miolo (img/miolo-N-*.svg), uma por faixa de BANDS.
 
-Mesmo pão, mesmo pano e mesmo enquadramento em todas; só os alvéolos mudam.
+Mesmo pão e mesmo enquadramento em todas; só os alvéolos mudam.
 A semente é fixa, então rodar de novo gera os mesmos arquivos.
 
     python3 tools/gerar-miolos.py
+
+Antes de gerar, as ilustrações atuais vão para img/backup/AAAAMMDD-HHMMSS/
+(pasta fora do git, no .gitignore).
 """
 
 import math
 import random
+import shutil
+from datetime import datetime
 from pathlib import Path
 
 W, H = 600, 400
-VIEW = "36 44 528 352"         # recorte 3:2 que aproxima o pão
+VIEW = "36 40 528 352"         # recorte 3:2 que aproxima o pão
 CX, BASE = 300, 338          # centro e base do miolo
 A, B, P = 222, 246, 2.35     # semi-eixos e expoente da superelipse do miolo
-CRUST = 13                   # espessura da casca
+EAR = 0.70 * math.pi         # onde fica a pestana do corte (em cima, à esquerda)
 
 # (raio mínimo, raio máximo, quantidade), do maior para o menor.
 # alongar: quanto o alvéolo pode esticar; torto: irregularidade do contorno;
@@ -31,27 +36,67 @@ LEVELS = [
 ]
 
 
+# --- O pão (igual em todas as faixas) ---------------------------------------
+
+def superellipse(theta):
+    c, s = abs(math.cos(theta)), abs(math.sin(theta))
+    return 1 / ((c / A) ** P + (s / B) ** P) ** (1 / P)
+
+
+def crumb_r(theta):
+    """Raio do miolo a partir do centro da base, com uma ondulação leve."""
+    wobble = 0.016 * math.sin(3 * theta + 0.7) + 0.010 * math.sin(7 * theta + 2.1) + 0.005 * math.sin(13 * theta + 0.4)
+    lean = 0.025 * max(0.0, math.cos(theta - EAR)) ** 6  # o lado da pestana cresce um pouco mais
+    return superellipse(theta) * (1 + wobble + lean)
+
+
+def crust_t(theta):
+    """Espessura da casca: grossa em cima, fina nas laterais, com a pestana levantada."""
+    top = 7 + 12 * math.sin(theta) ** 1.6
+    bumps = 0.9 * math.sin(11 * theta + 1.3) + 0.5 * math.sin(23 * theta)
+    d = theta - EAR
+    width = 0.035 * math.pi if d < 0 else 0.09 * math.pi
+    ear = 11 * math.exp(-((d / width) ** 2))
+    return top + bumps + ear
+
+
+def polar(theta, r):
+    return CX + r * math.cos(theta), BASE - r * math.sin(theta)
+
+
 def inside(x, y, margin=0.0):
-    """Ponto dentro do miolo (metade de cima da superelipse, cortada na base)."""
+    """Ponto dentro do miolo, com folga."""
     if y > BASE - margin:
         return False
-    dx = abs(x - CX) / (A - margin)
-    dy = abs(y - BASE) / (B - margin)
-    return dx ** P + dy ** P <= 1
+    theta = math.atan2(BASE - y, x - CX)
+    return math.hypot(x - CX, BASE - y) <= crumb_r(theta) - margin
 
 
-def outline(a, b, base_y, sag):
-    """Contorno do pão: domo em superelipse e base levemente curva."""
-    pts = []
-    for i in range(121):
-        t = math.pi * i / 120
-        c, s = math.cos(t), math.sin(t)
-        x = CX + a * math.copysign(abs(c) ** (2 / P), c)
-        y = base_y - b * abs(s) ** (2 / P)
-        pts.append((x, y))
-    d = "M " + " L ".join(f"{x:.1f} {y:.1f}" for x, y in pts)
-    return d + f" Q {CX} {base_y + sag} {pts[0][0]:.1f} {pts[0][1]:.1f} Z"
+def path_of(pts, close=True):
+    return "M " + " L ".join(f"{x:.1f} {y:.1f}" for x, y in pts) + (" Z" if close else "")
 
+
+def loaf():
+    """Contornos do miolo, da casca, da parte clara do corte e da fissura."""
+    n = 240
+    thetas = [math.pi * i / n for i in range(n + 1)]
+    inner = [polar(t, crumb_r(t)) for t in thetas]
+    outer = [polar(t, crumb_r(t) + crust_t(t)) for t in thetas]
+    left_in, right_in = inner[-1], inner[0]
+    base = [(left_in[0] + (right_in[0] - left_in[0]) * i / 20, BASE + 1.2 * math.sin(i * 1.7)) for i in range(1, 20)]
+    crumb = path_of(inner + [(left_in[0] + 2, BASE + 1)] + base + [(right_in[0] - 2, BASE + 1)])
+    left_out, right_out = outer[-1], outer[0]
+    crust = path_of(outer + [(left_out[0] + 5, BASE + 8), (CX, BASE + 11), (right_out[0] - 5, BASE + 8)])
+    # pestana: a fissura do corte entra na casca em diagonal, sob a borda levantada
+    t0, t1 = EAR - 0.06 * math.pi, EAR + 0.005 * math.pi
+    steps = [t0 + (t1 - t0) * i / 16 for i in range(17)]
+    crack = [polar(t, crumb_r(t) + 1.5 + crust_t(t) * 0.62 * (t - t0) / (t1 - t0)) for t in steps]
+    # brilho: uma faixa clara logo abaixo da borda de cima
+    shine = [polar(t, crumb_r(t) + crust_t(t) - 3.5) for t in thetas[30:211]]
+    return crumb, crust, path_of(crack, close=False), path_of(shine, close=False)
+
+
+# --- Os alvéolos (mudam por faixa) ------------------------------------------
 
 def blob(rng, x, y, r, along, torto):
     """Contorno fechado e irregular de um alvéolo (Catmull-Rom em Bézier)."""
@@ -85,7 +130,7 @@ def place(rng, level):
             x = rng.uniform(CX - A, CX + A)
             y = rng.uniform(BASE - B, BASE)
             d, reach = blob(rng, x, y, r, level["alongar"], level["torto"])
-            if not inside(x, y, reach + 4):
+            if not inside(x, y, reach + 5):
                 continue
             wall = level["parede"]
             if any(math.hypot(x - px, y - py) < reach + pr + wall for px, py, pr in placed):
@@ -99,8 +144,7 @@ def place(rng, level):
 def svg(level, seed):
     rng = random.Random(seed)
     shapes = place(rng, level)
-    crumb = outline(A, B, BASE, 6)
-    crust = outline(A + CRUST, B + CRUST, BASE + 6, 7)
+    crumb, crust, crack, shine = loaf()
     holes = []
     for d, x, y, r in shapes:
         holes.append(f'<path d="{d}" fill="url(#hole)" stroke="#f7eedd" stroke-width="{0.5 + r * 0.03:.2f}" stroke-opacity="0.8"/>')
@@ -111,19 +155,34 @@ def svg(level, seed):
             )
     return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="{VIEW}" width="{W}" height="{H}">
 <defs>
-  <radialGradient id="cloth" cx="50%" cy="38%" r="75%">
-    <stop offset="0" stop-color="#f4efe7"/><stop offset="1" stop-color="#dcd3c6"/>
-  </radialGradient>
-  <filter id="weave" x="0" y="0" width="100%" height="100%">
-    <feTurbulence type="fractalNoise" baseFrequency="0.012 0.06" numOctaves="2" seed="4"/>
-    <feColorMatrix values="0 0 0 0 0.45  0 0 0 0 0.40  0 0 0 0 0.34  0 0 0 0.22 0"/>
-  </filter>
-  <linearGradient id="crust" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#8f5320"/><stop offset="0.35" stop-color="#b8742f"/>
-    <stop offset="0.8" stop-color="#cf9348"/><stop offset="1" stop-color="#a5662a"/>
+  <linearGradient id="table" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#f5f0e8"/><stop offset="1" stop-color="#e8dfd2"/>
   </linearGradient>
+  <linearGradient id="crust" x1="0" y1="{BASE - B - 34}" x2="0" y2="{BASE + 12}" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#5a2c0e"/><stop offset="0.18" stop-color="#7c4115"/>
+    <stop offset="0.45" stop-color="#a9662a"/><stop offset="0.78" stop-color="#c88a42"/>
+    <stop offset="0.94" stop-color="#b9783a"/><stop offset="1" stop-color="#6e4020"/>
+  </linearGradient>
+  <clipPath id="crustclip"><path d="{crust}"/></clipPath>
+  <filter id="glow"><feGaussianBlur stdDeviation="2.2"/></filter>
+  <filter id="relief" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="4" seed="7" result="n"/>
+    <feDiffuseLighting in="n" surfaceScale="2.4" lighting-color="#fff6e8" result="l">
+      <feDistantLight azimuth="235" elevation="52"/>
+    </feDiffuseLighting>
+    <feComposite in="SourceGraphic" in2="l" operator="arithmetic" k1="1.15" k2="0" k3="0" k4="0" result="lit"/>
+    <feComposite in="lit" in2="SourceAlpha" operator="in"/>
+  </filter>
+  <filter id="crumbrelief" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.35" numOctaves="3" seed="3" result="n"/>
+    <feDiffuseLighting in="n" surfaceScale="1.4" lighting-color="#ffffff" result="l">
+      <feDistantLight azimuth="235" elevation="60"/>
+    </feDiffuseLighting>
+    <feComposite in="SourceGraphic" in2="l" operator="arithmetic" k1="0.35" k2="0.72" k3="0" k4="0" result="lit"/>
+    <feComposite in="lit" in2="SourceAlpha" operator="in"/>
+  </filter>
   <linearGradient id="crumbtone" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#f1e5cd"/><stop offset="1" stop-color="#e9dbc0"/>
+    <stop offset="0" stop-color="#f3e8d2"/><stop offset="1" stop-color="#eadcc2"/>
   </linearGradient>
   <linearGradient id="hole" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0" stop-color="#a98a5f"/><stop offset="0.55" stop-color="#cdb48c"/><stop offset="1" stop-color="#eadbc0"/>
@@ -133,24 +192,40 @@ def svg(level, seed):
     <feColorMatrix values="0 0 0 0 0.55  0 0 0 0 0.44  0 0 0 0 0.30  0 0 0 -2.2 1.25"/>
   </filter>
   <filter id="soft"><feGaussianBlur stdDeviation="10"/></filter>
+  <filter id="band"><feGaussianBlur stdDeviation="4"/></filter>
   <clipPath id="crumbclip"><path d="{crumb}"/></clipPath>
 </defs>
-<rect width="{W}" height="{H}" fill="url(#cloth)"/>
-<rect width="{W}" height="{H}" filter="url(#weave)"/>
-<ellipse cx="{CX}" cy="{BASE + 18}" rx="{A + 30}" ry="16" fill="#5a4630" opacity="0.28" filter="url(#soft)"/>
-<path d="{crust}" fill="url(#crust)"/>
-<path d="{crumb}" fill="url(#crumbtone)"/>
+<rect x="0" y="0" width="{W}" height="{H}" fill="url(#table)"/>
+<ellipse cx="{CX}" cy="{BASE + 16}" rx="{A + 34}" ry="14" fill="#4a3420" opacity="0.32" filter="url(#soft)"/>
+<path d="{crust}" fill="url(#crust)" filter="url(#relief)"/>
+<path d="{shine}" fill="none" stroke="#f3cf98" stroke-width="4" opacity="0.35" filter="url(#glow)" clip-path="url(#crustclip)"/>
+<path d="{crack}" fill="none" stroke="#e0ad6c" stroke-width="3.2" stroke-linecap="round" opacity="0.7" transform="translate(1.2 1.6)"/>
+<path d="{crack}" fill="none" stroke="#3a1a06" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
+<path d="{crumb}" fill="url(#crumbtone)" filter="url(#crumbrelief)"/>
 <g clip-path="url(#crumbclip)">
   <rect width="{W}" height="{H}" filter="url(#pores)" opacity="{level["poros"]:.2f}"/>
   {"".join(holes)}
+  <path d="{crumb}" fill="none" stroke="#d9b880" stroke-width="16" opacity="0.55" filter="url(#band)"/>
 </g>
-<path d="{crumb}" fill="none" stroke="#c99a5c" stroke-width="2.5" stroke-opacity="0.55"/>
+<path d="{crumb}" fill="none" stroke="#9a6428" stroke-width="1.6" stroke-opacity="0.7"/>
 </svg>
 '''
 
 
+def backup(out):
+    current = sorted(out.glob("miolo-[0-9]-*.svg"))
+    if not current:
+        return
+    dest = out / "backup" / datetime.now().strftime("%Y%m%d-%H%M%S")
+    dest.mkdir(parents=True, exist_ok=True)
+    for path in current:
+        shutil.copy2(path, dest / path.name)
+    print(f"backup: {dest.relative_to(out.parent)} ({len(current)} arquivos)")
+
+
 def main():
     out = Path(__file__).resolve().parent.parent / "img"
+    backup(out)
     for i, level in enumerate(LEVELS):
         path = out / f"miolo-{level['slug']}.svg"
         path.write_text(svg(level, 1000 + i), encoding="utf-8")
