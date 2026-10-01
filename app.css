@@ -161,6 +161,18 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   min-width: 0;
 }
 
+.crumb-thumb {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  height: auto;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 14px;
+  margin: 0;
+  background: #f6f1e8;
+}
+
 .side-kicker {
   margin: 0 0 2px;
   font-size: 0.66rem;

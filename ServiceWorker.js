@@ -1,4 +1,4 @@
-const CACHE = "padeiro-v14";
+const CACHE = "padeiro-v15";
 const FILES = [
   "./",
   "./index.html",

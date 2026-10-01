@@ -26,6 +26,11 @@ A composição da massa era uma barra vertical fina encostada na foto do miolo. 
 - [x] A barra vertical e a legenda acima do slider não existem mais
 - [x] Sem rolagem horizontal em 360 px, 390 px e 560 px
 - [x] As cores passam no `validate_palette.js` (modo claro)
+- [x] A foto do miolo mantém os cantos arredondados (14px) e a proporção 3:2
+
+## Correção posterior
+
+O commit da meia lua apagou a regra `.crumb-thumb` junto com a barra vertical, e a foto perdeu os cantos arredondados e a proporção 3:2. A regra voltou como era, num commit à parte, com o `CACHE` em `padeiro-v15`.
 
 ## Como verificar
 
