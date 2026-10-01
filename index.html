@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f3efe6">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Padeiro">
+  <title>Percentual do padeiro</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="vendor/pico.min.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <div id="app" class="app">
+    <header class="top">
+      <p class="brand">Percentual do padeiro</p>
+      <button v-if="canInstall" type="button" class="install" @click="install">Instalar</button>
+    </header>
+
+    <section class="sheet">
+      <div class="deck-row">
+        <div class="flour-side">
+          <div class="field-head">
+            <label class="kicker" for="flour">Farinha</label>
+            <span class="pill">100%</span>
+          </div>
+          <div class="mega" :style="{ '--flour-ch': flourDigits }">
+            <input id="flour" type="number" min="0" max="99999" step="1" inputmode="numeric" v-model.number="state.flour" @input="clampFlour" aria-label="Farinha em gramas">
+            <span class="unit">g</span>
+            <div class="spins">
+              <button type="button" class="spin" @click="bumpFlour(50)" aria-label="Aumentar farinha">▲</button>
+              <button type="button" class="spin" @click="bumpFlour(-50)" aria-label="Diminuir farinha">▼</button>
+            </div>
+          </div>
+        </div>
+        <aside class="crumb-side">
+          <div class="crumb-layout">
+            <div class="crumb-visual">
+              <img class="crumb-thumb" :src="result.band.img" alt="Corte do pão nesta faixa de hidratação">
+              <div class="comp-vert" aria-hidden="true">
+                <span class="flour" :style="{ flex: result.flourShare }"></span>
+                <span class="water" :style="{ flex: Math.max(result.waterShare, 0.001) }"></span>
+                <span class="other" v-if="result.otherShare > 0.4" :style="{ flex: result.otherShare }"></span>
+              </div>
+            </div>
+            <div>
+              <p class="kicker side-kicker">Hidratação total</p>
+              <p class="side-hyd" :data-final-hyd="result.hydration">{{ formatPct(result.hydration) }}<small>%</small></p>
+              <p class="side-feel" :data-feel="result.band.feel">{{ result.band.sensacao }}</p>
+              <p class="side-bread">{{ result.band.pao }}</p>
+              <p class="side-mass" :data-total="result.totalWeight">{{ formatG(result.totalWeight) }} g <span>massa</span></p>
+            </div>
+          </div>
+        </aside>
+      </div>
+      <div class="comp">
+        <div class="legend">
+          <span>Farinha <b>{{ formatPct(result.flourShare) }}%</b></span>
+          <span>Água <b>{{ formatPct(result.waterShare) }}%</b></span>
+          <span>Outros <b>{{ formatPct(result.otherShare) }}%</b></span>
+        </div>
+      </div>
+
+      <div class="field-head hyd-head">
+        <label class="kicker" for="agua">Água</label>
+        <div class="hyd-num"><span>{{ formatPct(waterPct) }}</span><small>%</small></div>
+      </div>
+      <div class="slider">
+        <input id="agua" type="range" min="30" max="110" step="1" v-model.number="waterPct">
+        <div class="slider-labels">
+          <span style="left:31%">55%</span>
+          <span style="left:44%">65%</span>
+          <span style="left:53%">72%</span>
+          <span style="left:69%">85%</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="sheet">
+      <h2 class="section-label">Detalhamento da receita</h2>
+
+      <div v-for="item in state.ingredients" :key="item.id" class="ing-block">
+        <div class="ing">
+          <div class="icon" v-html="iconFor(item)"></div>
+          <div>
+            <div class="ing-top">
+              <template v-if="item.role === 'ferment'">
+                <select class="ferment-select" :value="item.ferment" @change="setFerment($event.target.value)" aria-label="Tipo de fermento">
+                  <option value="seco">Fermento seco</option>
+                  <option value="fresco">Fermento fresco</option>
+                  <option value="levain">Levain</option>
+                </select>
+              </template>
+              <input v-else-if="item.custom" class="name-input" v-model="item.name" placeholder="Ingrediente" aria-label="Nome do ingrediente">
+              <div v-else class="ing-name">{{ item.name }}</div>
+              <button v-if="item.role === 'extra'" type="button" class="del" @click="removeIngredient(item.id)" aria-label="Remover ingrediente">×</button>
+            </div>
+            <div class="pct">
+              <input type="number" min="0" step="0.5" inputmode="decimal" v-model.number="item.pct" :aria-label="'Percentual de ' + (item.name || 'ingrediente')">
+              <span>%</span>
+            </div>
+            <label v-if="item.custom" class="water-edit">Teor de água
+              <input type="number" min="0" max="100" step="1" v-model.number="item.water" aria-label="Teor de água do ingrediente">
+              <span>%</span>
+            </label>
+            <p v-else-if="item.water > 0 && item.water < 100" class="moisture">{{ formatPct(item.water) }}% de água</p>
+            <p v-else-if="item.role === 'ferment' && item.ferment === 'seco'" class="moisture">Equivale a {{ formatPct(yeastEquivalent(item.pct, 'seco', 'fresco')) }}% de fresco</p>
+            <p v-else-if="item.role === 'ferment' && item.ferment === 'fresco'" class="moisture">Equivale a {{ formatPct(yeastEquivalent(item.pct, 'fresco', 'seco')) }}% de seco</p>
+            <div class="bar" aria-hidden="true"><span :style="{ width: barWidth(item.pct) }"></span></div>
+          </div>
+          <div class="grams" :data-grams="item.role">{{ formatG(rowOf(item.id).grams) }}<small>g</small></div>
+        </div>
+
+        <div v-if="item.role === 'ferment' && item.ferment === 'levain'" class="levain">
+          <h2>Ativar o levain</h2>
+          <p class="levain-grams">{{ formatG(result.levainGrams) }}<small> g na massa</small></p>
+          <label class="kicker" for="ratio">Proporção L : A : F</label>
+          <select id="ratio" class="ratio-select" :value="ratioId" @change="onRatio($event.target.value)">
+            <option v-for="ratio in ratios" :key="ratio.id" :value="ratio.id">{{ ratio.id }}</option>
+            <option value="custom">Personalizado</option>
+          </select>
+          <div class="parts">
+            <div class="part">
+              <label for="part-l">Levain</label>
+              <input id="part-l" type="number" min="0" step="1" :value="state.levain.L" @input="setPart('L', $event.target.value)">
+            </div>
+            <span class="colon">:</span>
+            <div class="part">
+              <label for="part-a">Água</label>
+              <input id="part-a" type="number" min="0" step="1" :value="state.levain.A" @input="setPart('A', $event.target.value)">
+            </div>
+            <span class="colon">:</span>
+            <div class="part">
+              <label for="part-f">Farinha</label>
+              <input id="part-f" type="number" min="0" step="1" :value="state.levain.F" @input="setPart('F', $event.target.value)">
+            </div>
+          </div>
+          <dl class="split" v-if="result.levain && result.levain.valid">
+            <div><dt>Levain</dt><dd data-levain-seed>{{ formatG(result.levain.seed) }} g</dd></div>
+            <div><dt>Água</dt><dd data-levain-water>{{ formatG(result.levain.water) }} g</dd></div>
+            <div><dt>Farinha</dt><dd data-levain-flour>{{ formatG(result.levain.flour) }} g</dd></div>
+          </dl>
+          <div class="levain-hyd">
+            <span class="kicker">Hidratação do levain</span>
+            <strong data-levain-hyd>{{ result.levain && result.levain.hydration != null ? formatPct(result.levain.hydration) + '%' : '—' }}</strong>
+          </div>
+          <p class="hint">A hidratação é a água dividida pela farinha desta alimentação. A água da isca não entra.</p>
+          <p class="hint" v-if="result.levain && result.levain.valid">{{ formatG(result.levain.water) }} g dessa água entram na hidratação final da massa.</p>
+        </div>
+      </div>
+
+      <div class="add-wrap">
+        <button type="button" class="add-btn" @click.stop="menuOpen = !menuOpen">+ Ingrediente</button>
+        <div class="menu" v-if="menuOpen">
+          <div v-for="group in menuGroups" :key="group.name" class="menu-group">
+            <p class="menu-label">{{ group.name }}</p>
+            <button v-for="spec in group.items" :key="spec.name" type="button" @click="addIngredient(spec)">
+              {{ spec.name }}
+              <small>{{ spec.water > 0 ? spec.water + '% de água' : 'não soma água' }}</small>
+            </button>
+          </div>
+          <button type="button" @click="addCustom">Personalizado <small>você define a água</small></button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+  <script src="vendor/vue.global.prod.js"></script>
+  <script src="calc.js"></script>
+  <script src="app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./ServiceWorker.js");
+    }
+  </script>
+</body>
+</html>
