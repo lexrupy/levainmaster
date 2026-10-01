@@ -53,6 +53,10 @@ O card de cima reúne a farinha e o resumo. Ele rola com a página para os ingre
 
 O campo da farinha não reserva espaço para 999999 g. Há um vão entre os botões ▲▼ e a foto.
 
+## Backlog e commits
+
+Cada melhoria ou correção tem uma tarefa em `backlog/` (modelo em `backlog/README.md`: autor, data, status, contexto, o que foi feito, critérios de aceite, como verificar). Uma melhoria por commit, e o commit leva a tarefa com o status atualizado. A mensagem do commit diz o que mudou e por quê, em português.
+
 ## O que não fazer
 
 - Não criar botões de receita pronta nem travar a farinha base quando entram outras farinhas. Elas se somam.
