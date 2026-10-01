@@ -62,6 +62,8 @@ function loadState() {
     const roles = new Set(raw.ingredients.map((item) => item.role));
     if (!roles.has("water") || !roles.has("salt") || !roles.has("ferment")) return Padeiro.defaultState();
     raw.ingredients.forEach((item) => {
+      item.pct = Math.max(0, Padeiro.num(item.pct));
+      item.water = Math.max(0, Padeiro.num(item.water));
       if (item.role === "ferment" && item.ferment !== "levain" && item.ferment !== "fresco" && item.ferment !== "seco") {
         item.ferment = "seco";
         item.name = "Fermento seco";
@@ -71,12 +73,13 @@ function loadState() {
         if (spec) item.water = spec.water;
       }
     });
-    const flour = Padeiro.num(raw.flour);
-    raw.flour = flour > 0 ? Math.min(FLOUR_MAX, flour) : 500;
+    // Campo vazio vale 0. Só falta de valor ou valor inválido volta para 500.
+    const flour = raw.flour === "" ? 0 : Number(raw.flour);
+    raw.flour = Number.isFinite(flour) ? Math.min(FLOUR_MAX, Math.max(0, flour)) : 500;
     raw.levain = raw.levain || { L: 1, A: 2, F: 2 };
-    raw.levain.L = Padeiro.num(raw.levain.L);
-    raw.levain.A = Padeiro.num(raw.levain.A);
-    raw.levain.F = Padeiro.num(raw.levain.F);
+    raw.levain.L = Math.max(0, Padeiro.num(raw.levain.L));
+    raw.levain.A = Math.max(0, Padeiro.num(raw.levain.A));
+    raw.levain.F = Math.max(0, Padeiro.num(raw.levain.F));
     return raw;
   } catch (error) {
     return Padeiro.defaultState();
@@ -91,6 +94,10 @@ createApp({
     let deferredPrompt = null;
     const gramsFormat = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
     const pctFormat = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
+    const pctFineFormat = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 });
+    // Percentual e gramas de um ingrediente aparecem como texto e viram campo ao clicar.
+    // Enquanto o campo está aberto, o texto digitado fica aqui para o Vue não reescrevê-lo.
+    const editing = reactive({ key: null, text: "", undo: 0 });
 
     const result = computed(() => Padeiro.compute(state));
     const ratioId = computed(() => Padeiro.matchRatio(state.levain.L, state.levain.A, state.levain.F));
@@ -112,7 +119,7 @@ createApp({
     const waterPct = computed({
       get() {
         const water = state.ingredients.find((item) => item.role === "water");
-        return water ? water.pct : 0;
+        return water ? Padeiro.num(water.pct) : 0;
       },
       set(value) {
         const water = state.ingredients.find((item) => item.role === "water");
@@ -130,6 +137,44 @@ createApp({
       return pctFormat.format(Padeiro.num(value));
     }
 
+    function formatPctFine(value) {
+      return pctFineFormat.format(Padeiro.num(value));
+    }
+
+    function editKey(item, field) {
+      return field + ":" + item.id;
+    }
+
+    function isEditing(item, field) {
+      return editing.key === editKey(item, field);
+    }
+
+    function startEdit(item, field) {
+      if (field === "grams" && result.value.flour <= 0) return;
+      editing.key = editKey(item, field);
+      editing.undo = item.pct;
+      editing.text = field === "grams"
+        ? String(Math.round(rowOf(item.id).grams))
+        : String(Math.round(Padeiro.num(item.pct) * 100) / 100);
+    }
+
+    // Vazio vale 0. Gramas viram percentual sobre a farinha da receita.
+    function onEdit(item, field, text) {
+      editing.text = text;
+      const value = Math.max(0, Padeiro.num(text));
+      if (field === "pct") item.pct = value;
+      else if (result.value.flour > 0) item.pct = (value / result.value.flour) * 100;
+    }
+
+    function endEdit() {
+      editing.key = null;
+    }
+
+    function cancelEdit(item) {
+      item.pct = editing.undo;
+      endEdit();
+    }
+
     const flourDigits = computed(() => {
       const text = String(Math.round(Math.abs(Padeiro.num(state.flour))));
       return Math.min(5, Math.max(1, text.length));
@@ -140,6 +185,15 @@ createApp({
       const n = Padeiro.num(state.flour);
       if (n > FLOUR_MAX) state.flour = FLOUR_MAX;
       else if (n < 0) state.flour = 0;
+    }
+
+    // Ao sair do campo, vazio vira 0 de verdade.
+    function settleFlour() {
+      state.flour = Math.min(FLOUR_MAX, Math.max(0, Padeiro.num(state.flour)));
+    }
+
+    function settleWater(item) {
+      item.water = Math.min(100, Math.max(0, Padeiro.num(item.water)));
     }
 
     function bumpFlour(delta) {
@@ -189,7 +243,11 @@ createApp({
     }
 
     function setPart(key, value) {
-      state.levain[key] = Math.max(0, Padeiro.num(value));
+      state.levain[key] = value === "" ? "" : Math.max(0, Padeiro.num(value));
+    }
+
+    function settlePart(key) {
+      state.levain[key] = Math.max(0, Padeiro.num(state.levain[key]));
     }
 
     function addIngredient(spec) {
@@ -268,8 +326,18 @@ createApp({
       canInstall,
       formatG,
       formatPct,
+      formatPctFine,
+      editing,
+      isEditing,
+      startEdit,
+      onEdit,
+      endEdit,
+      cancelEdit,
       flourDigits,
       clampFlour,
+      settleFlour,
+      settleWater,
+      settlePart,
       bumpFlour,
       setFerment,
       yeastEquivalent,
@@ -284,4 +352,13 @@ createApp({
       install,
     };
   },
-}).mount("#app");
+})
+  .directive("focus", {
+    mounted(el) {
+      el.focus();
+      try {
+        el.select();
+      } catch (error) {}
+    },
+  })
+  .mount("#app");

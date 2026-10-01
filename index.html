@@ -29,7 +29,7 @@
             <span class="pill">100%</span>
           </div>
           <div class="mega" :style="{ '--flour-ch': flourDigits }">
-            <input id="flour" type="number" min="0" max="99999" step="1" inputmode="numeric" v-model.number="state.flour" @input="clampFlour" aria-label="Farinha em gramas">
+            <input id="flour" type="number" min="0" max="99999" step="1" inputmode="numeric" v-model.number="state.flour" @input="clampFlour" @blur="settleFlour" aria-label="Farinha em gramas">
             <span class="unit">g</span>
             <div class="spins">
               <button type="button" class="spin" @click="bumpFlour(50)" aria-label="Aumentar farinha">▲</button>
@@ -100,11 +100,12 @@
               <button v-if="item.role === 'extra'" type="button" class="del" @click="removeIngredient(item.id)" aria-label="Remover ingrediente">×</button>
             </div>
             <div class="pct">
-              <input type="number" min="0" step="0.5" inputmode="decimal" v-model.number="item.pct" :aria-label="'Percentual de ' + (item.name || 'ingrediente')">
+              <input v-if="isEditing(item, 'pct')" v-focus type="number" min="0" step="0.5" inputmode="decimal" :value="editing.text" @input="onEdit(item, 'pct', $event.target.value)" @blur="endEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc="cancelEdit(item)" :aria-label="'Percentual de ' + (item.name || 'ingrediente')">
+              <button v-else type="button" class="pct-value" @click="startEdit(item, 'pct')" :aria-label="'Editar percentual de ' + (item.name || 'ingrediente')">{{ formatPctFine(item.pct) }}</button>
               <span>%</span>
             </div>
             <label v-if="item.custom" class="water-edit">Teor de água
-              <input type="number" min="0" max="100" step="1" v-model.number="item.water" aria-label="Teor de água do ingrediente">
+              <input type="number" min="0" max="100" step="1" v-model.number="item.water" @blur="settleWater(item)" aria-label="Teor de água do ingrediente">
               <span>%</span>
             </label>
             <p v-else-if="item.water > 0 && item.water < 100" class="moisture">{{ formatPct(item.water) }}% de água</p>
@@ -112,7 +113,10 @@
             <p v-else-if="item.role === 'ferment' && item.ferment === 'fresco'" class="moisture">Equivale a {{ formatPct(yeastEquivalent(item.pct, 'fresco', 'seco')) }}% de seco</p>
             <div class="bar" aria-hidden="true"><span :style="{ width: barWidth(item.pct) }"></span></div>
           </div>
-          <div class="grams" :data-grams="item.role">{{ formatG(rowOf(item.id).grams) }}<small>g</small></div>
+          <div class="grams" :data-grams="item.role">
+            <input v-if="isEditing(item, 'grams')" v-focus class="grams-input" type="number" min="0" step="1" inputmode="decimal" :value="editing.text" @input="onEdit(item, 'grams', $event.target.value)" @blur="endEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc="cancelEdit(item)" :aria-label="'Gramas de ' + (item.name || 'ingrediente')">
+            <button v-else type="button" class="grams-value" :disabled="result.flour <= 0" @click="startEdit(item, 'grams')" :aria-label="'Editar gramas de ' + (item.name || 'ingrediente')">{{ formatG(rowOf(item.id).grams) }}</button><small>g</small>
+          </div>
         </div>
 
         <div v-if="item.role === 'ferment' && item.ferment === 'levain'" class="levain">
@@ -126,17 +130,17 @@
           <div class="parts">
             <div class="part">
               <label for="part-l">Levain</label>
-              <input id="part-l" type="number" min="0" step="1" :value="state.levain.L" @input="setPart('L', $event.target.value)">
+              <input id="part-l" type="number" min="0" step="1" :value="state.levain.L" @input="setPart('L', $event.target.value)" @blur="settlePart('L')">
             </div>
             <span class="colon">:</span>
             <div class="part">
               <label for="part-a">Água</label>
-              <input id="part-a" type="number" min="0" step="1" :value="state.levain.A" @input="setPart('A', $event.target.value)">
+              <input id="part-a" type="number" min="0" step="1" :value="state.levain.A" @input="setPart('A', $event.target.value)" @blur="settlePart('A')">
             </div>
             <span class="colon">:</span>
             <div class="part">
               <label for="part-f">Farinha</label>
-              <input id="part-f" type="number" min="0" step="1" :value="state.levain.F" @input="setPart('F', $event.target.value)">
+              <input id="part-f" type="number" min="0" step="1" :value="state.levain.F" @input="setPart('F', $event.target.value)" @blur="settlePart('F')">
             </div>
           </div>
           <dl class="split" v-if="result.levain && result.levain.valid">

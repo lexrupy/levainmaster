@@ -25,7 +25,7 @@ O service worker só registra em HTTP. Sirva a pasta e abra no navegador:
 python3 -m http.server 8769 --bind 127.0.0.1
 ```
 
-`file://` não instala o app. Depois de mudar HTML, CSS, JS ou imagens cacheadas, suba a constante `CACHE` em `ServiceWorker.js` (`padeiro-v11` hoje). A estratégia é rede primeiro, cache se a rede falhar.
+`file://` não instala o app. Depois de mudar HTML, CSS, JS ou imagens cacheadas, suba a constante `CACHE` em `ServiceWorker.js` (`padeiro-v12` hoje). A estratégia é rede primeiro, cache se a rede falhar.
 
 Não há suíte de testes. `node -e` consegue importar `calc.js`. Mudança de tela precisa ser exercida no navegador, no celular (cerca de 390 px) e na largura máxima do app (560 px).
 

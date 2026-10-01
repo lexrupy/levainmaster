@@ -680,3 +680,48 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   .parts { grid-template-columns: 1fr; }
   .colon { display: none; }
 }
+
+/* Percentual e gramas do ingrediente: texto que vira campo ao clicar */
+.pct-value, .grams-value {
+  border: 0;
+  border-bottom: 1px dashed var(--line-strong);
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  padding: 0 2px;
+  margin: 0;
+  width: auto;
+  cursor: text;
+}
+
+.pct-value { font-weight: 650; }
+
+.pct-value:hover, .grams-value:hover { border-bottom-color: var(--brown-soft); }
+
+.grams-value:disabled { cursor: default; border-bottom-color: transparent; opacity: 1; }
+
+.pct-value:focus-visible, .grams-value:focus-visible {
+  outline: 2px solid var(--brown-soft);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.grams { display: flex; align-items: baseline; }
+
+.grams .grams-input {
+  width: 6.2ch;
+  padding: 2px 6px !important;
+  height: auto !important;
+  margin: 0 !important;
+  border: 1px solid var(--line-strong) !important;
+  border-radius: 10px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  color: var(--ink);
+  font-size: 1.35rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  text-align: right;
+}
