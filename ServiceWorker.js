@@ -1,4 +1,4 @@
-const CACHE = "padeiro-v15";
+const CACHE = "padeiro-v16";
 const FILES = [
   "./",
   "./index.html",
@@ -10,10 +10,13 @@ const FILES = [
   "./vendor/vue.global.prod.js",
   "./vendor/pico.min.css",
   "./vendor/outfit-latin.woff2",
-  "./img/miolo-firme.jpg",
-  "./img/miolo-macio.jpg",
-  "./img/miolo-aberto.jpg",
-  "./img/miolo-umido.jpg",
+  "./img/miolo-1-firme.svg",
+  "./img/miolo-2-fechado.svg",
+  "./img/miolo-3-macio.svg",
+  "./img/miolo-4-levemente-aberto.svg",
+  "./img/miolo-5-aberto-irregular.svg",
+  "./img/miolo-6-muito-aberto.svg",
+  "./img/miolo-7-rendado.svg",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png",

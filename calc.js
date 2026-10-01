@@ -15,13 +15,13 @@
   ];
 
   const BANDS = [
-    { max: 57, feel: "firme", sensacao: "Firme, fácil de modelar", pao: "Bagel", miolo: "Miolo denso, de alvéolos pequenos", img: "img/miolo-firme.jpg" },
-    { max: 62, feel: "firme", sensacao: "Rígida, segura o formato", pao: "Pretzel", miolo: "Miolo fechado e uniforme", img: "img/miolo-firme.jpg" },
-    { max: 67, feel: "macia", sensacao: "Macia e elástica", pao: "Baguete", miolo: "Miolo uniforme, levemente aberto", img: "img/miolo-macio.jpg" },
-    { max: 72, feel: "macia", sensacao: "Levemente pegajosa", pao: "Pão de fermentação natural", miolo: "Miolo levemente aberto", img: "img/miolo-aberto.jpg" },
-    { max: 78, feel: "pegajosa", sensacao: "Pegajosa", pao: "Ciabatta", miolo: "Alvéolos abertos e irregulares", img: "img/miolo-aberto.jpg" },
-    { max: 84, feel: "umida", sensacao: "Bem úmida", pao: "Focaccia", miolo: "Miolo muito aberto", img: "img/miolo-umido.jpg" },
-    { max: Infinity, feel: "umida", sensacao: "Extremamente úmida", pao: "Focaccia de alta hidratação", miolo: "Miolo rendado, de alvéolos grandes", img: "img/miolo-umido.jpg" },
+    { max: 57, feel: "firme", sensacao: "Firme, fácil de modelar", pao: "Bagel", miolo: "Miolo denso, de alvéolos pequenos", img: "img/miolo-1-firme.svg" },
+    { max: 62, feel: "firme", sensacao: "Rígida, segura o formato", pao: "Pretzel", miolo: "Miolo fechado e uniforme", img: "img/miolo-2-fechado.svg" },
+    { max: 67, feel: "macia", sensacao: "Macia e elástica", pao: "Baguete", miolo: "Miolo uniforme, levemente aberto", img: "img/miolo-3-macio.svg" },
+    { max: 72, feel: "macia", sensacao: "Levemente pegajosa", pao: "Pão de fermentação natural", miolo: "Miolo levemente aberto", img: "img/miolo-4-levemente-aberto.svg" },
+    { max: 78, feel: "pegajosa", sensacao: "Pegajosa", pao: "Ciabatta", miolo: "Alvéolos abertos e irregulares", img: "img/miolo-5-aberto-irregular.svg" },
+    { max: 84, feel: "umida", sensacao: "Bem úmida", pao: "Focaccia", miolo: "Miolo muito aberto", img: "img/miolo-6-muito-aberto.svg" },
+    { max: Infinity, feel: "umida", sensacao: "Extremamente úmida", pao: "Focaccia de alta hidratação", miolo: "Miolo rendado, de alvéolos grandes", img: "img/miolo-7-rendado.svg" },
   ];
 
   // Água que entra na hidratação da massa. Farinha e pó secos ficam em 0:
