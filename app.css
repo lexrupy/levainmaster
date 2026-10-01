@@ -205,6 +205,15 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 
 .side-feel { color: var(--muted); }
 
+/* Textura e pão reservam 2 linhas cada: quando o texto quebra, a foto não se mexe. */
+.side-feel, .side-bread {
+  min-height: calc(2 * 1.25em);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .side-feel[data-feel="firme"] { color: var(--sand); }
 .side-feel[data-feel="macia"] { color: var(--green); }
 .side-feel[data-feel="pegajosa"] { color: var(--amber); }
