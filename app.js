@@ -182,8 +182,9 @@ createApp({
     let flashTimer = null;
     const sharingCard = ref(false);
     const shareStatus = ref("");
+    const card3Preview = new URLSearchParams(location.search).has("card3");
     const card2Preview = new URLSearchParams(location.search).has("card2");
-    const cardPreview = new URLSearchParams(location.search).has("card") || card2Preview;
+    const cardPreview = new URLSearchParams(location.search).has("card") || card2Preview || card3Preview;
     const cardPreviewUrl = ref("");
     let cardPreviewTimer = 0;
     let cardPreviewObjectUrl = "";
@@ -1325,6 +1326,261 @@ createApp({
       return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Não foi possível gerar a imagem")), "image/png"));
     }
 
+    // Card 3: farinha e peso à esquerda, hidratação e barras no meio, foto com textura à direita.
+    async function makeRecipeCard3() {
+      if (document.fonts?.ready) await document.fonts.ready;
+      const width = 1080;
+      const pad = 64;
+      const rows = result.value.rows;
+      const hasLevain = result.value.levainOn;
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas indisponível");
+
+      function ingredientNote(row) {
+        if (row.ferment === "levain" && result.value.levain?.valid) {
+          const lv = result.value.levain;
+          return "Levain " + state.levain.L + ":" + state.levain.A + ":" + state.levain.F
+            + " · hidratação " + formatPct(levainProfile.value?.hydration || 0) + "%"
+            + " · " + formatG(lv.seed) + " g isca, " + formatG(lv.water) + " g água, " + formatG(lv.flour) + " g farinha";
+        }
+        if (row.custom) return "Teor de água " + formatPct(row.waterPct) + "%";
+        if (row.waterPct > 0 && row.waterPct < 100) return formatPct(row.waterPct) + "% de água";
+        if (row.ferment === "seco" || row.ferment === "fresco") {
+          const to = row.ferment === "seco" ? "fresco" : "seco";
+          return "Equivale a " + formatPct(Padeiro.convertYeast(row.pct, row.ferment, to)) + "% de " + to;
+        }
+        return "";
+      }
+
+      const layouts = rows.map((row) => {
+        const note = ingredientNote(row);
+        ctx.font = "600 23px Outfit, sans-serif";
+        const nameLines = Math.max(1, cardLines(ctx, row.name || "Ingrediente", 480, 2).length);
+        let noteLines = 0;
+        if (note) {
+          ctx.font = "500 15px Outfit, sans-serif";
+          noteLines = Math.max(1, cardLines(ctx, note, width - pad * 2, 2).length);
+        }
+        const nameY = 34;
+        const nameStep = 27;
+        if (!noteLines) return { row, note, height: nameY + (nameLines - 1) * nameStep + 18, nameY, noteY: 0 };
+        const noteY = nameY + (nameLines - 1) * nameStep + 24;
+        return { row, note, height: noteY + (noteLines - 1) * 18 + 20, nameY, noteY };
+      });
+      const rowsHeight = layouts.reduce((sum, item) => sum + item.height, 0);
+
+      const heroY = 258;
+      const colGap = 22;
+      const leftW = 292;
+      const photoW = 380;
+      const photoH = 253;
+      const photoX = width - pad - photoW;
+      const centerX = pad + leftW + colGap;
+      const centerW = photoX - colGap - centerX;
+      const stackGap = 14;
+      const stackH = (photoH - stackGap) / 2;
+      const infoTop = heroY + photoH + 22;
+      const heroBottom = infoTop + 188;
+      const levainBlockY = heroBottom + 24;
+      const levainBlockHeight = 202;
+      const headingY = hasLevain ? levainBlockY + levainBlockHeight + 68 : heroBottom + 44;
+      const height = headingY + rowsHeight + 260;
+      canvas.width = width;
+      canvas.height = height;
+
+      ctx.fillStyle = "#f3efe6";
+      ctx.fillRect(0, 0, width, height);
+      roundedRect(ctx, 36, 36, width - 72, height - 72, 34, "#fffdfb");
+
+      const iconSize = 80;
+      const iconX = pad;
+      const iconY = 56;
+      let titleX = pad;
+      try {
+        const icon = new Image();
+        icon.src = "icons/icon-192.png";
+        await icon.decode();
+        ctx.save();
+        cardRoundPath(ctx, iconX, iconY, iconSize, iconSize, 20);
+        ctx.clip();
+        ctx.drawImage(icon, iconX, iconY, iconSize, iconSize);
+        ctx.restore();
+        titleX = iconX + iconSize + 20;
+      } catch (error) {}
+      const titleSize = 42;
+      ctx.fillStyle = "#7d6244";
+      ctx.font = "700 " + titleSize + "px Outfit, sans-serif";
+      ctx.fillText("PERCENTUAL DO PADEIRO", titleX, iconY + iconSize / 2 + titleSize * 0.32);
+      ctx.fillStyle = "#2c241c";
+      ctx.font = "700 48px Outfit, sans-serif";
+      cardText(ctx, state.recipeName.trim() || "Minha Receita", pad, iconY + iconSize + 52, width - pad * 2, 54, 1);
+      ctx.fillStyle = "#8d7f70";
+      ctx.font = "500 22px Outfit, sans-serif";
+      ctx.fillText(new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(new Date()), pad, iconY + iconSize + 86);
+
+      [
+        [heroY, "FARINHA", formatG(result.value.flour) + " g"],
+        [heroY + stackH + stackGap, "PESO DA MASSA", formatG(result.value.totalWeight) + " g"],
+      ].forEach(([y, label, value]) => {
+        roundedRect(ctx, pad, y, leftW, stackH, 16, "#f7f2ea");
+        ctx.fillStyle = "#8d7f70";
+        ctx.font = "650 15px Outfit, sans-serif";
+        ctx.fillText(label, pad + 18, y + 34);
+        ctx.fillStyle = "#2c241c";
+        ctx.font = "700 36px Outfit, sans-serif";
+        ctx.fillText(value, pad + 18, y + stackH - 24);
+      });
+
+      ctx.letterSpacing = "0.08em";
+      ctx.fillStyle = "#8d7f70";
+      ctx.font = "650 14px Outfit, sans-serif";
+      ctx.fillText("HIDRATAÇÃO TOTAL", centerX, heroY + 22);
+      ctx.letterSpacing = "0px";
+      const hydText = formatPct(result.value.hydration);
+      ctx.fillStyle = "#2c241c";
+      ctx.font = "700 52px Outfit, sans-serif";
+      ctx.fillText(hydText, centerX, heroY + 82);
+      const hydW = ctx.measureText(hydText).width;
+      ctx.fillStyle = "#8d7f70";
+      ctx.font = "650 22px Outfit, sans-serif";
+      ctx.fillText("%", centerX + hydW + 3, heroY + 80);
+
+      const shares = [
+        ["Farinha", result.value.flourShare, "#b8792e", "#9e6828"],
+        ["Água", result.value.waterShare, "#2f80c0", "#2c78b4"],
+        ["Outros", result.value.otherShare, "#6e9a35", "#5a7e2b"],
+      ];
+      shares.forEach(([label, share, bar, text], index) => {
+        const y = heroY + 118 + index * 44;
+        ctx.fillStyle = text;
+        ctx.font = "650 16px Outfit, sans-serif";
+        ctx.fillText(label, centerX, y);
+        ctx.fillStyle = "#2c241c";
+        ctx.font = "680 16px Outfit, sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText(formatPct(share) + "%", centerX + centerW, y);
+        ctx.textAlign = "left";
+        const barW = share > 0.4 ? Math.max(8, centerW * share / 100) : 0;
+        if (barW) roundedRect(ctx, centerX, y + 10, barW, 8, 4, bar);
+      });
+
+      roundedRect(ctx, photoX, heroY, photoW, photoH, 16, "#efe6da");
+      try {
+        const image = new Image();
+        image.src = result.value.img;
+        await image.decode();
+        const scale = Math.max(photoW / image.naturalWidth, photoH / image.naturalHeight);
+        const cropW = photoW / scale;
+        const cropH = photoH / scale;
+        ctx.save();
+        cardRoundPath(ctx, photoX, heroY, photoW, photoH, 16);
+        ctx.clip();
+        ctx.drawImage(image, (image.naturalWidth - cropW) / 2, (image.naturalHeight - cropH) / 2, cropW, cropH, photoX, heroY, photoW, photoH);
+        ctx.restore();
+      } catch (error) {
+        ctx.fillStyle = "#7d6244";
+        ctx.font = "600 22px Outfit, sans-serif";
+        ctx.fillText("Miolo do pão", photoX + 24, heroY + photoH / 2);
+      }
+
+      ctx.letterSpacing = "0.1em";
+      ctx.fillStyle = "#8d7f70";
+      ctx.font = "650 15px Outfit, sans-serif";
+      ctx.fillText("TEXTURA", photoX, infoTop + 18);
+      ctx.letterSpacing = "0px";
+      const feelColor = { firme: "#7a6244", macia: "#2f7a45", pegajosa: "#8a5a20", umida: "#8a3e28" }[result.value.band.feel] || "#8d7f70";
+      ctx.fillStyle = feelColor;
+      ctx.font = "650 24px Outfit, sans-serif";
+      cardText(ctx, result.value.band.sensacao, photoX, infoTop + 52, photoW, 28, 2);
+      ctx.letterSpacing = "0.1em";
+      ctx.fillStyle = "#8d7f70";
+      ctx.font = "650 15px Outfit, sans-serif";
+      ctx.fillText(result.value.enriched ? "PÃO ENRIQUECIDO" : "PÃO TÍPICO", photoX, infoTop + 118);
+      ctx.letterSpacing = "0px";
+      ctx.fillStyle = "#2c241c";
+      ctx.font = "650 24px Outfit, sans-serif";
+      cardText(ctx, result.value.bread, photoX, infoTop + 152, photoW, 28, 2);
+
+      if (hasLevain) {
+        const lv = result.value.levain;
+        const profile = levainProfile.value;
+        roundedRect(ctx, pad, levainBlockY, width - pad * 2, levainBlockHeight, 18, "#f7f2ea");
+        ctx.fillStyle = "#7d6244";
+        ctx.font = "700 22px Outfit, sans-serif";
+        ctx.fillText("LEVAIN USADO", pad + 22, levainBlockY + 38);
+        ctx.fillStyle = "#2c241c";
+        ctx.font = "600 17px Outfit, sans-serif";
+        ctx.fillText("Na massa: " + formatG(result.value.levainGrams) + " g (" + formatPctFine(levainItem.value?.pct || 0) + "%) · proporção L:A:F " + state.levain.L + ":" + state.levain.A + ":" + state.levain.F, pad + 22, levainBlockY + 76);
+        ctx.font = "500 16px Outfit, sans-serif";
+        const feedParts = lv?.valid
+          ? formatG(lv.seed) + " g isca + " + formatG(lv.water) + " g água + " + formatG(lv.flour) + " g farinha · hidratação " + formatPct(lv.hydration) + "%"
+          : "Alimentação ainda não configurada";
+        cardText(ctx, "Alimentação: " + feedParts, pad + 22, levainBlockY + 109, width - pad * 2 - 44, 22, 2);
+        const texture = profile ? profile.texture : "—";
+        const peak = profile ? profile.time + " a 24–26 °C" : "—";
+        ctx.fillText("Textura: " + texture + " · Pico: " + peak, pad + 22, levainBlockY + 151);
+        const acidity = profile ? profile.flavor + " · nível " + (profile.score + 1) + "/5" : "—";
+        ctx.fillText("Perfil de acidez: " + acidity, pad + 22, levainBlockY + 184);
+      }
+
+      ctx.fillStyle = "#2c241c";
+      ctx.font = "700 30px Outfit, sans-serif";
+      ctx.fillText("Ingredientes", pad, headingY);
+      ctx.fillStyle = "#8d7f70";
+      ctx.font = "650 17px Outfit, sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText("PERCENTUAL", 790, headingY);
+      ctx.fillText("GRAMAS", width - pad, headingY);
+      ctx.textAlign = "left";
+
+      let rowY = headingY + 28;
+      layouts.forEach((item) => {
+        const row = item.row;
+        const y = rowY;
+        ctx.strokeStyle = "#efe6da";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(pad, y);
+        ctx.lineTo(width - pad, y);
+        ctx.stroke();
+        ctx.fillStyle = "#2c241c";
+        ctx.font = "600 23px Outfit, sans-serif";
+        cardText(ctx, row.name || "Ingrediente", pad, y + item.nameY, 480, 27, 2);
+        ctx.fillStyle = "#7d6244";
+        ctx.font = "600 22px Outfit, sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText(formatPctFine(row.pct) + "%", 790, y + item.nameY);
+        ctx.fillStyle = "#2c241c";
+        ctx.font = "700 24px Outfit, sans-serif";
+        ctx.fillText(formatG(row.grams) + " g", width - pad, y + item.nameY);
+        ctx.textAlign = "left";
+        if (item.note) {
+          ctx.fillStyle = "#8d7f70";
+          ctx.font = "500 15px Outfit, sans-serif";
+          cardText(ctx, item.note, pad, y + item.noteY, width - pad * 2, 18, 2);
+        }
+        rowY += item.height;
+      });
+
+      const footerY = rowY + 28;
+      roundedRect(ctx, pad, footerY, width - pad * 2, 82, 16, "#f7f2ea");
+      ctx.fillStyle = "#7d6244";
+      ctx.font = "650 18px Outfit, sans-serif";
+      ctx.fillText("COMPOSIÇÃO DA MASSA", pad + 20, footerY + 30);
+      ctx.fillStyle = "#2c241c";
+      ctx.font = "600 19px Outfit, sans-serif";
+      ctx.fillText("Farinha " + formatPct(result.value.flourShare) + "%   ·   Água " + formatPct(result.value.waterShare) + "%   ·   Outros " + formatPct(result.value.otherShare) + "%", pad + 20, footerY + 61);
+      ctx.fillStyle = "#8d7f70";
+      ctx.font = "500 16px Outfit, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("Feito com Percentual do padeiro", width / 2, height - 62);
+      ctx.textAlign = "left";
+      ctx.letterSpacing = "0px";
+
+      return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Não foi possível gerar a imagem")), "image/png"));
+    }
+
     function downloadRecipeCard(blob) {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -1359,21 +1615,24 @@ createApp({
       try {
         const blob = await makeRecipeCard();
         const blob2 = await makeRecipeCard2();
+        const blob3 = await makeRecipeCard3();
         if (generation !== cardGeneration) return;
         const controlled = await whenControlled();
         if (generation !== cardGeneration) return;
         const stored = controlled && (await storeCard(blob, "card"));
         const stored2 = controlled && (await storeCard(blob2, "card2"));
+        const stored3 = controlled && (await storeCard(blob3, "card3"));
         if (generation !== cardGeneration) return;
         if (!cardPreview) return;
-        const shown = card2Preview ? blob2 : blob;
-        const ok = card2Preview ? stored2 : stored;
+        const shown = card3Preview ? blob3 : card2Preview ? blob2 : blob;
+        const ok = card3Preview ? stored3 : card2Preview ? stored2 : stored;
+        const file = card3Preview ? "card3.png?t=" : card2Preview ? "card2.png?t=" : "card.png?t=";
         if (ok) {
           if (cardPreviewObjectUrl) {
             URL.revokeObjectURL(cardPreviewObjectUrl);
             cardPreviewObjectUrl = "";
           }
-          cardPreviewUrl.value = (card2Preview ? "card2.png?t=" : "card.png?t=") + Date.now();
+          cardPreviewUrl.value = file + Date.now();
           return;
         }
         const url = URL.createObjectURL(shown);
@@ -1577,6 +1836,7 @@ createApp({
       shareRecipeCard,
       cardPreview,
       card2Preview,
+      card3Preview,
       cardPreviewUrl,
       openRecipes,
       closeRecipes,

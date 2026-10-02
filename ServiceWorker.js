@@ -1,6 +1,6 @@
 // Percentual do padeiro — © 2026 Alexandre da Silva
 // SPDX-License-Identifier: LGPL-3.0-or-later
-const CACHE = "padeiro-v63";
+const CACHE = "padeiro-v64";
 const FILES = [
   "./",
   "./index.html",
@@ -51,10 +51,9 @@ self.addEventListener("activate", (event) => {
 
 // Rede primeiro, revalidando com o servidor (cache: "no-cache"); o que chegar
 // atualiza o cache. Sem rede, com erro ou depois de NETWORK_TIMEOUT, vale o cache.
-// /card e /card2 (e os .png) não existem no servidor. A página manda os PNG
-// e este worker responde com a imagem, para o navegador mostrar em vez de baixar.
-let cardBlob = null;
-let card2Blob = null;
+// /card, /card2 e /card3 (e os .png) não existem no servidor. A página manda
+// os PNG e este worker responde com a imagem, para o navegador mostrar em vez de baixar.
+const cardBlobs = { card: null, card2: null, card3: null };
 
 const CARD_HEADERS = {
   "Content-Type": "image/png",
@@ -66,8 +65,9 @@ function cardRequest(file) {
   return new Request(new URL(file, self.location).href);
 }
 
-// card2 antes de card: os dois terminam o caminho, sem arquivo no disco.
+// O número maior vem antes: card3 não pode cair em card.
 function cardKind(url) {
+  if (/\/card3(\.png)?$/.test(url.pathname)) return "card3";
   if (/\/card2(\.png)?$/.test(url.pathname)) return "card2";
   if (/\/card(\.png)?$/.test(url.pathname)) return "card";
   return "";
@@ -86,10 +86,10 @@ self.addEventListener("fetch", (event) => {
   const kind = cardKind(url);
   if (kind) {
     event.respondWith((async () => {
-      const blob = kind === "card2" ? card2Blob : cardBlob;
+      const blob = cardBlobs[kind];
       if (blob) return cardResponse(blob);
       const cache = await caches.open(CACHE);
-      const hit = await cache.match(cardRequest(kind === "card2" ? "./card2.png" : "./card.png"));
+      const hit = await cache.match(cardRequest("./" + kind + ".png"));
       if (hit) return hit;
       return new Response("Abra a calculadora uma vez para gerar o card.", {
         status: 404,
@@ -134,15 +134,13 @@ self.addEventListener("message", (event) => {
   if (!port) return;
   if (event.data === "version") {
     port.postMessage({ version: CACHE });
-  } else if (event.data && event.data.blob && (event.data.type === "card" || event.data.type === "card2")) {
-    const v2 = event.data.type === "card2";
-    if (v2) card2Blob = event.data.blob;
-    else cardBlob = event.data.blob;
-    const blob = v2 ? card2Blob : cardBlob;
+  } else if (event.data && event.data.blob && Object.prototype.hasOwnProperty.call(cardBlobs, event.data.type)) {
+    const kind = event.data.type;
+    cardBlobs[kind] = event.data.blob;
     event.waitUntil(
       caches
         .open(CACHE)
-        .then((cache) => cache.put(cardRequest(v2 ? "./card2.png" : "./card.png"), cardResponse(blob)))
+        .then((cache) => cache.put(cardRequest("./" + kind + ".png"), cardResponse(cardBlobs[kind])))
         .then(() => port.postMessage({ ok: true }), () => port.postMessage({ ok: false }))
     );
   } else if (event.data === "refresh") {
