@@ -1025,7 +1025,7 @@ createApp({
       const footerGap = 28;
       const footerH = 156;
       const ingBlockH = ingHead + ingTopPad + rowsHeight + ingBotPad + ingFrame;
-      const height = top + ingBlockH + footerGap + footerH + 128;
+      const height = top + ingBlockH + footerGap + footerH + 102;
       canvas.width = width;
       canvas.height = height;
 
