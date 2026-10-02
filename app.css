@@ -143,12 +143,18 @@ input[type="number"] {
   padding: 14px;
   margin-bottom: 8px;
 }
-.screen-name { min-width: 0; margin: 0 0 10px; }
+.screen-name {
+  width: 0;
+  min-width: 100%;
+  max-width: 100%;
+  margin: 0 0 10px;
+}
 .screen-name-display {
   display: flex;
   align-items: center;
   gap: 7px;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
   margin: 0;
   padding: 2px 0;
@@ -160,10 +166,22 @@ input[type="number"] {
   text-align: left;
   cursor: pointer;
 }
-.screen-name-display span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.screen-name-display span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .screen-name-display svg { width: 16px; height: 16px; flex: none; fill: none; stroke: var(--brown-soft); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .screen-name-display:focus-visible { outline: 2px solid var(--brown-soft); outline-offset: 2px; }
-.screen-recipe-name { margin: 0 0 10px !important; }
+.screen-recipe-name {
+  display: block;
+  width: 100% !important;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0 !important;
+}
 
 .field-head, .ing-top, .final-head, .total-row {
   display: flex;

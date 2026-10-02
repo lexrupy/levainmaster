@@ -32,7 +32,7 @@
         <div class="flour-side">
           <div class="screen-name">
             <input v-if="recipeNameEditing" id="screen-recipe-name" v-focus class="name-input screen-recipe-name" v-model="state.recipeName" maxlength="80" placeholder="Nome da receita" autocomplete="off" @blur="finishRecipeNameEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc="finishRecipeNameEdit" aria-label="Nome da receita atual">
-            <button v-else type="button" class="screen-name-display" @click="editRecipeName" :aria-label="'Editar nome da receita: ' + state.recipeName" title="Editar nome da receita">
+            <button v-else type="button" class="screen-name-display" @click="editRecipeName" :aria-label="'Editar nome da receita: ' + state.recipeName" :title="state.recipeName">
               <span>{{ state.recipeName }}</span>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3z"/><path d="m13.5 8.5 3 3"/></svg>
             </button>
