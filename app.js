@@ -711,6 +711,36 @@ createApp({
       return lines.length;
     }
 
+    // Ícone do ingrediente, o mesmo traço do app, num quadrado bege.
+    function drawIngredientIcon(ctx, item, x, y, box) {
+      roundedRect(ctx, x, y, box, box, Math.round(box * 0.3), "#f6f1e8");
+      const svg = iconFor(item);
+      const glyph = box * 0.52;
+      const attr = (source, name) => {
+        const found = new RegExp(name + '="([\\d.]+)"').exec(source);
+        return found ? Number(found[1]) : 0;
+      };
+      ctx.save();
+      ctx.translate(x + (box - glyph) / 2, y + (box - glyph) / 2);
+      ctx.scale(glyph / 24, glyph / 24);
+      ctx.strokeStyle = "#7d6244";
+      ctx.lineWidth = 1.7;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      for (const match of svg.matchAll(/<path d="([^"]+)"/g)) ctx.stroke(new Path2D(match[1]));
+      for (const match of svg.matchAll(/<circle([^>]*)\/?>/g)) {
+        ctx.beginPath();
+        ctx.arc(attr(match[1], "cx"), attr(match[1], "cy"), attr(match[1], "r"), 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      for (const match of svg.matchAll(/<rect([^>]*)\/?>/g)) {
+        const rx = attr(match[1], "rx");
+        cardRoundPath(ctx, attr(match[1], "x"), attr(match[1], "y"), attr(match[1], "width"), attr(match[1], "height"), rx);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
     async function makeRecipeCard() {
       if (document.fonts?.ready) await document.fonts.ready;
       const width = 1080;
@@ -965,6 +995,10 @@ createApp({
         return "";
       }
 
+      const iconBox = 36;
+      const nameX = pad + iconBox + 14;
+      const trackH = 5;
+      const noteMax = width - pad * 2 - (nameX - pad);
       const layouts = rows.map((row) => {
         const note = ingredientNote(row);
         ctx.font = "600 23px Outfit, sans-serif";
@@ -972,15 +1006,19 @@ createApp({
         let noteLines = 0;
         if (note) {
           ctx.font = "500 15px Outfit, sans-serif";
-          noteLines = Math.max(1, cardLines(ctx, note, width - pad * 2, 2).length);
+          noteLines = Math.max(1, cardLines(ctx, note, noteMax, 2).length);
         }
         const nameY = 34;
         const nameStep = 27;
+        // A barra fica embaixo do item: o vão separa o texto dela.
+        const barSpace = 8 + trackH;
         if (!noteLines) {
-          return { row, note, height: nameY + (nameLines - 1) * nameStep + 18, nameY, noteY: 0 };
+          const content = Math.max(nameY + (nameLines - 1) * nameStep + 10, 8 + iconBox);
+          return { row, note, height: content + barSpace, nameY, noteY: 0 };
         }
         const noteY = nameY + (nameLines - 1) * nameStep + 24;
-        return { row, note, height: noteY + (noteLines - 1) * 18 + 20, nameY, noteY };
+        const content = Math.max(noteY + (noteLines - 1) * 18 + 6, 8 + iconBox);
+        return { row, note, height: content + barSpace, nameY, noteY };
       });
       const rowsHeight = layouts.reduce((sum, item) => sum + item.height, 0);
       const height = top + rowsHeight + 340;
@@ -1115,15 +1153,16 @@ createApp({
       layouts.forEach((item) => {
         const row = item.row;
         const y = rowY;
-        ctx.strokeStyle = "#efe6da";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(pad, y);
-        ctx.lineTo(width - pad, y);
-        ctx.stroke();
+        const trackW = width - pad * 2;
+        const trackY = y + item.height - trackH;
+        roundedRect(ctx, pad, trackY, trackW, trackH, trackH / 2, "#f0e8dc");
+        const pct = Math.max(0, Math.min(100, Number(row.pct) || 0));
+        const fillW = trackW * pct / 100;
+        if (fillW > 1) roundedRect(ctx, pad, trackY, Math.max(trackH, fillW), trackH, trackH / 2, "#a68462");
+        drawIngredientIcon(ctx, row, pad, y + 8, iconBox);
         ctx.fillStyle = "#2c241c";
         ctx.font = "600 23px Outfit, sans-serif";
-        cardText(ctx, row.name || "Ingrediente", pad, y + item.nameY, 480, 27, 2);
+        cardText(ctx, row.name || "Ingrediente", nameX, y + item.nameY, 500, 27, 2);
         ctx.fillStyle = "#7d6244";
         ctx.font = "600 22px Outfit, sans-serif";
         ctx.textAlign = "right";
@@ -1135,7 +1174,7 @@ createApp({
         if (item.note) {
           ctx.fillStyle = "#8d7f70";
           ctx.font = "500 15px Outfit, sans-serif";
-          cardText(ctx, item.note, pad, y + item.noteY, width - pad * 2, 18, 2);
+          cardText(ctx, item.note, nameX, y + item.noteY, width - pad * 2 - (nameX - pad), 18, 2);
         }
         rowY += item.height;
       });
