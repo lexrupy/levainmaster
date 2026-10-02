@@ -2,7 +2,7 @@
 
 - **Autor:** Alexandre da Silva
 - **Data:** 2026-10-01
-- **Status:** proposta
+- **Status:** concluída (na 0018)
 - **Arquivos:** `ServiceWorker.js`
 
 ## Contexto
@@ -15,5 +15,5 @@ Buscar com `fetch(request, { cache: "no-cache" })`, que revalida com o servidor 
 
 ## Critérios de aceite
 
-- [ ] Depois de mudar `index.html` e `app.js`, um recarregamento traz os dois novos
-- [ ] Sem internet, o app continua abrindo pelo cache da PWA
+- [x] Depois de mudar `index.html` e `app.js`, um recarregamento traz os dois novos
+- [x] Sem internet, o app continua abrindo pelo cache da PWA

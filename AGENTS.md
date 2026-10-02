@@ -25,7 +25,7 @@ O service worker só registra em HTTP. Sirva a pasta e abra no navegador:
 python3 -m http.server 8769 --bind 127.0.0.1
 ```
 
-`file://` não instala o app. Depois de mudar HTML, CSS, JS ou imagens cacheadas, suba a constante `CACHE` em `ServiceWorker.js` (`padeiro-v25` hoje). A estratégia é rede primeiro, cache se a rede falhar.
+`file://` não instala o app. Depois de mudar HTML, CSS, JS ou imagens cacheadas, suba a constante `CACHE` em `ServiceWorker.js` (`padeiro-v26` hoje). O app funciona 100% offline depois da primeira visita. A estratégia é rede primeiro, revalidando com o servidor (`cache: "no-cache"`); sem rede, com erro ou depois de 3 s (`NETWORK_TIMEOUT`), vale o cache, e a busca segue em segundo plano atualizando o cache. A instalação de uma versão nova baixa os arquivos com `cache: "reload"` e só apaga a versão anterior depois que a nova está completa; se falhar, a anterior continua. Todo arquivo que a página carrega precisa estar em `FILES`. A página pede `navigator.storage.persist()` para o navegador não apagar o cache e as receitas quando faltar espaço.
 
 Não há suíte de testes. `node -e` consegue importar `calc.js`. Mudança de tela precisa ser exercida no navegador, no celular (cerca de 390 px) e na largura máxima do app (560 px).
 

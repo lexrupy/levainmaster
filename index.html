@@ -247,6 +247,11 @@
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./ServiceWorker.js");
     }
+    // Pede ao navegador para não apagar o cache e as receitas quando faltar espaço.
+    // Com isso, os dados do app só saem se o usuário remover.
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persisted().then((done) => done || navigator.storage.persist()).catch(() => {});
+    }
   </script>
 </body>
 </html>

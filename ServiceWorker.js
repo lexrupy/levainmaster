@@ -1,4 +1,4 @@
-const CACHE = "padeiro-v25";
+const CACHE = "padeiro-v26";
 const FILES = [
   "./",
   "./index.html",
@@ -23,16 +23,30 @@ const FILES = [
   "./icons/icon-maskable-512.png",
 ];
 
+// Sem resposta da rede nesse tempo, serve o cache (sinal fraco não trava o app).
+const NETWORK_TIMEOUT = 3000;
+
+// A versão nova só entra se todos os arquivos baixarem. Se falhar (sem internet,
+// por exemplo), a versão anterior continua instalada e funcionando.
+// cache: "reload" ignora o cache HTTP para não gravar um arquivo antigo na versão nova.
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(FILES)).then(() => self.skipWaiting()));
+  event.waitUntil(
+    caches
+      .open(CACHE)
+      .then((cache) => cache.addAll(FILES.map((file) => new Request(file, { cache: "reload" }))))
+      .then(() => self.skipWaiting())
+  );
 });
 
+// Só apaga as versões antigas depois que a nova está completa.
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))).then(() => self.clients.claim())
   );
 });
 
+// Rede primeiro, revalidando com o servidor (cache: "no-cache"); o que chegar
+// atualiza o cache. Sem rede, com erro ou depois de NETWORK_TIMEOUT, vale o cache.
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
@@ -41,18 +55,28 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
-    try {
-      const fresh = await fetch(request);
+    const network = fetch(request.url, { cache: "no-cache", credentials: "same-origin" }).then((fresh) => {
       if (fresh.ok) cache.put(request, fresh.clone());
       return fresh;
-    } catch (error) {
+    });
+    // Mesmo respondendo pelo cache, deixa a busca terminar para atualizar o cache.
+    event.waitUntil(network.then(() => undefined, () => undefined));
+    const fallback = async () => {
       const cached = await cache.match(request, { ignoreSearch: true });
       if (cached) return cached;
-      if (request.mode === "navigate") {
-        const home = await cache.match("./index.html");
-        if (home) return home;
-      }
-      throw error;
+      if (request.mode === "navigate") return cache.match("./index.html");
+      return undefined;
+    };
+    try {
+      const fresh = await Promise.race([
+        network,
+        new Promise((resolve, reject) => setTimeout(() => reject(new Error("timeout")), NETWORK_TIMEOUT)),
+      ]);
+      if (fresh.ok) return fresh;
+      return (await fallback()) || fresh;
+    } catch (error) {
+      // Sem cache para este pedido, espera a rede mesmo que demore.
+      return (await fallback()) || network;
     }
   })());
 });
