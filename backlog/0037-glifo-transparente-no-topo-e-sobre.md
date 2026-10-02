@@ -23,4 +23,4 @@ O topo (34 px) e o Sobre (52 px) usavam o ícone de app, um quadrado bege com a 
 - [x] O topo e o Sobre mostram a figura sem o quadrado bege e sem cortes
 - [x] O glifo é gerado pelo script, com backup do anterior
 - [x] O glifo final não mostra nenhuma linha da moldura
-- [x] No Sobre, o glifo tem 104 px (o dobro), com título (1,4rem) e versão (1,05rem) maiores ao lado
+- [x] No Sobre, o glifo tem 128 px, com título (1,4rem) e versão (1,05rem) maiores ao lado
