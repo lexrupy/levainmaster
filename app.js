@@ -972,7 +972,7 @@ createApp({
       const hasLevain = result.value.levainOn;
       const levainBlockY = 610;
       const levainBlockHeight = 272;
-      const levainGap = 68;
+      const levainGap = 28;
       const top = levainBlockY + (hasLevain ? levainBlockHeight + levainGap : 0);
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
