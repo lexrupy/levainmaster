@@ -185,38 +185,39 @@
           <button type="button" class="del" @click="closeLevain" aria-label="Fechar">×</button>
         </header>
         <p class="levain-grams">{{ formatG(result.levainGrams) }}<small> g na massa</small></p>
-        <label class="kicker" for="ratio">Proporção L : A : F</label>
-        <select id="ratio" class="ratio-select" :value="ratioId" @change="onRatio($event.target.value)">
-          <optgroup v-for="group in ratioGroups" :key="group.name" :label="group.name">
-            <option v-for="ratio in group.items" :key="ratio.id" :value="ratio.id">{{ ratio.id }}</option>
-          </optgroup>
-          <option value="custom">Personalizado</option>
-        </select>
         <div class="parts">
+          <div class="part part-ratio">
+            <label for="ratio">Proporção</label>
+            <select id="ratio" class="ratio-select" :value="ratioId" @change="onRatio($event.target.value)">
+              <optgroup v-for="group in ratioGroups" :key="group.name" :label="group.name">
+                <option v-for="ratio in group.items" :key="ratio.id" :value="ratio.id">{{ ratio.id }}</option>
+              </optgroup>
+              <option value="custom">Personalizado</option>
+            </select>
+          </div>
           <div class="part">
-            <label for="part-l">Levain</label>
-            <input id="part-l" type="number" min="0" step="1" :value="state.levain.L" @input="setPart('L', $event.target.value)" @blur="settlePart('L')">
+            <label for="part-l">Isca</label>
+            <input id="part-l" type="number" min="0" step="1" inputmode="decimal" :value="state.levain.L" @input="setPart('L', $event.target.value)" @blur="settlePart('L')">
           </div>
           <span class="colon">:</span>
           <div class="part">
             <label for="part-a">Água</label>
-            <input id="part-a" type="number" min="0" step="1" :value="state.levain.A" @input="setPart('A', $event.target.value)" @blur="settlePart('A')">
+            <input id="part-a" type="number" min="0" step="1" inputmode="decimal" :value="state.levain.A" @input="setPart('A', $event.target.value)" @blur="settlePart('A')">
           </div>
           <span class="colon">:</span>
           <div class="part">
             <label for="part-f">Farinha</label>
-            <input id="part-f" type="number" min="0" step="1" :value="state.levain.F" @input="setPart('F', $event.target.value)" @blur="settlePart('F')">
+            <input id="part-f" type="number" min="0" step="1" inputmode="decimal" :value="state.levain.F" @input="setPart('F', $event.target.value)" @blur="settlePart('F')">
           </div>
         </div>
-        <dl class="split" v-if="result.levain && result.levain.valid">
-          <div><dt>Levain</dt><dd data-levain-seed>{{ formatG(result.levain.seed) }} g</dd></div>
-          <div><dt>Água</dt><dd data-levain-water>{{ formatG(result.levain.water) }} g</dd></div>
-          <div><dt>Farinha</dt><dd data-levain-flour>{{ formatG(result.levain.flour) }} g</dd></div>
+        <dl class="split">
+          <template v-if="result.levain && result.levain.valid">
+            <div><dt>Isca</dt><dd data-levain-seed>{{ formatG(result.levain.seed) }} g</dd></div>
+            <div><dt>Água</dt><dd data-levain-water>{{ formatG(result.levain.water) }} g</dd></div>
+            <div><dt>Farinha</dt><dd data-levain-flour>{{ formatG(result.levain.flour) }} g</dd></div>
+          </template>
+          <div class="split-hyd"><dt>Hidratação</dt><dd data-levain-hyd>{{ result.levain && result.levain.hydration != null ? formatPct(result.levain.hydration) + '%' : '—' }}</dd></div>
         </dl>
-        <div class="levain-hyd">
-          <span class="kicker">Hidratação do levain</span>
-          <strong data-levain-hyd>{{ result.levain && result.levain.hydration != null ? formatPct(result.levain.hydration) + '%' : '—' }}</strong>
-        </div>
         <section class="profile" v-if="levainProfile" aria-label="Como fica esta ativação">
           <dl class="profile-facts">
             <div><dt>Textura</dt><dd data-levain-texture>{{ levainProfile.texture }}</dd></div>

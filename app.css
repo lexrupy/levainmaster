@@ -517,43 +517,40 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 
 .ratio-select { width: 100%; margin-bottom: 12px !important; padding: 8px 10px !important; height: auto !important; }
 
+/* Proporção ao lado das partes; gramas e hidratação na linha de baixo */
 .parts {
   display: grid;
-  grid-template-columns: 1fr auto 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
   gap: 6px;
   align-items: end;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
+.parts .part input { width: 100%; text-align: center; }
+.parts .ratio-select { margin: 0 !important; padding: 6px 24px 6px 8px !important; background-position: right 6px center !important; }
+
 .part { display: flex; flex-direction: column; gap: 4px; }
-.part label { letter-spacing: 0.08em; }
+.part label { letter-spacing: 0.08em; white-space: nowrap; }
 .colon { color: var(--muted); padding-bottom: 8px; font-weight: 700; }
 
 .split {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.25fr);
+  gap: 6px;
   margin: 0 0 12px;
 }
 
 .split div {
   background: #fff;
-  border-radius: 12px;
-  padding: 8px;
+  border-radius: 10px;
+  padding: 5px 8px;
   border: 1px solid var(--line);
 }
 
-.split dt { margin: 0; color: var(--muted); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; }
-.split dd { margin: 2px 0 0; font-size: 1.05rem; font-weight: 680; }
-
-.levain-hyd {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
-}
-
-.levain-hyd strong { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.03em; }
+.split dt { margin: 0; color: var(--muted); font-size: 0.64rem; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.split dd { margin: 1px 0 0; font-size: 0.95rem; font-weight: 680; white-space: nowrap; }
+.split .split-hyd { grid-column: 4; background: var(--sand-bg); border-color: var(--line-strong); }
+.split .split-hyd dd { font-size: 1.05rem; }
 
 .add-wrap { position: relative; margin-top: 12px; }
 
@@ -668,8 +665,9 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   .deck-row { column-gap: 16px; }
   .mega input { font-size: 2.35rem; }
   .final-num { font-size: 2.5rem; }
-  .parts { grid-template-columns: 1fr; }
-  .colon { display: none; }
+  .split div { padding: 5px 6px; }
+  .split dt { font-size: 0.6rem; letter-spacing: 0.02em; }
+  .part label { letter-spacing: 0.03em; }
 }
 
 /* Percentual e gramas do ingrediente: texto que vira campo ao clicar */
@@ -917,3 +915,8 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 .recipe-actions { display: flex; flex-direction: column; gap: 6px; flex: none; }
 .recipe-actions .install { padding: 6px 12px; box-shadow: none; }
 .recipe-del.confirm { border-color: var(--wet); color: var(--wet); }
+
+@media (max-width: 340px) {
+  .parts { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr); }
+  .parts .part-ratio { grid-column: 1 / -1; }
+}
