@@ -722,15 +722,31 @@ createApp({
       ctx.fillRect(0, 0, width, height);
       roundedRect(ctx, 36, 36, width - 72, height - 72, 34, "#fffdfb");
 
+      let textX = pad;
+      try {
+        const icon = new Image();
+        icon.src = "icons/icon-192.png";
+        await icon.decode();
+        const iconSize = 84;
+        const iconX = pad;
+        const iconY = 70;
+        ctx.save();
+        cardRoundPath(ctx, iconX, iconY, iconSize, iconSize, 20);
+        ctx.clip();
+        ctx.drawImage(icon, iconX, iconY, iconSize, iconSize);
+        ctx.restore();
+        textX = iconX + iconSize + 22;
+      } catch (error) {}
+
       ctx.fillStyle = "#7d6244";
       ctx.font = "700 24px Outfit, sans-serif";
-      ctx.fillText("PERCENTUAL DO PADEIRO", pad, 100);
+      ctx.fillText("PERCENTUAL DO PADEIRO", textX, 102);
       ctx.fillStyle = "#2c241c";
       ctx.font = "700 48px Outfit, sans-serif";
-      cardText(ctx, state.recipeName.trim() || "Minha Receita", pad, 160, width - pad * 2, 54, 1);
+      cardText(ctx, state.recipeName.trim() || "Minha Receita", textX, 156, width - textX - pad, 54, 1);
       ctx.fillStyle = "#8d7f70";
       ctx.font = "500 22px Outfit, sans-serif";
-      ctx.fillText(new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(new Date()), pad, 198);
+      ctx.fillText(new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(new Date()), textX, 198);
 
       const statY = 232;
       const statW = 290;
