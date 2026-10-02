@@ -149,6 +149,19 @@
       </div>
     </section>
 
+    <dialog ref="confirmDialog" class="levain-dialog confirm-dialog" @click="onConfirmClick" @close="answerConfirm(false)" aria-labelledby="confirm-title" aria-describedby="confirm-text">
+      <article class="levain compact confirm">
+        <header class="levain-head">
+          <h2 id="confirm-title">{{ confirmState.title }}</h2>
+        </header>
+        <p id="confirm-text" class="confirm-text">{{ confirmState.message }}</p>
+        <div class="confirm-actions">
+          <button type="button" class="install" autofocus @click="answerConfirm(false)">{{ confirmState.cancelLabel }}</button>
+          <button type="button" class="levain-done" :class="{ danger: confirmState.danger }" @click="answerConfirm(true)">{{ confirmState.confirmLabel }}</button>
+        </div>
+      </article>
+    </dialog>
+
     <dialog ref="aboutDialog" class="levain-dialog" @click="onAboutClick" aria-labelledby="about-title">
       <article class="levain about" tabindex="-1" autofocus>
         <header class="levain-head">
@@ -199,7 +212,7 @@
             </div>
             <div class="recipe-actions">
               <button type="button" class="install" @click="openRecipe(recipe)">Abrir</button>
-              <button type="button" class="install recipe-del" :class="{ confirm: confirmDelete === recipe.id }" @click="deleteRecipe(recipe)">{{ confirmDelete === recipe.id ? 'Confirmar' : 'Apagar' }}</button>
+              <button type="button" class="install recipe-del" @click="deleteRecipe(recipe)">Apagar</button>
             </div>
           </li>
         </ul>

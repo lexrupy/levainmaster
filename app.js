@@ -141,7 +141,11 @@ createApp({
     const about = reactive({ version: "", offline: false, persisted: false, checking: false, status: "", reload: false });
     const recipes = ref(loadRecipes());
     const recipeName = ref("");
-    const confirmDelete = ref(null);
+    // Modal de confirmação genérico: askConfirm({ title, message, confirmLabel, cancelLabel, danger })
+    // devolve uma Promise com true (confirmou) ou false (cancelou, Esc ou clique no fundo).
+    const confirmDialog = ref(null);
+    const confirmState = reactive({ title: "", message: "", confirmLabel: "Confirmar", cancelLabel: "Cancelar", danger: false });
+    let confirmResolve = null;
     const quickSave = ref(false);
     const savedFlash = ref(false);
     let flashTimer = null;
@@ -416,7 +420,6 @@ createApp({
 
     // quick: aberto pelo botão Salvar do card, só com o campo de descrição.
     function openRecipes(quick = false) {
-      confirmDelete.value = null;
       quickSave.value = quick === true;
       const dialog = recipesDialog.value;
       if (dialog && !dialog.open) dialog.showModal();
@@ -461,14 +464,38 @@ createApp({
       closeRecipes();
     }
 
-    // Apagar pede um segundo toque no mesmo botão.
-    function deleteRecipe(recipe) {
-      if (confirmDelete.value !== recipe.id) {
-        confirmDelete.value = recipe.id;
-        return;
-      }
+    function askConfirm(options) {
+      if (confirmResolve) confirmResolve(false);
+      Object.assign(confirmState, { title: "", message: "", confirmLabel: "Confirmar", cancelLabel: "Cancelar", danger: false }, options);
+      return new Promise((resolve) => {
+        confirmResolve = resolve;
+        const dialog = confirmDialog.value;
+        if (dialog && !dialog.open) dialog.showModal();
+      });
+    }
+
+    function answerConfirm(answer) {
+      const resolve = confirmResolve;
+      confirmResolve = null;
+      const dialog = confirmDialog.value;
+      if (dialog && dialog.open) dialog.close();
+      if (resolve) resolve(answer);
+    }
+
+    function onConfirmClick(event) {
+      if (event.target === confirmDialog.value) answerConfirm(false);
+    }
+
+    async function deleteRecipe(recipe) {
+      const when = formatDate(recipe.savedAt);
+      const ok = await askConfirm({
+        title: "Apagar receita?",
+        message: "“" + recipe.name + "”" + (when ? ", salva em " + when + "," : "") + " vai ser apagada. Não dá para desfazer.",
+        confirmLabel: "Apagar",
+        danger: true,
+      });
+      if (!ok) return;
       recipes.value = recipes.value.filter((item) => item.id !== recipe.id);
-      confirmDelete.value = null;
       persistRecipes();
     }
 
@@ -594,7 +621,10 @@ createApp({
       reloadApp,
       recipes,
       recipeName,
-      confirmDelete,
+      confirmDialog,
+      confirmState,
+      answerConfirm,
+      onConfirmClick,
       quickSave,
       savedFlash,
       openRecipes,
