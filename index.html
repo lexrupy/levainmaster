@@ -262,7 +262,9 @@
         </section>
         <p class="hint">A hidratação é a água dividida pela farinha desta alimentação. A água da isca não entra.</p>
         <p class="hint" v-if="result.levain && result.levain.valid">{{ formatG(result.levain.water) }} g dessa água entram na hidratação total da massa.</p>
-        <button type="button" class="levain-done" @click="closeLevain">Concluir</button>
+        <div class="sheet-foot">
+          <button type="button" class="levain-done" @click="closeLevain">Concluir</button>
+        </div>
       </article>
     </dialog>
 
