@@ -115,7 +115,7 @@
               <input v-if="isEditing(item, 'pct')" v-focus type="number" min="0" step="0.5" inputmode="decimal" :value="editing.text" @input="onEdit(item, 'pct', $event.target.value)" @blur="endEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc="cancelEdit(item)" :aria-label="'Percentual de ' + (item.name || 'ingrediente')">
               <button v-else type="button" class="pct-value" @click="startEdit(item, 'pct')" :aria-label="'Editar percentual de ' + (item.name || 'ingrediente')">{{ formatPctFine(item.pct) }}</button>
               <span>%</span>
-              <span v-if="isFerment(item) && item.ferment === 'levain'" class="levain-info">Hidratação {{ result.levain && result.levain.hydration != null ? formatPct(result.levain.hydration) + '%' : '—' }}</span>
+              <span v-if="isFerment(item) && item.ferment === 'levain'" class="levain-info">Hidratação {{ levainProfile ? formatPct(levainProfile.hydration) + '%' : '—' }}</span>
             </div>
             <label v-if="item.custom" class="water-edit">Teor de água
               <input type="number" min="0" max="100" step="1" v-model.number="item.water" @blur="settleWater(item)" aria-label="Teor de água do ingrediente">
@@ -265,12 +265,10 @@
           </div>
         </div>
         <dl class="split">
-          <template v-if="result.levain && result.levain.valid">
-            <div><dt>Isca</dt><dd data-levain-seed>{{ formatG(result.levain.seed) }} g</dd></div>
-            <div><dt>Água</dt><dd data-levain-water>{{ formatG(result.levain.water) }} g</dd></div>
-            <div><dt>Farinha</dt><dd data-levain-flour>{{ formatG(result.levain.flour) }} g</dd></div>
-          </template>
-          <div class="split-hyd"><dt>Hidratação</dt><dd data-levain-hyd>{{ result.levain && result.levain.hydration != null ? formatPct(result.levain.hydration) + '%' : '—' }}</dd></div>
+          <div><dt>Isca</dt><dd data-levain-seed>{{ formatG(result.levain ? result.levain.seed : 0) }} g</dd></div>
+          <div><dt>Água</dt><dd data-levain-water>{{ formatG(result.levain ? result.levain.water : 0) }} g</dd></div>
+          <div><dt>Farinha</dt><dd data-levain-flour>{{ formatG(result.levain ? result.levain.flour : 0) }} g</dd></div>
+          <div class="split-hyd"><dt>Hidratação</dt><dd data-levain-hyd>{{ levainProfile ? formatPct(levainProfile.hydration) + '%' : '—' }}</dd></div>
         </dl>
         <section class="profile" v-if="levainProfile" aria-label="Como fica esta ativação">
           <dl class="profile-facts">
