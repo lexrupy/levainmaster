@@ -1173,14 +1173,12 @@ createApp({
       const ingBodyW = width - pad * 2 - ingFrame * 2;
       const ingBodyH = ingTopPad + rowsHeight + ingBotPad;
       roundedRect(ctx, pad, ingY, width - pad * 2, ingBlockH, 16, "#f7f2ea");
-      ctx.fillStyle = "#7d6244";
-      ctx.font = "700 22px Outfit, sans-serif";
-      ctx.fillText("Ingredientes", pad + 20, ingY + 34);
       ctx.fillStyle = "#8d7f70";
       ctx.font = "650 17px Outfit, sans-serif";
+      ctx.fillText("INGREDIENTE", pad + 20, ingY + 34);
       ctx.textAlign = "right";
       ctx.fillText("PERCENTUAL", 790, ingY + 34);
-      ctx.fillText("GRAMAS", rowRight, ingY + 34);
+      ctx.fillText("PESO", rowRight, ingY + 34);
       ctx.textAlign = "left";
       roundedRect(ctx, ingBodyX, ingBodyY, ingBodyW, ingBodyH, 12, "#fffdfb");
 
