@@ -3,9 +3,11 @@
   if (typeof module === "object" && module.exports) module.exports = api;
   root.Padeiro = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
-  // L:A:F em grupos: primeiro os de hidratação 100%, da alimentação menor para a maior
-  // (mais rápido → mais lento); depois os mais firmes, do mais úmido para o mais firme.
+  // L:A:F em grupos: mais líquidos; hidratação 100%, da alimentação menor para a maior
+  // (mais rápido → mais lento); e mais firmes, do mais úmido para o mais firme
+  // (no empate, o de alimentação menor primeiro).
   const RATIOS = [
+    { id: "1:5:4", L: 1, A: 5, F: 4, group: "Mais líquidos" },
     { id: "2:1:1", L: 2, A: 1, F: 1, group: "Hidratação 100%" },
     { id: "1:1:1", L: 1, A: 1, F: 1, group: "Hidratação 100%" },
     { id: "1:2:2", L: 1, A: 2, F: 2, group: "Hidratação 100%" },
@@ -13,8 +15,12 @@
     { id: "1:4:4", L: 1, A: 4, F: 4, group: "Hidratação 100%" },
     { id: "1:5:5", L: 1, A: 5, F: 5, group: "Hidratação 100%" },
     { id: "1:10:10", L: 1, A: 10, F: 10, group: "Hidratação 100%" },
+    { id: "1:20:20", L: 1, A: 20, F: 20, group: "Hidratação 100%" },
     { id: "2:4:5", L: 2, A: 4, F: 5, group: "Mais firmes" },
+    { id: "1:4:5", L: 1, A: 4, F: 5, group: "Mais firmes" },
     { id: "1:2:3", L: 1, A: 2, F: 3, group: "Mais firmes" },
+    { id: "1:1:2", L: 1, A: 1, F: 2, group: "Mais firmes" },
+    { id: "1:5:10", L: 1, A: 5, F: 10, group: "Mais firmes" },
   ];
 
   const RATIO_GROUPS = RATIOS.reduce((groups, ratio) => {
@@ -160,7 +166,7 @@
     "Bem acético: azedo e pungente",
   ];
 
-  const PEAK_TIMES = ["2 a 3 h", "3 a 4 h", "4 a 6 h", "6 a 8 h", "8 a 12 h", "12 h ou mais"];
+  const PEAK_TIMES = ["2 a 3 h", "3 a 4 h", "4 a 6 h", "6 a 8 h", "8 a 12 h", "12 a 16 h", "16 a 24 h"];
 
   function levainProfile(L, A, F) {
     const l = Math.max(0, num(L));
@@ -176,7 +182,7 @@
     else if (hydration < 70) texture = "Firme, de sovar na mão";
     else if (stiff) texture = "Pastosa, mais firme que iogurte";
 
-    let speed = feed <= 0.5 ? 0 : feed <= 1 ? 1 : feed <= 2 ? 2 : feed <= 3 ? 3 : feed <= 5 ? 4 : 5;
+    let speed = feed <= 0.5 ? 0 : feed <= 1 ? 1 : feed <= 2 ? 2 : feed <= 3 ? 3 : feed <= 5 ? 4 : feed <= 10 ? 5 : 6;
     if (stiff) speed = Math.min(PEAK_TIMES.length - 1, speed + 1);
 
     let score = hydration >= 95 ? 1 : hydration >= 75 ? 2 : hydration >= 60 ? 3 : 4;
