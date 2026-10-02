@@ -1,6 +1,6 @@
 // Percentual do padeiro — © 2026 Alexandre da Silva
 // SPDX-License-Identifier: LGPL-3.0-or-later
-const CACHE = "padeiro-v56";
+const CACHE = "padeiro-v57";
 const FILES = [
   "./",
   "./index.html",
@@ -51,11 +51,34 @@ self.addEventListener("activate", (event) => {
 
 // Rede primeiro, revalidando com o servidor (cache: "no-cache"); o que chegar
 // atualiza o cache. Sem rede, com erro ou depois de NETWORK_TIMEOUT, vale o cache.
+// card.png não existe no servidor. A página grava a prévia no cache e este
+// pedido responde com ela, inline, para o navegador mostrar em vez de baixar.
+function cardRequest() {
+  return new Request(new URL("./card.png", self.location).href);
+}
+
+function isCardRequest(url) {
+  return url.pathname.endsWith("/card.png");
+}
+
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+
+  if (isCardRequest(url)) {
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE);
+      const hit = await cache.match(cardRequest());
+      if (hit) return hit;
+      return new Response("Abra a calculadora com ?card para gerar a prévia.", {
+        status: 404,
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+      });
+    })());
+    return;
+  }
 
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
@@ -92,6 +115,24 @@ self.addEventListener("message", (event) => {
   if (!port) return;
   if (event.data === "version") {
     port.postMessage({ version: CACHE });
+  } else if (event.data && event.data.type === "card") {
+    event.waitUntil(
+      caches
+        .open(CACHE)
+        .then((cache) =>
+          cache.put(
+            cardRequest(),
+            new Response(event.data.blob, {
+              headers: {
+                "Content-Type": "image/png",
+                "Content-Disposition": "inline",
+                "Cache-Control": "no-store",
+              },
+            })
+          )
+        )
+        .then(() => port.postMessage({ ok: true }), () => port.postMessage({ ok: false }))
+    );
   } else if (event.data === "refresh") {
     event.waitUntil(
       caches

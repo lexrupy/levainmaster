@@ -886,10 +886,39 @@ createApp({
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
+    function whenControlled() {
+      if (!("serviceWorker" in navigator)) return Promise.resolve(false);
+      if (navigator.serviceWorker.controller) return Promise.resolve(true);
+      return new Promise((resolve) => {
+        const done = () => resolve(!!navigator.serviceWorker.controller);
+        navigator.serviceWorker.addEventListener("controllerchange", done, { once: true });
+        setTimeout(() => resolve(!!navigator.serviceWorker.controller), 4000);
+      });
+    }
+
+    function storeCard(blob) {
+      const worker = navigator.serviceWorker && navigator.serviceWorker.controller;
+      if (!worker) return Promise.resolve(false);
+      return new Promise((resolve) => {
+        const channel = new MessageChannel();
+        channel.port1.onmessage = (event) => resolve(!!event.data?.ok);
+        worker.postMessage({ type: "card", blob }, [channel.port2]);
+      });
+    }
+
     async function refreshCardPreview() {
       if (!cardPreview) return;
       try {
         const blob = await makeRecipeCard();
+        const stored = (await whenControlled()) && (await storeCard(blob));
+        if (stored) {
+          if (cardPreviewObjectUrl) {
+            URL.revokeObjectURL(cardPreviewObjectUrl);
+            cardPreviewObjectUrl = "";
+          }
+          cardPreviewUrl.value = "card.png?t=" + Date.now();
+          return;
+        }
         const url = URL.createObjectURL(blob);
         if (cardPreviewObjectUrl) URL.revokeObjectURL(cardPreviewObjectUrl);
         cardPreviewObjectUrl = url;
