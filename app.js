@@ -2,6 +2,37 @@ const { createApp, reactive, computed, watch, ref, onMounted, nextTick } = Vue;
 
 const STORAGE_KEY = "percentual-padeiro-v1";
 const RECIPES_KEY = "percentual-padeiro-receitas-v1";
+
+// Pergunta algo ao service worker que controla a página e espera a resposta.
+function askWorker(message, timeout = 4000) {
+  return new Promise((resolve) => {
+    const worker = navigator.serviceWorker && navigator.serviceWorker.controller;
+    if (!worker) return resolve(null);
+    const channel = new MessageChannel();
+    const timer = setTimeout(() => resolve(null), timeout);
+    channel.port1.onmessage = (event) => {
+      clearTimeout(timer);
+      resolve(event.data);
+    };
+    worker.postMessage(message, [channel.port2]);
+  });
+}
+
+// "padeiro-v27" → "27"
+function versionLabel(cacheName) {
+  const match = /v(\d+)$/.exec(cacheName || "");
+  return match ? match[1] : "";
+}
+
+// Espera um service worker novo terminar de instalar e ativar.
+function untilActive(worker) {
+  return new Promise((resolve) => {
+    if (worker.state === "activated" || worker.state === "redundant") return resolve(worker.state);
+    worker.addEventListener("statechange", () => {
+      if (worker.state === "activated" || worker.state === "redundant") resolve(worker.state);
+    });
+  });
+}
 const FLOUR_MAX = 99999;
 
 const ICONS = {
@@ -106,6 +137,8 @@ createApp({
     const menuOpen = ref(false);
     const levainDialog = ref(null);
     const recipesDialog = ref(null);
+    const aboutDialog = ref(null);
+    const about = reactive({ version: "", offline: false, persisted: false, checking: false, status: "", reload: false });
     const recipes = ref(loadRecipes());
     const recipeName = ref("");
     const confirmDelete = ref(null);
@@ -296,6 +329,81 @@ createApp({
       if (event.target === levainDialog.value) closeLevain();
     }
 
+    // Sobre: versão, situação offline e busca de atualização.
+    async function refreshAbout() {
+      const answer = await askWorker("version");
+      if (answer && answer.version) about.version = versionLabel(answer.version);
+      else {
+        const keys = "caches" in window ? await caches.keys().catch(() => []) : [];
+        about.version = versionLabel(keys.find((key) => key.startsWith("padeiro-")));
+      }
+      about.offline = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
+      about.persisted = !!(navigator.storage && navigator.storage.persisted && (await navigator.storage.persisted().catch(() => false)));
+    }
+
+    function openAbout() {
+      about.status = "";
+      about.reload = false;
+      refreshAbout();
+      const dialog = aboutDialog.value;
+      if (dialog && !dialog.open) dialog.showModal();
+    }
+
+    function closeAbout() {
+      const dialog = aboutDialog.value;
+      if (dialog && dialog.open) dialog.close();
+    }
+
+    function onAboutClick(event) {
+      if (event.target === aboutDialog.value) closeAbout();
+    }
+
+    async function checkUpdate() {
+      if (about.checking) return;
+      const current = about.version ? "a versão " + about.version : "a versão atual";
+      const registration = navigator.serviceWorker ? await navigator.serviceWorker.getRegistration().catch(() => null) : null;
+      if (!registration) {
+        about.status = "Este navegador não permite atualizar o app por aqui.";
+        return;
+      }
+      if (!navigator.onLine) {
+        about.status = "Sem internet agora. Você continua com " + current + ", que funciona offline.";
+        return;
+      }
+      about.checking = true;
+      about.reload = false;
+      about.status = "Procurando atualização…";
+      try {
+        await registration.update();
+        const fresh = registration.installing || registration.waiting;
+        if (fresh) {
+          about.status = "Baixando a versão nova…";
+          const state = await untilActive(fresh);
+          if (state === "redundant") {
+            about.status = "A atualização não terminou. Você continua com " + current + ".";
+          } else {
+            await new Promise((resolve) => setTimeout(resolve, 300));
+            await refreshAbout();
+            about.status = "Versão " + about.version + " instalada. Recarregue para usar.";
+            about.reload = true;
+          }
+        } else {
+          const answer = await askWorker("refresh", 20000);
+          about.status = answer && answer.ok
+            ? "Você já está na versão mais recente (" + about.version + "). Arquivos conferidos com o servidor."
+            : "Não foi possível falar com o servidor. Você continua com " + current + ".";
+        }
+      } catch (error) {
+        about.status = "Não foi possível falar com o servidor. Você continua com " + current + ".";
+      } finally {
+        about.checking = false;
+      }
+    }
+
+    function reloadApp() {
+      location.reload();
+    }
+
     // Receitas salvas: descrição, data e hora e uma cópia do estado inteiro (com o L:A:F).
     function persistRecipes() {
       try {
@@ -465,6 +573,13 @@ createApp({
       menuOpen,
       levainDialog,
       recipesDialog,
+      aboutDialog,
+      about,
+      openAbout,
+      closeAbout,
+      onAboutClick,
+      checkUpdate,
+      reloadApp,
       recipes,
       recipeName,
       confirmDelete,

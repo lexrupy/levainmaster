@@ -1,4 +1,4 @@
-const CACHE = "padeiro-v26";
+const CACHE = "padeiro-v27";
 const FILES = [
   "./",
   "./index.html",
@@ -79,4 +79,21 @@ self.addEventListener("fetch", (event) => {
       return (await fallback()) || network;
     }
   })());
+});
+
+// Conversa com a página (modal Sobre): "version" devolve o nome do cache;
+// "refresh" baixa de novo todos os arquivos direto do servidor.
+self.addEventListener("message", (event) => {
+  const port = event.ports && event.ports[0];
+  if (!port) return;
+  if (event.data === "version") {
+    port.postMessage({ version: CACHE });
+  } else if (event.data === "refresh") {
+    event.waitUntil(
+      caches
+        .open(CACHE)
+        .then((cache) => cache.addAll(FILES.map((file) => new Request(file, { cache: "reload" }))))
+        .then(() => port.postMessage({ ok: true, files: FILES.length }), () => port.postMessage({ ok: false }))
+    );
+  }
 });

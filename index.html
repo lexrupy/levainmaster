@@ -17,7 +17,10 @@
 <body>
   <div id="app" class="app">
     <header class="top">
-      <p class="brand">Percentual do padeiro</p>
+      <button type="button" class="brand" @click="openAbout" aria-label="Sobre o Percentual do padeiro">
+        <img src="icons/icon-192.png" alt="" width="30" height="30">
+        <span>Percentual do padeiro</span>
+      </button>
       <div class="top-actions">
         <button type="button" class="install" @click="openRecipes">Receitas</button>
         <button v-if="canInstall" type="button" class="install" @click="install">Instalar</button>
@@ -144,6 +147,30 @@
         </div>
       </div>
     </section>
+
+    <dialog ref="aboutDialog" class="levain-dialog" @click="onAboutClick" aria-labelledby="about-title">
+      <article class="levain about" tabindex="-1" autofocus>
+        <header class="levain-head">
+          <div class="about-id">
+            <img src="icons/icon-192.png" alt="" width="52" height="52">
+            <div>
+              <h2 id="about-title">Percentual do padeiro</h2>
+              <p class="about-version" data-version>{{ about.version ? 'Versão ' + about.version : 'Versão —' }}</p>
+            </div>
+          </div>
+          <button type="button" class="del" @click="closeAbout" aria-label="Fechar">×</button>
+        </header>
+        <p class="about-text">Calculadora de percentual do padeiro, hidratação e levain. Depois da primeira visita, funciona sem internet.</p>
+        <dl class="about-facts">
+          <div><dt>Disponível offline</dt><dd data-about-offline>{{ about.offline ? 'Sim' : 'Ainda não' }}</dd></div>
+          <div><dt>Dados protegidos</dt><dd data-about-persisted>{{ about.persisted ? 'Sim' : 'Não' }}</dd></div>
+        </dl>
+        <p class="hint" v-if="!about.persisted">Sem proteção, o navegador pode apagar o app e as receitas se faltar espaço. Instalar o app costuma liberar a proteção.</p>
+        <button type="button" class="levain-done" :disabled="about.checking" @click="checkUpdate">{{ about.checking ? 'Verificando…' : 'Verificar atualizações' }}</button>
+        <p class="about-status" aria-live="polite" data-about-status>{{ about.status }}</p>
+        <button v-if="about.reload" type="button" class="install about-reload" @click="reloadApp">Recarregar agora</button>
+      </article>
+    </dialog>
 
     <dialog ref="recipesDialog" class="levain-dialog" @click="onRecipesClick" aria-labelledby="recipes-title">
       <article class="levain recipes" tabindex="-1" autofocus>

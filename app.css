@@ -82,11 +82,26 @@ input[type="number"] {
 }
 
 .brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0;
+  padding: 2px 6px 2px 2px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
   font-size: 0.95rem;
   font-weight: 650;
   letter-spacing: -0.02em;
+  cursor: pointer;
+  width: auto;
 }
+
+.brand img { width: 30px; height: 30px; border-radius: 8px; flex: none; }
+.brand span { text-align: left; line-height: 1.15; }
+.brand:hover { background: #f6f1e8; }
+.brand:focus-visible { outline: 2px solid var(--brown-soft); outline-offset: 2px; }
 
 .install, .text-btn, .spin, .add-btn, .menu button, .del {
   border: 0;
@@ -920,3 +935,16 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   .parts { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr); }
   .parts .part-ratio { grid-column: 1 / -1; }
 }
+
+/* Sobre */
+.about-id { display: flex; align-items: center; gap: 12px; }
+.about-id img { width: 52px; height: 52px; border-radius: 12px; flex: none; }
+.about-version { margin: 2px 0 0; color: var(--muted); font-size: 0.85rem; font-weight: 600; }
+.about-text { margin: 12px 0; font-size: 0.92rem; line-height: 1.4; }
+.about-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 0 0 8px; }
+.about-facts div { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 6px 8px; }
+.about-facts dt { margin: 0; color: var(--muted); font-size: 0.66rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.about-facts dd { margin: 1px 0 0; font-weight: 650; }
+.about .levain-done:disabled { opacity: 0.6; cursor: default; }
+.about-status { margin: 10px 0 0; min-height: 1.3em; font-size: 0.88rem; line-height: 1.35; }
+.about-reload { margin-top: 8px; }
