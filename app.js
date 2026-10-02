@@ -1066,7 +1066,8 @@ createApp({
       ctx.fillStyle = "#8d7f70";
       ctx.font = "650 18px Outfit, sans-serif";
       ctx.fillText("TEXTURA", infoX, 400);
-      ctx.fillStyle = "#2c241c";
+      const feelColor = { firme: "#7a6244", macia: "#2f7a45", pegajosa: "#8a5a20", umida: "#8a3e28" }[result.value.band.feel] || "#8d7f70";
+      ctx.fillStyle = feelColor;
       ctx.font = "600 27px Outfit, sans-serif";
       cardText(ctx, result.value.band.sensacao, infoX, 442, 420, 34, 2);
       ctx.fillStyle = "#8d7f70";
