@@ -151,7 +151,9 @@
         <p class="levain-grams">{{ formatG(result.levainGrams) }}<small> g na massa</small></p>
         <label class="kicker" for="ratio">Proporção L : A : F</label>
         <select id="ratio" class="ratio-select" :value="ratioId" @change="onRatio($event.target.value)">
-          <option v-for="ratio in ratios" :key="ratio.id" :value="ratio.id">{{ ratio.id }}</option>
+          <optgroup v-for="group in ratioGroups" :key="group.name" :label="group.name">
+            <option v-for="ratio in group.items" :key="ratio.id" :value="ratio.id">{{ ratio.id }}</option>
+          </optgroup>
           <option value="custom">Personalizado</option>
         </select>
         <div class="parts">

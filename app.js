@@ -363,7 +363,7 @@ createApp({
       waterDiffers,
       ratioId,
       compArcs,
-      ratios: Padeiro.RATIOS,
+      ratioGroups: Padeiro.RATIO_GROUPS,
       menuGroups,
       menuOpen,
       levainDialog,

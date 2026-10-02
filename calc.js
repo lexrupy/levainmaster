@@ -3,16 +3,26 @@
   if (typeof module === "object" && module.exports) module.exports = api;
   root.Padeiro = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  // L:A:F em grupos: primeiro os de hidratação 100%, da alimentação menor para a maior
+  // (mais rápido → mais lento); depois os mais firmes, do mais úmido para o mais firme.
   const RATIOS = [
-    { id: "1:1:1", L: 1, A: 1, F: 1 },
-    { id: "1:2:2", L: 1, A: 2, F: 2 },
-    { id: "1:2:3", L: 1, A: 2, F: 3 },
-    { id: "2:4:5", L: 2, A: 4, F: 5 },
-    { id: "1:3:3", L: 1, A: 3, F: 3 },
-    { id: "1:4:4", L: 1, A: 4, F: 4 },
-    { id: "1:5:5", L: 1, A: 5, F: 5 },
-    { id: "1:10:10", L: 1, A: 10, F: 10 },
+    { id: "2:1:1", L: 2, A: 1, F: 1, group: "Hidratação 100%" },
+    { id: "1:1:1", L: 1, A: 1, F: 1, group: "Hidratação 100%" },
+    { id: "1:2:2", L: 1, A: 2, F: 2, group: "Hidratação 100%" },
+    { id: "1:3:3", L: 1, A: 3, F: 3, group: "Hidratação 100%" },
+    { id: "1:4:4", L: 1, A: 4, F: 4, group: "Hidratação 100%" },
+    { id: "1:5:5", L: 1, A: 5, F: 5, group: "Hidratação 100%" },
+    { id: "1:10:10", L: 1, A: 10, F: 10, group: "Hidratação 100%" },
+    { id: "2:4:5", L: 2, A: 4, F: 5, group: "Mais firmes" },
+    { id: "1:2:3", L: 1, A: 2, F: 3, group: "Mais firmes" },
   ];
+
+  const RATIO_GROUPS = RATIOS.reduce((groups, ratio) => {
+    let group = groups.find((item) => item.name === ratio.group);
+    if (!group) groups.push((group = { name: ratio.group, items: [] }));
+    group.items.push(ratio);
+    return groups;
+  }, []);
 
   const BANDS = [
     { max: 57, feel: "firme", sensacao: "Firme, fácil de modelar", pao: "Bagel", miolo: "Miolo denso, de alvéolos pequenos", img: "img/miolo-1-firme.svg" },
@@ -189,6 +199,7 @@
 
   return {
     RATIOS,
+    RATIO_GROUPS,
     BANDS,
     ADDABLE,
     num,
