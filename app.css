@@ -1132,6 +1132,22 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 .share-status { margin: 0; color: var(--muted); font-size: 0.66rem; line-height: 1.25; }
 .share-status:empty { display: none; }
 
+.card-preview-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 8px;
+  border-radius: 12px;
+  background: #fff;
+}
+.card-preview-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+}
+
 @media (max-width: 640px) {
   .levain-dialog > .levain.compact { height: auto; }
 }

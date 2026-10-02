@@ -182,6 +182,10 @@ createApp({
     let flashTimer = null;
     const sharingCard = ref(false);
     const shareStatus = ref("");
+    const cardPreview = new URLSearchParams(location.search).has("card");
+    const cardPreviewUrl = ref("");
+    let cardPreviewTimer = 0;
+    let cardPreviewObjectUrl = "";
     const dateFormat = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
     const canInstall = ref(false);
     let deferredPrompt = null;
@@ -882,6 +886,19 @@ createApp({
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
+    async function refreshCardPreview() {
+      if (!cardPreview) return;
+      try {
+        const blob = await makeRecipeCard();
+        const url = URL.createObjectURL(blob);
+        if (cardPreviewObjectUrl) URL.revokeObjectURL(cardPreviewObjectUrl);
+        cardPreviewObjectUrl = url;
+        cardPreviewUrl.value = url;
+      } catch (error) {
+        cardPreviewUrl.value = "";
+      }
+    }
+
     async function shareRecipeCard() {
       if (sharingCard.value) return;
       sharingCard.value = true;
@@ -1008,7 +1025,15 @@ createApp({
       { deep: true }
     );
 
+    if (cardPreview) {
+      watch(state, () => {
+        clearTimeout(cardPreviewTimer);
+        cardPreviewTimer = setTimeout(refreshCardPreview, 180);
+      }, { deep: true });
+    }
+
     onMounted(() => {
+      if (cardPreview) refreshCardPreview();
       window.addEventListener("beforeinstallprompt", (event) => {
         event.preventDefault();
         deferredPrompt = event;
@@ -1066,6 +1091,8 @@ createApp({
       sharingCard,
       shareStatus,
       shareRecipeCard,
+      cardPreview,
+      cardPreviewUrl,
       openRecipes,
       closeRecipes,
       onRecipesClick,
