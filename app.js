@@ -971,7 +971,7 @@ createApp({
       const rows = result.value.rows;
       const hasLevain = result.value.levainOn;
       const levainBlockY = 610;
-      const levainBlockHeight = 202;
+      const levainBlockHeight = 272;
       const levainGap = 68;
       const top = levainBlockY + (hasLevain ? levainBlockHeight + levainGap : 0);
       const canvas = document.createElement("canvas");
@@ -1117,21 +1117,45 @@ createApp({
         roundedRect(ctx, pad, levainBlockY, width - pad * 2, levainBlockHeight, 18, "#f7f2ea");
         ctx.fillStyle = "#7d6244";
         ctx.font = "700 22px Outfit, sans-serif";
-        ctx.fillText("LEVAIN USADO", pad + 22, levainBlockY + 38);
+        ctx.fillText("LEVAIN USADO", pad + 22, levainBlockY + 36);
+        const bodyX = pad + 12;
+        const bodyY = levainBlockY + 54;
+        const bodyW = width - pad * 2 - 24;
+        const bodyH = levainBlockHeight - 68;
+        roundedRect(ctx, bodyX, bodyY, bodyW, bodyH, 14, "#fffdfb");
+        const textX = bodyX + 18;
+        const textW = bodyW - 36;
         ctx.fillStyle = "#2c241c";
         ctx.font = "600 17px Outfit, sans-serif";
-        ctx.fillText("Na massa: " + formatG(result.value.levainGrams) + " g (" + formatPctFine(levainItem.value?.pct || 0) + "%) · proporção L:A:F " + state.levain.L + ":" + state.levain.A + ":" + state.levain.F, pad + 22, levainBlockY + 76);
-        ctx.fillStyle = "#2c241c";
+        ctx.fillText("Na massa: " + formatG(result.value.levainGrams) + " g (" + formatPctFine(levainItem.value?.pct || 0) + "%) · proporção L:A:F " + state.levain.L + ":" + state.levain.A + ":" + state.levain.F, textX, bodyY + 32);
         ctx.font = "500 16px Outfit, sans-serif";
         const feedParts = lv?.valid
           ? formatG(lv.seed) + " g isca + " + formatG(lv.water) + " g água + " + formatG(lv.flour) + " g farinha · hidratação " + formatPct(lv.hydration) + "%"
           : "Alimentação ainda não configurada";
-        cardText(ctx, "Alimentação: " + feedParts, pad + 22, levainBlockY + 109, width - pad * 2 - 44, 22, 2);
+        cardText(ctx, "Alimentação: " + feedParts, textX, bodyY + 60, textW, 22, 2);
         const texture = profile ? profile.texture : "—";
         const peak = profile ? profile.time + " a 24–26 °C" : "—";
-        ctx.fillText("Textura: " + texture + " · Pico: " + peak, pad + 22, levainBlockY + 151);
-        const acidity = profile ? profile.flavor + " · nível " + (profile.score + 1) + "/5" : "—";
-        ctx.fillText("Perfil de acidez: " + acidity, pad + 22, levainBlockY + 184);
+        ctx.fillText("Textura: " + texture + " · Pico: " + peak, textX, bodyY + 92);
+
+        // A escala do modal: cinco trechos, do láctico ao acético, um marcado.
+        const scaleX = textX;
+        const scaleY = bodyY + 112;
+        const scaleW = textW;
+        const scaleH = 14;
+        const scaleGap = 8;
+        const segW = (scaleW - scaleGap * 4) / 5;
+        const score = profile ? profile.score : -1;
+        for (let i = 0; i < 5; i++) {
+          roundedRect(ctx, scaleX + i * (segW + scaleGap), scaleY, segW, scaleH, scaleH / 2, i === score ? "#7d6244" : "#efe6da");
+        }
+        ctx.fillStyle = "#2c241c";
+        ctx.font = "600 15px Outfit, sans-serif";
+        ctx.fillText("Láctico · suave", scaleX, scaleY + 36);
+        ctx.textAlign = "right";
+        ctx.fillText("Acético · azedo", scaleX + scaleW, scaleY + 36);
+        ctx.textAlign = "left";
+        ctx.font = "650 20px Outfit, sans-serif";
+        ctx.fillText(profile ? profile.flavor : "—", scaleX, scaleY + 64);
       }
 
       const headingY = top;
