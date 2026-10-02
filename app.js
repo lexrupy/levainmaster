@@ -990,10 +990,13 @@ createApp({
         return "";
       }
 
+      const ingFrame = 6;
+      const rowPad = 16;
       const iconBox = 36;
-      const nameX = pad + iconBox + 14;
+      const nameX = pad + ingFrame + rowPad + iconBox + 14;
       const trackH = 5;
-      const noteMax = width - pad * 2 - (nameX - pad);
+      const rowRight = width - pad - ingFrame - rowPad;
+      const noteMax = rowRight - nameX;
       const layouts = rows.map((row) => {
         const note = ingredientNote(row);
         ctx.font = "600 23px Outfit, sans-serif";
@@ -1016,7 +1019,13 @@ createApp({
         return { row, note, height: content + barSpace, nameY, noteY };
       });
       const rowsHeight = layouts.reduce((sum, item) => sum + item.height, 0);
-      const height = top + rowsHeight + 340;
+      const ingHead = 52;
+      const ingTopPad = 6;
+      const ingBotPad = 8;
+      const footerGap = 28;
+      const footerH = 156;
+      const ingBlockH = ingHead + ingTopPad + rowsHeight + ingBotPad + ingFrame;
+      const height = top + ingBlockH + footerGap + footerH + 128;
       canvas.width = width;
       canvas.height = height;
 
@@ -1158,28 +1167,35 @@ createApp({
         ctx.fillText(profile ? profile.flavor : "—", scaleX, scaleY + 64);
       }
 
-      const headingY = top;
-      ctx.fillStyle = "#2c241c";
-      ctx.font = "700 30px Outfit, sans-serif";
-      ctx.fillText("Ingredientes", pad, headingY);
+      const ingY = top;
+      const ingBodyX = pad + ingFrame;
+      const ingBodyY = ingY + ingHead;
+      const ingBodyW = width - pad * 2 - ingFrame * 2;
+      const ingBodyH = ingTopPad + rowsHeight + ingBotPad;
+      roundedRect(ctx, pad, ingY, width - pad * 2, ingBlockH, 16, "#f7f2ea");
+      ctx.fillStyle = "#7d6244";
+      ctx.font = "700 22px Outfit, sans-serif";
+      ctx.fillText("Ingredientes", pad + 20, ingY + 34);
       ctx.fillStyle = "#8d7f70";
       ctx.font = "650 17px Outfit, sans-serif";
       ctx.textAlign = "right";
-      ctx.fillText("PERCENTUAL", 790, headingY);
-      ctx.fillText("GRAMAS", width - pad, headingY);
+      ctx.fillText("PERCENTUAL", 790, ingY + 34);
+      ctx.fillText("GRAMAS", rowRight, ingY + 34);
       ctx.textAlign = "left";
+      roundedRect(ctx, ingBodyX, ingBodyY, ingBodyW, ingBodyH, 12, "#fffdfb");
 
-      let rowY = headingY + 28;
+      let rowY = ingBodyY + ingTopPad;
+      const rowLeft = ingBodyX + rowPad;
       layouts.forEach((item) => {
         const row = item.row;
         const y = rowY;
-        const trackW = width - pad * 2;
+        const trackW = rowRight - rowLeft;
         const trackY = y + item.height - trackH;
-        roundedRect(ctx, pad, trackY, trackW, trackH, trackH / 2, "#f0e8dc");
+        roundedRect(ctx, rowLeft, trackY, trackW, trackH, trackH / 2, "#f0e8dc");
         const pct = Math.max(0, Math.min(100, Number(row.pct) || 0));
         const fillW = trackW * pct / 100;
-        if (fillW > 1) roundedRect(ctx, pad, trackY, Math.max(trackH, fillW), trackH, trackH / 2, "#a68462");
-        drawIngredientIcon(ctx, row, pad, y + 8, iconBox);
+        if (fillW > 1) roundedRect(ctx, rowLeft, trackY, Math.max(trackH, fillW), trackH, trackH / 2, "#a68462");
+        drawIngredientIcon(ctx, row, rowLeft, y + 8, iconBox);
         ctx.fillStyle = "#2c241c";
         ctx.font = "600 23px Outfit, sans-serif";
         cardText(ctx, row.name || "Ingrediente", nameX, y + item.nameY, 500, 27, 2);
@@ -1189,18 +1205,17 @@ createApp({
         ctx.fillText(formatPctFine(row.pct) + "%", 790, y + item.nameY);
         ctx.fillStyle = "#2c241c";
         ctx.font = "700 24px Outfit, sans-serif";
-        ctx.fillText(formatG(row.grams) + " g", width - pad, y + item.nameY);
+        ctx.fillText(formatG(row.grams) + " g", rowRight, y + item.nameY);
         ctx.textAlign = "left";
         if (item.note) {
           ctx.fillStyle = "#8d7f70";
           ctx.font = "500 15px Outfit, sans-serif";
-          cardText(ctx, item.note, nameX, y + item.noteY, width - pad * 2 - (nameX - pad), 18, 2);
+          cardText(ctx, item.note, nameX, y + item.noteY, noteMax, 18, 2);
         }
         rowY += item.height;
       });
 
-      const footerY = rowY + 28;
-      const footerH = 156;
+      const footerY = ingY + ingBlockH + footerGap;
       roundedRect(ctx, pad, footerY, width - pad * 2, footerH, 16, "#f7f2ea");
       ctx.fillStyle = "#7d6244";
       ctx.font = "650 18px Outfit, sans-serif";
