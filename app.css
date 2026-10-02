@@ -70,11 +70,11 @@ input[type="number"] {
 .app {
   width: min(560px, 100%);
   margin: 0 auto;
-  padding: 0 16px calc(36px + env(safe-area-inset-bottom));
+  padding: 0 8px calc(36px + env(safe-area-inset-bottom));
 }
 
 /* Barra do topo fixa: ícone, nome, Receitas e Instalar ficam visíveis ao rolar.
-   Ela ocupa a largura toda da coluna (sangra os 16 px do .app) e cobre a área do relógio. */
+   Ela ocupa a largura toda da coluna (sangra os 8 px do .app) e cobre a área do relógio. */
 .top {
   position: sticky;
   top: 0;
@@ -83,8 +83,8 @@ input[type="number"] {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 0 -16px 8px;
-  padding: calc(6px + env(safe-area-inset-top)) 16px 6px;
+  margin: 0 -8px 8px;
+  padding: calc(6px + env(safe-area-inset-top)) 8px 6px;
   background: rgba(243, 239, 230, 0.9);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
@@ -136,10 +136,10 @@ input[type="number"] {
 .sheet {
   background: var(--sheet);
   border: 1px solid rgba(80, 55, 30, 0.06);
-  border-radius: 18px;
+  border-radius: 14px;
   box-shadow: var(--shadow);
   padding: 14px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .field-head, .ing-top, .final-head, .total-row {
@@ -197,7 +197,7 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   height: auto;
   object-fit: cover;
   object-position: center;
-  border-radius: 14px;
+  border-radius: 10px;
   margin: 0;
   background: #f6f1e8;
 }
@@ -440,7 +440,7 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   gap: 10px;
   align-items: center;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 10px;
   padding: 10px;
   background: #fff;
 }
@@ -537,7 +537,7 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 .levain {
   margin-top: 8px;
   padding: 14px;
-  border-radius: 18px;
+  border-radius: 14px;
   background: #faf6f0;
   border: 1px solid var(--line);
 }
@@ -599,7 +599,7 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 .add-btn {
   width: 100%;
   border: 1px dashed #e0d3c2 !important;
-  border-radius: 14px;
+  border-radius: 10px;
   padding: 12px;
   color: var(--brown);
   font-weight: 650;
