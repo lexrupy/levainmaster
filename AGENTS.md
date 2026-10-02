@@ -25,7 +25,7 @@ O service worker só registra em HTTP. Sirva a pasta e abra no navegador:
 python3 -m http.server 8769 --bind 127.0.0.1
 ```
 
-`file://` não instala o app. Depois de mudar HTML, CSS, JS ou imagens cacheadas, suba a constante `CACHE` em `ServiceWorker.js` (`padeiro-v22` hoje). A estratégia é rede primeiro, cache se a rede falhar.
+`file://` não instala o app. Depois de mudar HTML, CSS, JS ou imagens cacheadas, suba a constante `CACHE` em `ServiceWorker.js` (`padeiro-v23` hoje). A estratégia é rede primeiro, cache se a rede falhar.
 
 Não há suíte de testes. `node -e` consegue importar `calc.js`. Mudança de tela precisa ser exercida no navegador, no celular (cerca de 390 px) e na largura máxima do app (560 px).
 
@@ -45,7 +45,7 @@ O modal mostra o perfil da ativação de `levainProfile` (`calc.js`): textura, t
 
 `BANDS` escolhe textura, pão típico e foto do miolo a partir da hidratação total. Cada faixa tem a sua imagem 3:2 (`img/miolo-N-*.svg`), gerada por `python3 tools/gerar-miolos.py` com semente fixa. A casca, o pano e a faixa clara junto da casca vêm da foto `img/miolo-firme.jpg`, embutida em cada SVG; o script acha o miolo na foto pela cor, traça o contorno e gera só os alvéolos dentro dele. Não apague `img/miolo-firme.jpg`: é a fonte da casca. Esse modo precisa de `numpy` e `Pillow` (só para gerar, o app não usa). `--ilustrado` gera o pão todo desenhado, sem a foto. Para ajustar uma faixa, mude `LEVELS` e gere de novo. Cada geração copia antes as imagens atuais para `img/backup/AAAAMMDD-HHMMSS/`, pasta que está no `.gitignore`. As fotos `img/miolo-*.jpg` não entram no cache. Não repita textura nem tipo de pão em outro ponto da tela.
 
-O estado fica em `localStorage`, chave `percentual-padeiro-v1`.
+O estado fica em `localStorage`, chave `percentual-padeiro-v1`. As receitas salvas ficam na chave `percentual-padeiro-receitas-v1`: uma lista com `id`, `name` (a descrição), `savedAt` (data e hora em ISO) e `state` (cópia do estado inteiro, com o L:A:F). Abrir uma receita passa o estado por `normalizeState`, a mesma limpeza do carregamento.
 
 ## Tela
 

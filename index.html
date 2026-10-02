@@ -18,7 +18,10 @@
   <div id="app" class="app">
     <header class="top">
       <p class="brand">Percentual do padeiro</p>
-      <button v-if="canInstall" type="button" class="install" @click="install">Instalar</button>
+      <div class="top-actions">
+        <button type="button" class="install" @click="openRecipes">Receitas</button>
+        <button v-if="canInstall" type="button" class="install" @click="install">Instalar</button>
+      </div>
     </header>
 
     <section class="sheet">
@@ -141,6 +144,39 @@
         </div>
       </div>
     </section>
+
+    <dialog ref="recipesDialog" class="levain-dialog" @click="onRecipesClick" aria-labelledby="recipes-title">
+      <article class="levain recipes" tabindex="-1" autofocus>
+        <header class="levain-head">
+          <h2 id="recipes-title">Receitas</h2>
+          <button type="button" class="del" @click="closeRecipes" aria-label="Fechar">×</button>
+        </header>
+        <form class="recipe-save" @submit.prevent="saveRecipe">
+          <label class="kicker" for="recipe-name">Salvar a receita da tela</label>
+          <p class="recipe-meta">{{ summaryOf(state) }}</p>
+          <div class="recipe-save-row">
+            <input id="recipe-name" class="name-input" v-model="recipeName" maxlength="80" placeholder="Ex.: pão de domingo, forno a lenha" autocomplete="off">
+            <button type="submit" class="levain-done recipe-save-btn" :disabled="!recipeName.trim()">Salvar</button>
+          </div>
+        </form>
+        <p class="kicker recipes-label">Salvas</p>
+        <p v-if="!recipes.length" class="hint">Nenhuma receita salva ainda.</p>
+        <ul v-else class="recipe-list">
+          <li v-for="recipe in recipes" :key="recipe.id" class="recipe-item">
+            <div class="recipe-text">
+              <p class="recipe-name">{{ recipe.name }}</p>
+              <p class="recipe-meta"><time :datetime="recipe.savedAt">{{ formatDate(recipe.savedAt) }}</time></p>
+              <p class="recipe-meta">{{ summaryOf(recipe.state) }}</p>
+            </div>
+            <div class="recipe-actions">
+              <button type="button" class="install" @click="openRecipe(recipe)">Abrir</button>
+              <button type="button" class="install recipe-del" :class="{ confirm: confirmDelete === recipe.id }" @click="deleteRecipe(recipe)">{{ confirmDelete === recipe.id ? 'Confirmar' : 'Apagar' }}</button>
+            </div>
+          </li>
+        </ul>
+        <p v-if="recipes.length" class="hint">Abrir troca a receita da tela pela salva.</p>
+      </article>
+    </dialog>
 
     <dialog ref="levainDialog" class="levain-dialog" @click="onDialogClick" aria-labelledby="levain-title">
       <article v-if="result.levainOn" class="levain" tabindex="-1" autofocus>

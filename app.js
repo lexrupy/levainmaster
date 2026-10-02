@@ -1,6 +1,7 @@
 const { createApp, reactive, computed, watch, ref, onMounted, nextTick } = Vue;
 
 const STORAGE_KEY = "percentual-padeiro-v1";
+const RECIPES_KEY = "percentual-padeiro-receitas-v1";
 const FLOUR_MAX = 99999;
 
 const ICONS = {
@@ -55,34 +56,47 @@ function iconFor(item) {
   return ICON_BY_NAME[item.name] || ICONS.generic;
 }
 
+// Limpa um estado salvo (na tela ou numa receita). Devolve null se não der para usar.
+function normalizeState(raw) {
+  if (!raw || !Array.isArray(raw.ingredients)) return null;
+  const roles = new Set(raw.ingredients.map((item) => item.role));
+  if (!roles.has("water") || !roles.has("salt") || !roles.has("ferment")) return null;
+  raw.ingredients.forEach((item) => {
+    item.pct = Math.max(0, Padeiro.num(item.pct));
+    item.water = Math.max(0, Padeiro.num(item.water));
+    if (item.role === "ferment" && item.ferment !== "levain" && item.ferment !== "fresco" && item.ferment !== "seco") {
+      item.ferment = "seco";
+      item.name = "Fermento seco";
+    }
+    if (item.role === "extra" && !item.custom) {
+      const spec = Padeiro.ADDABLE.find((entry) => entry.name === item.name);
+      if (spec) item.water = spec.water;
+    }
+  });
+  // Campo vazio vale 0. Só falta de valor ou valor inválido volta para 500.
+  const flour = raw.flour === "" ? 0 : Number(raw.flour);
+  raw.flour = Number.isFinite(flour) ? Math.min(FLOUR_MAX, Math.max(0, flour)) : 500;
+  raw.levain = raw.levain || { L: 1, A: 2, F: 2 };
+  raw.levain.L = Math.max(0, Padeiro.num(raw.levain.L));
+  raw.levain.A = Math.max(0, Padeiro.num(raw.levain.A));
+  raw.levain.F = Math.max(0, Padeiro.num(raw.levain.F));
+  return raw;
+}
+
 function loadState() {
   try {
-    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-    if (!raw || !Array.isArray(raw.ingredients)) return Padeiro.defaultState();
-    const roles = new Set(raw.ingredients.map((item) => item.role));
-    if (!roles.has("water") || !roles.has("salt") || !roles.has("ferment")) return Padeiro.defaultState();
-    raw.ingredients.forEach((item) => {
-      item.pct = Math.max(0, Padeiro.num(item.pct));
-      item.water = Math.max(0, Padeiro.num(item.water));
-      if (item.role === "ferment" && item.ferment !== "levain" && item.ferment !== "fresco" && item.ferment !== "seco") {
-        item.ferment = "seco";
-        item.name = "Fermento seco";
-      }
-      if (item.role === "extra" && !item.custom) {
-        const spec = Padeiro.ADDABLE.find((entry) => entry.name === item.name);
-        if (spec) item.water = spec.water;
-      }
-    });
-    // Campo vazio vale 0. Só falta de valor ou valor inválido volta para 500.
-    const flour = raw.flour === "" ? 0 : Number(raw.flour);
-    raw.flour = Number.isFinite(flour) ? Math.min(FLOUR_MAX, Math.max(0, flour)) : 500;
-    raw.levain = raw.levain || { L: 1, A: 2, F: 2 };
-    raw.levain.L = Math.max(0, Padeiro.num(raw.levain.L));
-    raw.levain.A = Math.max(0, Padeiro.num(raw.levain.A));
-    raw.levain.F = Math.max(0, Padeiro.num(raw.levain.F));
-    return raw;
+    return normalizeState(JSON.parse(localStorage.getItem(STORAGE_KEY) || "null")) || Padeiro.defaultState();
   } catch (error) {
     return Padeiro.defaultState();
+  }
+}
+
+function loadRecipes() {
+  try {
+    const list = JSON.parse(localStorage.getItem(RECIPES_KEY) || "[]");
+    return Array.isArray(list) ? list.filter((item) => item && item.id && item.state) : [];
+  } catch (error) {
+    return [];
   }
 }
 
@@ -91,6 +105,11 @@ createApp({
     const state = reactive(loadState());
     const menuOpen = ref(false);
     const levainDialog = ref(null);
+    const recipesDialog = ref(null);
+    const recipes = ref(loadRecipes());
+    const recipeName = ref("");
+    const confirmDelete = ref(null);
+    const dateFormat = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
     const canInstall = ref(false);
     let deferredPrompt = null;
     const gramsFormat = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
@@ -277,6 +296,80 @@ createApp({
       if (event.target === levainDialog.value) closeLevain();
     }
 
+    // Receitas salvas: descrição, data e hora e uma cópia do estado inteiro (com o L:A:F).
+    function persistRecipes() {
+      try {
+        localStorage.setItem(RECIPES_KEY, JSON.stringify(recipes.value));
+      } catch (error) {}
+    }
+
+    function openRecipes() {
+      confirmDelete.value = null;
+      const dialog = recipesDialog.value;
+      if (dialog && !dialog.open) dialog.showModal();
+    }
+
+    function closeRecipes() {
+      const dialog = recipesDialog.value;
+      if (dialog && dialog.open) dialog.close();
+    }
+
+    function onRecipesClick(event) {
+      if (event.target === recipesDialog.value) closeRecipes();
+    }
+
+    function saveRecipe() {
+      const name = recipeName.value.trim();
+      if (!name) return;
+      recipes.value.unshift({
+        id: "r-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        name,
+        savedAt: new Date().toISOString(),
+        state: JSON.parse(JSON.stringify(state)),
+      });
+      persistRecipes();
+      recipeName.value = "";
+    }
+
+    function openRecipe(recipe) {
+      const saved = normalizeState(JSON.parse(JSON.stringify(recipe.state)));
+      if (!saved) return;
+      endEdit();
+      state.flour = saved.flour;
+      state.ingredients = saved.ingredients;
+      state.levain = saved.levain;
+      closeRecipes();
+    }
+
+    // Apagar pede um segundo toque no mesmo botão.
+    function deleteRecipe(recipe) {
+      if (confirmDelete.value !== recipe.id) {
+        confirmDelete.value = recipe.id;
+        return;
+      }
+      recipes.value = recipes.value.filter((item) => item.id !== recipe.id);
+      confirmDelete.value = null;
+      persistRecipes();
+    }
+
+    function formatDate(iso) {
+      const date = new Date(iso);
+      return Number.isNaN(date.getTime()) ? "" : dateFormat.format(date);
+    }
+
+    function summaryOf(saved) {
+      const res = Padeiro.compute(saved);
+      const ferment = (saved.ingredients || []).find((item) => item.role === "ferment");
+      let text = "";
+      if (ferment && ferment.ferment === "levain") {
+        const lv = saved.levain || {};
+        text = "Levain " + formatPct(ferment.pct) + "% · " + [lv.L, lv.A, lv.F].map((v) => Padeiro.num(v)).join(":");
+      } else if (ferment) {
+        text = (ferment.ferment === "fresco" ? "Fermento fresco " : "Fermento seco ") + formatPct(ferment.pct) + "%";
+      }
+      return formatG(res.flour) + " g de farinha · hidratação " + formatPct(res.hydration) + "% · " + text;
+    }
+
     function onRatio(id) {
       const preset = Padeiro.RATIOS.find((item) => item.id === id);
       if (!preset) return;
@@ -341,7 +434,9 @@ createApp({
     watch(
       state,
       () => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (error) {}
       },
       { deep: true }
     );
@@ -369,6 +464,18 @@ createApp({
       menuGroups,
       menuOpen,
       levainDialog,
+      recipesDialog,
+      recipes,
+      recipeName,
+      confirmDelete,
+      openRecipes,
+      closeRecipes,
+      onRecipesClick,
+      saveRecipe,
+      openRecipe,
+      deleteRecipe,
+      formatDate,
+      summaryOf,
       openLevain,
       closeLevain,
       onDialogClick,
