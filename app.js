@@ -92,6 +92,9 @@ function iconFor(item) {
 // Limpa um estado salvo (na tela ou numa receita). Devolve null se não der para usar.
 function normalizeState(raw) {
   if (!raw || !Array.isArray(raw.ingredients)) return null;
+  // Descarta entradas inválidas antes de ler campos; localStorage e receitas antigas
+  // podem conter dados incompletos ou parcialmente corrompidos.
+  raw.ingredients = raw.ingredients.filter((item) => item && typeof item === "object" && !Array.isArray(item));
   const roles = new Set(raw.ingredients.map((item) => item.role));
   if (!roles.has("water") || !roles.has("salt") || !roles.has("ferment")) return null;
   // Segundo fermento: só um, e do tipo que falta (levain com biológico, ou o contrário).
@@ -440,6 +443,7 @@ createApp({
       about.checking = true;
       about.reload = false;
       about.status = "Procurando atualização…";
+      const activeBefore = registration.active;
       try {
         await registration.update();
         const fresh = registration.installing || registration.waiting;
@@ -454,6 +458,14 @@ createApp({
             about.status = "Versão " + about.version + " instalada. Recarregue para usar.";
             about.reload = true;
           }
+        } else if (registration.active && registration.active !== activeBefore) {
+          // O worker pode instalar e ativar entre update() e esta leitura.
+          // Nesse caso, não há worker installing/waiting para aguardar, mas a página
+          // ainda precisa ser recarregada para usar os arquivos da nova versão.
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          await refreshAbout();
+          about.status = "Versão " + about.version + " instalada. Recarregue para usar.";
+          about.reload = true;
         } else {
           const answer = await askWorker("refresh", 20000);
           about.status = answer && answer.ok
