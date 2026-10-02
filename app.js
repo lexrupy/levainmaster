@@ -295,10 +295,13 @@ createApp({
       if (kind === "levain") {
         row.yeastPct = row.pct;
         row.yeastKind = row.ferment === "fresco" ? "fresco" : "seco";
-        row.pct = row.levainPct != null ? row.levainPct : 20;
+        // A ativação só abre sozinha na primeira vez que a receita usa levain.
+        // Voltando a um levain já configurado, ela fica fechada (o lápis edita).
+        const firstTime = row.levainPct == null;
+        row.pct = firstTime ? 20 : row.levainPct;
         row.ferment = "levain";
         row.name = "Levain";
-        nextTick(openLevain);
+        if (firstTime) nextTick(openLevain);
         return;
       }
       let sourceKind = row.ferment === "fresco" ? "fresco" : "seco";
