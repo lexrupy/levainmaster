@@ -25,7 +25,7 @@ O service worker só registra em HTTP. Sirva a pasta e abra no navegador:
 python3 -m http.server 8769 --bind 127.0.0.1
 ```
 
-`file://` não instala o app. Depois de mudar HTML, CSS, JS ou imagens cacheadas, suba a constante `CACHE` em `ServiceWorker.js` (`padeiro-v18` hoje). A estratégia é rede primeiro, cache se a rede falhar.
+`file://` não instala o app. Depois de mudar HTML, CSS, JS ou imagens cacheadas, suba a constante `CACHE` em `ServiceWorker.js` (`padeiro-v19` hoje). A estratégia é rede primeiro, cache se a rede falhar.
 
 Não há suíte de testes. `node -e` consegue importar `calc.js`. Mudança de tela precisa ser exercida no navegador, no celular (cerca de 390 px) e na largura máxima do app (560 px).
 
@@ -41,7 +41,7 @@ O fermento biológico é seco (padrão, 1%) ou fresco. A mesma força pesa o tri
 
 O levain não é outra tela. Com o fermento em Levain, a ativação abre num modal (`<dialog>`): ao escolher Levain no seletor ou pelo lápis ao lado dele. Na linha do fermento ficam a proporção (à direita do lápis), a hidratação do levain (à direita do percentual) e os gramas de isca, água e farinha. O modal usa o percentual já digitado, em gramas, e pede a proporção L:A:F (levain : água : farinha), ordem brasileira. Os presets só preenchem os campos: 1:1:1, 1:2:2, 1:2:3, 2:4:5, 1:3:3, 1:4:4, 1:5:5, 1:10:10, ou personalizado. A hidratação do levain é água da alimentação ÷ farinha da alimentação. A água já presente na isca não entra. A água da alimentação entra na hidratação total da massa. Os gramas exibidos são inteiros que somam o total arredondado; a sobra vai para a isca.
 
-`BANDS` escolhe textura, pão típico e foto do miolo a partir da hidratação total. Cada faixa tem a sua ilustração 3:2 (`img/miolo-N-*.svg`), gerada por `python3 tools/gerar-miolos.py` com semente fixa: mesmo pão e enquadramento, só os alvéolos mudam. Para ajustar uma faixa, mude `LEVELS` no script e gere de novo. O contorno, a casca e a pestana ficam em `loaf()` e são iguais em todas. Cada geração copia antes as ilustrações atuais para `img/backup/AAAAMMDD-HHMMSS/`, pasta que está no `.gitignore`. As fotos `img/miolo-*.jpg` ficam como backup e não entram no cache. Não repita textura nem tipo de pão em outro ponto da tela.
+`BANDS` escolhe textura, pão típico e foto do miolo a partir da hidratação total. Cada faixa tem a sua imagem 3:2 (`img/miolo-N-*.svg`), gerada por `python3 tools/gerar-miolos.py` com semente fixa. A casca, o pano e a faixa clara junto da casca vêm da foto `img/miolo-firme.jpg`, embutida em cada SVG; o script acha o miolo na foto pela cor, traça o contorno e gera só os alvéolos dentro dele. Não apague `img/miolo-firme.jpg`: é a fonte da casca. Esse modo precisa de `numpy` e `Pillow` (só para gerar, o app não usa). `--ilustrado` gera o pão todo desenhado, sem a foto. Para ajustar uma faixa, mude `LEVELS` e gere de novo. Cada geração copia antes as imagens atuais para `img/backup/AAAAMMDD-HHMMSS/`, pasta que está no `.gitignore`. As fotos `img/miolo-*.jpg` não entram no cache. Não repita textura nem tipo de pão em outro ponto da tela.
 
 O estado fica em `localStorage`, chave `percentual-padeiro-v1`.
 

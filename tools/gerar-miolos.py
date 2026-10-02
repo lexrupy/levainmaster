@@ -4,17 +4,29 @@
 Mesmo pão e mesmo enquadramento em todas; só os alvéolos mudam.
 A semente é fixa, então rodar de novo gera os mesmos arquivos.
 
-    python3 tools/gerar-miolos.py
+    python3 tools/gerar-miolos.py              # casca da foto (padrão)
+    python3 tools/gerar-miolos.py --ilustrado  # pão todo desenhado
+
+No padrão, a casca, o pano e a faixa clara junto da casca vêm da foto
+CASCA_FOTO, embutida no SVG; o script acha o miolo na foto e gera só os
+alvéolos dentro dele. Esse modo precisa de numpy e Pillow.
 
 Antes de gerar, as ilustrações atuais vão para img/backup/AAAAMMDD-HHMMSS/
 (pasta fora do git, no .gitignore).
 """
 
+import base64
+import io
 import math
 import random
 import shutil
+import sys
+from collections import deque
 from datetime import datetime
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+CASCA_FOTO = ROOT / "img" / "miolo-firme.jpg"  # foto original; o miolo dela é coberto
 
 W, H = 600, 400
 VIEW = "36 40 528 352"         # recorte 3:2 que aproxima o pão
@@ -26,7 +38,7 @@ EAR = 0.70 * math.pi         # onde fica a pestana do corte (em cima, à esquerd
 # alongar: quanto o alvéolo pode esticar; torto: irregularidade do contorno;
 # parede: espessura mínima entre alvéolos; brilho: paredes úmidas.
 LEVELS = [
-    dict(slug="1-firme", tiers=[(1.0, 2.6, 520)], alongar=1.2, torto=0.10, parede=1.6, brilho=0.0, poros=0.34),
+    dict(slug="1-firme", tiers=[(1.4, 3.2, 560)], alongar=1.2, torto=0.10, parede=1.6, brilho=0.0, poros=0.34),
     dict(slug="2-fechado", tiers=[(3.0, 4.6, 40), (1.2, 3.0, 460)], alongar=1.35, torto=0.12, parede=1.6, brilho=0.0, poros=0.30),
     dict(slug="3-macio", tiers=[(6.5, 11, 22), (3.0, 6.0, 150), (1.2, 3.0, 320)], alongar=1.8, torto=0.18, parede=1.8, brilho=0.0, poros=0.26),
     dict(slug="4-levemente-aberto", tiers=[(11, 18, 16), (5.0, 10, 90), (2.0, 5.0, 260)], alongar=1.9, torto=0.22, parede=2.0, brilho=0.05, poros=0.22),
@@ -223,12 +235,130 @@ def backup(out):
     print(f"backup: {dest.relative_to(out.parent)} ({len(current)} arquivos)")
 
 
+# --- Casca da foto ------------------------------------------------------------
+
+def use_photo():
+    """Acha o miolo na foto e passa a usar o contorno dele para encaixar os alvéolos.
+
+    Devolve a foto em base64, o contorno do miolo e o tom mediano do miolo.
+    """
+    global inside, CX, BASE, A, B
+    import numpy as np
+    from PIL import Image
+
+    photo = Image.open(CASCA_FOTO).convert("RGB")
+    pw, ph = photo.size
+    scale = W / pw
+    px = np.asarray(photo).astype(float) / 255
+    hi, lo = px.max(-1), px.min(-1)
+    crumbish = (hi > 0.62) & ((hi - lo) / (hi + 1e-6) < 0.30)  # claro e pouco saturado
+    # o miolo é a região clara ligada ao centro da foto; a casca o separa do pano
+    seen = np.zeros_like(crumbish)
+    start = (ph // 2, pw // 2)
+    seen[start] = True
+    queue = deque([start])
+    while queue:
+        y, x = queue.popleft()
+        for ny, nx in ((y + 1, x), (y - 1, x), (y, x + 1), (y, x - 1)):
+            if 0 <= ny < ph and 0 <= nx < pw and not seen[ny, nx] and crumbish[ny, nx]:
+                seen[ny, nx] = True
+                queue.append((ny, nx))
+    ys, xs = np.nonzero(seen)
+    cx, cy = (xs.min() + xs.max()) / 2, (ys.min() + ys.max()) / 2 + 20
+    # contorno em 360° a partir do meio do miolo: o maior raio com miolo em cada ângulo
+    n = 720
+    radii = []
+    for i in range(n):
+        t = 2 * math.pi * i / n
+        r = last = 0
+        while True:
+            x, y = int(round(cx + r * math.cos(t))), int(round(cy - r * math.sin(t)))
+            if not (0 <= x < pw and 0 <= y < ph):
+                break
+            if seen[y, x]:
+                last = r
+            r += 1
+        radii.append(last)
+    radii = np.array(radii, float)
+    radii = np.convolve(np.concatenate([radii[-3:], radii, radii[:3]]), np.ones(7) / 7, mode="valid") * scale
+    ocx, ocy = cx * scale, cy * scale
+
+    def outline_r(t):
+        f = (t % (2 * math.pi)) / (2 * math.pi) * n
+        i = int(f) % n
+        return radii[i] + (radii[(i + 1) % n] - radii[i]) * (f - int(f))
+
+    def inside_photo(x, y, margin=0.0):
+        return math.hypot(x - ocx, ocy - y) <= outline_r(math.atan2(ocy - y, x - ocx)) - margin
+
+    inside = inside_photo
+    CX, BASE = ocx, ys.max() * scale
+    A, B = radii.max(), BASE - (ocy - radii.max())
+
+    pts = [(ocx + (outline_r(t) + 3) * math.cos(t), ocy - (outline_r(t) + 3) * math.sin(t)) for t in (2 * math.pi * i / 360 for i in range(360))]
+    buf = io.BytesIO()
+    photo.resize((900, 600), Image.LANCZOS).save(buf, "JPEG", quality=80, optimize=True, progressive=True)
+    tone = np.median(px[seen], axis=0)
+    return base64.b64encode(buf.getvalue()).decode(), path_of(pts), tone
+
+
+def hex_of(rgb):
+    return "#" + "".join(f"{int(max(0, min(1, v)) * 255):02x}" for v in rgb)
+
+
+def svg_photo(level, seed, photo, crumb, tone):
+    rng = random.Random(seed)
+    shapes = place(rng, level)
+    holes = []
+    for d, x, y, r in shapes:
+        holes.append(f'<path d="{d}" fill="url(#hole)" stroke="#f3e9d6" stroke-width="{0.5 + r * 0.03:.2f}" stroke-opacity="0.7"/>')
+        if level["brilho"] and r > 9:
+            holes.append(
+                f'<ellipse cx="{x - r * 0.25:.1f}" cy="{y + r * 0.35:.1f}" rx="{r * 0.35:.1f}" ry="{r * 0.16:.1f}" '
+                f'fill="#fffaf0" opacity="{level["brilho"]:.2f}"/>'
+            )
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}">
+<defs>
+  <linearGradient id="crumbtone" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="{hex_of(tone * 1.05)}"/><stop offset="1" stop-color="{hex_of(tone * 0.98)}"/>
+  </linearGradient>
+  <linearGradient id="hole" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#8f7550"/><stop offset="0.55" stop-color="#b59c76"/><stop offset="1" stop-color="#d9c8a8"/>
+  </linearGradient>
+  <filter id="crumbrelief" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.35" numOctaves="3" seed="3" result="n"/>
+    <feDiffuseLighting in="n" surfaceScale="1.4" lighting-color="#ffffff" result="l">
+      <feDistantLight azimuth="235" elevation="60"/>
+    </feDiffuseLighting>
+    <feComposite in="SourceGraphic" in2="l" operator="arithmetic" k1="0.35" k2="0.72" k3="0" k4="0" result="lit"/>
+    <feComposite in="lit" in2="SourceAlpha" operator="in"/>
+  </filter>
+  <filter id="pores" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="11"/>
+    <feColorMatrix values="0 0 0 0 0.50  0 0 0 0 0.40  0 0 0 0 0.27  0 0 0 -2.2 1.25"/>
+  </filter>
+  <filter id="feather"><feGaussianBlur stdDeviation="2.5"/></filter>
+  <mask id="edge"><path d="{crumb}" fill="#fff" filter="url(#feather)"/></mask>
+</defs>
+<image width="{W}" height="{H}" href="data:image/jpeg;base64,{photo}"/>
+<g mask="url(#edge)">
+  <path d="{crumb}" fill="url(#crumbtone)" filter="url(#crumbrelief)"/>
+  <rect width="{W}" height="{H}" filter="url(#pores)" opacity="{level["poros"]:.2f}"/>
+  {"".join(holes)}
+</g>
+</svg>
+'''
+
+
 def main():
-    out = Path(__file__).resolve().parent.parent / "img"
+    out = ROOT / "img"
+    illustrated = "--ilustrado" in sys.argv[1:]
+    photo = None if illustrated else use_photo()
     backup(out)
     for i, level in enumerate(LEVELS):
         path = out / f"miolo-{level['slug']}.svg"
-        path.write_text(svg(level, 1000 + i), encoding="utf-8")
+        text = svg(level, 1000 + i) if illustrated else svg_photo(level, 1000 + i, *photo)
+        path.write_text(text, encoding="utf-8")
         print(path.relative_to(out.parent), f"{path.stat().st_size // 1024} KB")
 
 
