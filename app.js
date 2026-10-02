@@ -1052,8 +1052,9 @@ createApp({
       ctx.fillText(new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(new Date()), pad, iconY + iconSize + 86);
 
       const statY = 250;
-      const statW = 290;
-      const statGap = 18;
+      const statGap = 14;
+      const statSpan = width - pad * 2;
+      const statW = (statSpan - statGap * 2) / 3;
       const stats = [
         ["FARINHA", formatG(result.value.flour) + " g"],
         ["HIDRATAÇÃO TOTAL", formatPct(result.value.hydration) + "%"],
@@ -1067,8 +1068,8 @@ createApp({
         ctx.font = "650 17px Outfit, sans-serif";
         ctx.fillText(label, x + statW / 2, statY + 34);
         ctx.fillStyle = "#2c241c";
-        ctx.font = "700 34px Outfit, sans-serif";
-        ctx.fillText(value, x + statW / 2, statY + 79);
+        ctx.font = "700 44px Outfit, sans-serif";
+        ctx.fillText(value, x + statW / 2, statY + 82);
       });
       ctx.textAlign = "left";
 
