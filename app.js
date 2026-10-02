@@ -35,6 +35,11 @@ function recipeNameKey(name) {
     .toLocaleLowerCase("pt-BR");
 }
 
+function recipeFileName(name) {
+  const slug = recipeNameKey(name).replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return (slug || "minha-receita") + ".png";
+}
+
 // Espera um service worker novo terminar de instalar e ativar.
 function untilActive(worker) {
   return new Promise((resolve) => {
@@ -1942,11 +1947,11 @@ createApp({
       return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Não foi possível gerar a imagem")), "image/png"));
     }
 
-    function downloadRecipeCard(blob) {
+    function downloadRecipeCard(blob, fileName) {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "receita-percentual-do-padeiro.png";
+      link.download = fileName;
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
@@ -2012,8 +2017,10 @@ createApp({
       sharingCard.value = true;
       shareStatus.value = "Preparando imagem…";
       try {
-        const blob = await makeRecipeCard();
-        const file = typeof File !== "undefined" ? new File([blob], "receita-percentual-do-padeiro.png", { type: "image/png" }) : null;
+        // O botão usa o card 4. Os outros makeRecipeCard* continuam nas prévias.
+        const blob = await makeRecipeCard4();
+        const fileName = recipeFileName(state.recipeName);
+        const file = typeof File !== "undefined" ? new File([blob], fileName, { type: "image/png" }) : null;
         if (file && navigator.share && navigator.canShare?.({ files: [file] })) {
           try {
             await navigator.share({ files: [file], title: "Minha receita de pão", text: "Receita feita no Percentual do padeiro" });
@@ -2023,11 +2030,11 @@ createApp({
               shareStatus.value = "Compartilhamento cancelado.";
               return;
             }
-            downloadRecipeCard(blob);
+            downloadRecipeCard(blob, fileName);
             shareStatus.value = "Imagem baixada. Você já pode compartilhar a receita.";
           }
         } else {
-          downloadRecipeCard(blob);
+          downloadRecipeCard(blob, fileName);
           shareStatus.value = "Imagem baixada. Você já pode compartilhar a receita.";
         }
       } catch (error) {
