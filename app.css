@@ -170,11 +170,12 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   letter-spacing: 0.04em;
 }
 
+/* A coluna da farinha fica com o espaço que sobrar (em tela larga não abre vão no meio);
+   nunca menor que o próprio conteúdo. A da foto vai até 236 px. */
 .deck-row {
   display: grid;
-  grid-template-columns: max-content minmax(0, 236px);
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, 236px);
   column-gap: 22px;
-  justify-content: space-between;
   align-items: center;
 }
 
