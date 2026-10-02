@@ -986,6 +986,11 @@ createApp({
       const rightBottom = breadY + 36;
       // A coluna da farinha fica centrada na foto + hidratação, como no app.
       const leftShift = Math.max(0, Math.round((rightBottom - sectionY - 262) / 2));
+      // Os três cards ocupam o vão à esquerda da foto, acima da farinha.
+      const statGap = 10;
+      const statW = (leftW - statGap * 2) / 3;
+      const statH = Math.max(84, leftShift - 20);
+      const statY = sectionY;
       const sliderY = rightBottom + 36;
       const afterSlider = sliderY + 118;
       const levainBlockY = afterSlider + 20;
@@ -1025,6 +1030,32 @@ createApp({
       ctx.fillStyle = "#8d7f70";
       ctx.font = "500 22px Outfit, sans-serif";
       ctx.fillText(new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(new Date()), pad, iconY + iconSize + 86);
+
+      const stats = [
+        ["FARINHA", formatG(result.value.flour) + " g"],
+        ["HIDRATAÇÃO TOTAL", formatPct(result.value.hydration) + "%"],
+        ["PESO DA MASSA", formatG(result.value.totalWeight) + " g"],
+      ];
+      stats.forEach(([label, value], index) => {
+        const x = pad + index * (statW + statGap);
+        roundedRect(ctx, x, statY, statW, statH, 16, "#f7f2ea");
+        ctx.fillStyle = "#8d7f70";
+        let labelSize = 14;
+        ctx.font = "650 " + labelSize + "px Outfit, sans-serif";
+        while (labelSize > 11 && ctx.measureText(label).width > statW - 24) {
+          labelSize -= 1;
+          ctx.font = "650 " + labelSize + "px Outfit, sans-serif";
+        }
+        ctx.fillText(label, x + 14, statY + 26);
+        ctx.fillStyle = "#2c241c";
+        let valueSize = 28;
+        ctx.font = "700 " + valueSize + "px Outfit, sans-serif";
+        while (valueSize > 18 && ctx.measureText(value).width > statW - 24) {
+          valueSize -= 1;
+          ctx.font = "700 " + valueSize + "px Outfit, sans-serif";
+        }
+        ctx.fillText(value, x + 14, statY + statH - 20);
+      });
 
       ctx.letterSpacing = "0.12em";
       ctx.fillStyle = "#8d7f70";
