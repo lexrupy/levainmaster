@@ -83,7 +83,7 @@ const ICON_BY_NAME = {
 function iconFor(item) {
   if (item.role === "water") return ICONS.water;
   if (item.role === "salt") return ICONS.salt;
-  if (item.role === "ferment") return item.ferment === "levain" ? ICONS.levain : ICONS.yeast;
+  if (Padeiro.isFerment(item)) return item.ferment === "levain" ? ICONS.levain : ICONS.yeast;
   return ICON_BY_NAME[item.name] || ICONS.generic;
 }
 
@@ -92,6 +92,16 @@ function normalizeState(raw) {
   if (!raw || !Array.isArray(raw.ingredients)) return null;
   const roles = new Set(raw.ingredients.map((item) => item.role));
   if (!roles.has("water") || !roles.has("salt") || !roles.has("ferment")) return null;
+  // Segundo fermento: só um, e do tipo que falta (levain com biológico, ou o contrário).
+  const main = raw.ingredients.find((item) => item.role === "ferment");
+  const mainIsLevain = !!(main && main.ferment === "levain");
+  let hasSecond = false;
+  raw.ingredients = raw.ingredients.filter((item) => {
+    if (item.role !== "ferment2") return true;
+    const ok = !hasSecond && (mainIsLevain ? item.ferment === "seco" || item.ferment === "fresco" : item.ferment === "levain");
+    hasSecond = hasSecond || ok;
+    return ok;
+  });
   raw.ingredients.forEach((item) => {
     item.pct = Math.max(0, Padeiro.num(item.pct));
     item.water = Math.max(0, Padeiro.num(item.water));
@@ -162,6 +172,20 @@ createApp({
     const result = computed(() => Padeiro.compute(state));
     const ratioId = computed(() => Padeiro.matchRatio(state.levain.L, state.levain.A, state.levain.F));
     const levainProfile = computed(() => Padeiro.levainProfile(state.levain.L, state.levain.A, state.levain.F));
+    // Segundo fermento: o tipo que falta em relação ao principal.
+    const secondFerment = computed(() => state.ingredients.find((item) => item.role === "ferment2") || null);
+    const fermentChoices = computed(() => {
+      if (secondFerment.value) return [];
+      const main = state.ingredients.find((item) => item.role === "ferment");
+      if (main && main.ferment === "levain") {
+        return [
+          { kind: "seco", name: "Fermento seco", note: "reforço, sem água" },
+          { kind: "fresco", name: "Fermento fresco", note: "reforço, sem água" },
+        ];
+      }
+      return [{ kind: "levain", name: "Levain", note: "soma a água da alimentação" }];
+    });
+
     const menuGroups = computed(() => {
       const present = new Set(state.ingredients.map((row) => row.name));
       const groups = [];
@@ -509,14 +533,15 @@ createApp({
 
     function summaryOf(saved) {
       const res = Padeiro.compute(saved);
-      const ferment = (saved.ingredients || []).find((item) => item.role === "ferment");
-      let text = "";
-      if (ferment && ferment.ferment === "levain") {
-        const lv = saved.levain || {};
-        text = "Levain " + formatPct(ferment.pct) + "% · " + [lv.L, lv.A, lv.F].map((v) => Padeiro.num(v)).join(":");
-      } else if (ferment) {
-        text = (ferment.ferment === "fresco" ? "Fermento fresco " : "Fermento seco ") + formatPct(ferment.pct) + "%";
-      }
+      const lv = saved.levain || {};
+      const text = (saved.ingredients || [])
+        .filter((item) => Padeiro.isFerment(item))
+        .map((item) =>
+          item.ferment === "levain"
+            ? "Levain " + formatPct(item.pct) + "% · " + [lv.L, lv.A, lv.F].map((v) => Padeiro.num(v)).join(":")
+            : (item.ferment === "fresco" ? "Fermento fresco " : "Fermento seco ") + formatPct(item.pct) + "%"
+        )
+        .join(" + ");
       return formatG(res.flour) + " g de farinha · hidratação " + formatPct(res.hydration) + "% · " + text;
     }
 
@@ -548,6 +573,31 @@ createApp({
       menuOpen.value = false;
     }
 
+    function addFerment(kind) {
+      const row = {
+        id: "fermento2",
+        role: "ferment2",
+        ferment: kind,
+        name: kind === "levain" ? "Levain" : yeastName(kind),
+        // reforço típico: um pouco de fermento junto do levain, ou 20% de levain junto do fermento
+        pct: kind === "levain" ? 20 : kind === "fresco" ? 0.9 : 0.3,
+        water: 0,
+      };
+      const main = state.ingredients.findIndex((item) => item.role === "ferment");
+      state.ingredients.splice(main + 1, 0, row);
+      menuOpen.value = false;
+      if (kind === "levain") nextTick(openLevain);
+    }
+
+    // Segundo fermento biológico: troca seco ↔ fresco convertendo o percentual.
+    function setSecondYeast(kind) {
+      const row = secondFerment.value;
+      if (!row || row.ferment === kind || row.ferment === "levain") return;
+      row.pct = Padeiro.convertYeast(row.pct, row.ferment, kind);
+      row.ferment = kind;
+      row.name = yeastName(kind);
+    }
+
     function addCustom() {
       state.ingredients.push({
         id: "extra-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
@@ -561,7 +611,7 @@ createApp({
     }
 
     function removeIngredient(id) {
-      const index = state.ingredients.findIndex((item) => item.id === id && item.role === "extra");
+      const index = state.ingredients.findIndex((item) => item.id === id && (item.role === "extra" || item.role === "ferment2"));
       if (index >= 0) state.ingredients.splice(index, 1);
     }
 
@@ -663,6 +713,11 @@ createApp({
       setPart,
       addIngredient,
       addCustom,
+      addFerment,
+      isFerment: Padeiro.isFerment,
+      setSecondYeast,
+      secondFerment,
+      fermentChoices,
       removeIngredient,
       barWidth,
       rowOf,

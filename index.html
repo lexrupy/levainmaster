@@ -92,13 +92,20 @@
           <div class="icon" v-html="iconFor(item)"></div>
           <div>
             <div class="ing-top">
-              <template v-if="item.role === 'ferment'">
+              <template v-if="isFerment(item)">
                 <div class="ferment-wrap">
-                  <select class="ferment-select" :class="{ 'is-levain': item.ferment === 'levain' }" :value="item.ferment" @change="setFerment($event.target.value)" aria-label="Tipo de fermento">
+                  <select v-if="item.role === 'ferment'" class="ferment-select" :class="{ 'is-levain': item.ferment === 'levain' }" :value="item.ferment" @change="setFerment($event.target.value)" aria-label="Tipo de fermento">
+                    <template v-if="!secondFerment || secondFerment.ferment === 'levain'">
+                      <option value="seco">Fermento seco</option>
+                      <option value="fresco">Fermento fresco</option>
+                    </template>
+                    <option v-if="!secondFerment || secondFerment.ferment !== 'levain'" value="levain">Levain</option>
+                  </select>
+                  <select v-else-if="item.ferment !== 'levain'" class="ferment-select" :value="item.ferment" @change="setSecondYeast($event.target.value)" aria-label="Tipo do segundo fermento">
                     <option value="seco">Fermento seco</option>
                     <option value="fresco">Fermento fresco</option>
-                    <option value="levain">Levain</option>
                   </select>
+                  <div v-else class="ing-name">Levain</div>
                   <template v-if="item.ferment === 'levain'">
                     <button type="button" class="edit-levain" @click="openLevain" aria-label="Editar o levain">
                       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3z"/><path d="M13.5 8.5l3 3"/></svg>
@@ -109,22 +116,22 @@
               </template>
               <input v-else-if="item.custom" class="name-input" v-model="item.name" placeholder="Ingrediente" aria-label="Nome do ingrediente">
               <div v-else class="ing-name">{{ item.name }}</div>
-              <button v-if="item.role === 'extra'" type="button" class="del" @click="removeIngredient(item.id)" aria-label="Remover ingrediente">×</button>
+              <button v-if="item.role === 'extra' || item.role === 'ferment2'" type="button" class="del" @click="removeIngredient(item.id)" :aria-label="'Remover ' + (item.name || 'ingrediente')">×</button>
             </div>
             <div class="pct">
               <input v-if="isEditing(item, 'pct')" v-focus type="number" min="0" step="0.5" inputmode="decimal" :value="editing.text" @input="onEdit(item, 'pct', $event.target.value)" @blur="endEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc="cancelEdit(item)" :aria-label="'Percentual de ' + (item.name || 'ingrediente')">
               <button v-else type="button" class="pct-value" @click="startEdit(item, 'pct')" :aria-label="'Editar percentual de ' + (item.name || 'ingrediente')">{{ formatPctFine(item.pct) }}</button>
               <span>%</span>
-              <span v-if="item.role === 'ferment' && item.ferment === 'levain'" class="levain-info">Hidratação {{ result.levain && result.levain.hydration != null ? formatPct(result.levain.hydration) + '%' : '—' }}</span>
+              <span v-if="isFerment(item) && item.ferment === 'levain'" class="levain-info">Hidratação {{ result.levain && result.levain.hydration != null ? formatPct(result.levain.hydration) + '%' : '—' }}</span>
             </div>
             <label v-if="item.custom" class="water-edit">Teor de água
               <input type="number" min="0" max="100" step="1" v-model.number="item.water" @blur="settleWater(item)" aria-label="Teor de água do ingrediente">
               <span>%</span>
             </label>
             <p v-else-if="item.water > 0 && item.water < 100" class="moisture">{{ formatPct(item.water) }}% de água</p>
-            <p v-else-if="item.role === 'ferment' && item.ferment === 'seco'" class="moisture">Equivale a {{ formatPct(yeastEquivalent(item.pct, 'seco', 'fresco')) }}% de fresco</p>
-            <p v-else-if="item.role === 'ferment' && item.ferment === 'fresco'" class="moisture">Equivale a {{ formatPct(yeastEquivalent(item.pct, 'fresco', 'seco')) }}% de seco</p>
-            <p v-else-if="item.role === 'ferment' && item.ferment === 'levain' && result.levain && result.levain.valid" class="moisture">{{ formatG(result.levain.seed) }} g de isca · {{ formatG(result.levain.water) }} g de água · {{ formatG(result.levain.flour) }} g de farinha</p>
+            <p v-else-if="isFerment(item) && item.ferment === 'seco'" class="moisture">Equivale a {{ formatPct(yeastEquivalent(item.pct, 'seco', 'fresco')) }}% de fresco</p>
+            <p v-else-if="isFerment(item) && item.ferment === 'fresco'" class="moisture">Equivale a {{ formatPct(yeastEquivalent(item.pct, 'fresco', 'seco')) }}% de seco</p>
+            <p v-else-if="isFerment(item) && item.ferment === 'levain' && result.levain && result.levain.valid" class="moisture">{{ formatG(result.levain.seed) }} g de isca · {{ formatG(result.levain.water) }} g de água · {{ formatG(result.levain.flour) }} g de farinha</p>
             <div class="bar" aria-hidden="true"><span :style="{ width: barWidth(item.pct) }"></span></div>
           </div>
           <div class="grams" :data-grams="item.role">
@@ -137,6 +144,13 @@
       <div class="add-wrap">
         <button type="button" class="add-btn" @click.stop="menuOpen = !menuOpen">+ Ingrediente</button>
         <div class="menu" v-if="menuOpen">
+          <div v-if="fermentChoices.length" class="menu-group">
+            <p class="menu-label">Segundo fermento</p>
+            <button v-for="choice in fermentChoices" :key="choice.kind" type="button" @click="addFerment(choice.kind)">
+              {{ choice.name }}
+              <small>{{ choice.note }}</small>
+            </button>
+          </div>
           <div v-for="group in menuGroups" :key="group.name" class="menu-group">
             <p class="menu-label">{{ group.name }}</p>
             <button v-for="spec in group.items" :key="spec.name" type="button" @click="addIngredient(spec)">

@@ -204,6 +204,11 @@
     };
   }
 
+  // Fermento principal ("ferment") ou segundo fermento ("ferment2"): um biológico e um levain.
+  function isFerment(item) {
+    return item.role === "ferment" || item.role === "ferment2";
+  }
+
   function gramsOf(flour, pct) {
     return (Math.max(0, num(flour)) * Math.max(0, num(pct))) / 100;
   }
@@ -241,16 +246,17 @@
   function compute(state) {
     const flour = Math.max(0, num(state.flour));
     const ingredients = Array.isArray(state.ingredients) ? state.ingredients : [];
-    const ferment = ingredients.find((item) => item.role === "ferment");
-    const levainOn = !!(ferment && ferment.ferment === "levain");
-    const levainGrams = levainOn ? gramsOf(flour, ferment.pct) : 0;
+    // O levain pode ser o fermento principal (role "ferment") ou o segundo (role "ferment2").
+    const levainRow = ingredients.find((item) => isFerment(item) && item.ferment === "levain");
+    const levainOn = !!levainRow;
+    const levainGrams = levainOn ? gramsOf(flour, levainRow.pct) : 0;
     const ratio = state.levain || { L: 1, A: 2, F: 2 };
     const levain = levainOn ? weighLevain(splitLevain(levainGrams, ratio.L, ratio.A, ratio.F)) : null;
 
     const rows = ingredients.map((item) => {
       const grams = gramsOf(flour, item.pct);
       let water = grams * (Math.max(0, num(item.water)) / 100);
-      if (item.role === "ferment" && item.ferment === "levain") {
+      if (isFerment(item) && item.ferment === "levain") {
         water = levain && levain.valid ? levain.water : 0;
       }
       return {
@@ -306,6 +312,7 @@
     matchRatio,
     splitLevain,
     levainProfile,
+    isFerment,
     enrichedBread,
     gramsOf,
     convertYeast,
