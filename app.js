@@ -803,13 +803,15 @@ createApp({
       stats.forEach(([label, value], index) => {
         const x = pad + index * (statW + statGap);
         roundedRect(ctx, x, statY, statW, 108, 18, "#f7f2ea");
+        ctx.textAlign = "center";
         ctx.fillStyle = "#8d7f70";
         ctx.font = "650 17px Outfit, sans-serif";
-        ctx.fillText(label, x + 20, statY + 34);
+        ctx.fillText(label, x + statW / 2, statY + 34);
         ctx.fillStyle = "#2c241c";
         ctx.font = "700 34px Outfit, sans-serif";
-        ctx.fillText(value, x + 20, statY + 79);
+        ctx.fillText(value, x + statW / 2, statY + 79);
       });
+      ctx.textAlign = "left";
 
       const imageX = pad;
       const imageY = 370;
@@ -1047,7 +1049,8 @@ createApp({
           labelSize -= 1;
           ctx.font = "650 " + labelSize + "px Outfit, sans-serif";
         }
-        ctx.fillText(label, x + 14, statY + 26);
+        ctx.textAlign = "center";
+        ctx.fillText(label, x + statW / 2, statY + 26);
         ctx.fillStyle = "#2c241c";
         let valueSize = 28;
         ctx.font = "700 " + valueSize + "px Outfit, sans-serif";
@@ -1055,8 +1058,9 @@ createApp({
           valueSize -= 1;
           ctx.font = "700 " + valueSize + "px Outfit, sans-serif";
         }
-        ctx.fillText(value, x + 14, statY + statH - 20);
+        ctx.fillText(value, x + statW / 2, statY + statH - 20);
       });
+      ctx.textAlign = "left";
 
       ctx.letterSpacing = "0.12em";
       ctx.fillStyle = "#8d7f70";
@@ -1424,27 +1428,36 @@ createApp({
         [heroY + stackH + stackGap, "PESO DA MASSA", formatG(result.value.totalWeight) + " g"],
       ].forEach(([y, label, value]) => {
         roundedRect(ctx, pad, y, leftW, stackH, 16, "#f7f2ea");
+        ctx.textAlign = "center";
         ctx.fillStyle = "#8d7f70";
         ctx.font = "650 15px Outfit, sans-serif";
-        ctx.fillText(label, pad + 18, y + 34);
+        ctx.fillText(label, pad + leftW / 2, y + 34);
         ctx.fillStyle = "#2c241c";
         ctx.font = "700 36px Outfit, sans-serif";
-        ctx.fillText(value, pad + 18, y + stackH - 24);
+        ctx.fillText(value, pad + leftW / 2, y + stackH - 24);
       });
+      ctx.textAlign = "left";
 
       ctx.letterSpacing = "0.08em";
       ctx.fillStyle = "#8d7f70";
       ctx.font = "650 14px Outfit, sans-serif";
-      ctx.fillText("HIDRATAÇÃO TOTAL", centerX, heroY + 22);
+      ctx.textAlign = "center";
+      ctx.fillText("HIDRATAÇÃO TOTAL", centerX + centerW / 2, heroY + 22);
       ctx.letterSpacing = "0px";
       const hydText = formatPct(result.value.hydration);
+      ctx.font = "700 52px Outfit, sans-serif";
+      const hydW = ctx.measureText(hydText).width;
+      ctx.font = "650 22px Outfit, sans-serif";
+      const hydPctW = ctx.measureText("%").width;
+      const hydTotal = hydW + 3 + hydPctW;
+      const hydLeft = centerX + (centerW - hydTotal) / 2;
+      ctx.textAlign = "left";
       ctx.fillStyle = "#2c241c";
       ctx.font = "700 52px Outfit, sans-serif";
-      ctx.fillText(hydText, centerX, heroY + 82);
-      const hydW = ctx.measureText(hydText).width;
+      ctx.fillText(hydText, hydLeft, heroY + 82);
       ctx.fillStyle = "#8d7f70";
       ctx.font = "650 22px Outfit, sans-serif";
-      ctx.fillText("%", centerX + hydW + 3, heroY + 80);
+      ctx.fillText("%", hydLeft + hydW + 3, heroY + 80);
 
       const shares = [
         ["Farinha", result.value.flourShare, "#b8792e", "#9e6828"],
