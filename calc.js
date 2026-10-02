@@ -46,25 +46,63 @@
     { group: "Farinhas e amidos", name: "Farinha integral", water: 0 },
     { group: "Farinhas e amidos", name: "Farinha de aveia", water: 0 },
     { group: "Farinhas e amidos", name: "Farinha de arroz", water: 0 },
-    { group: "Cozidos e frutas", name: "Batata inglesa cozida", water: 77 },
-    { group: "Cozidos e frutas", name: "Batata-doce cozida", water: 80 },
-    { group: "Cozidos e frutas", name: "Mandioca cozida", water: 69 },
-    { group: "Cozidos e frutas", name: "Abóbora cozida", water: 90 },
-    { group: "Cozidos e frutas", name: "Banana", water: 75 },
-    { group: "Ovos, leite e gordura", name: "Ovos", water: 75 },
-    { group: "Ovos, leite e gordura", name: "Leite integral", water: 87 },
-    { group: "Ovos, leite e gordura", name: "Leite desnatado", water: 91 },
-    { group: "Ovos, leite e gordura", name: "Leite em pó integral", water: 0 },
-    { group: "Ovos, leite e gordura", name: "Leite em pó desnatado", water: 0 },
+    { group: "Cozidos e frutas", name: "Batata inglesa cozida", water: 77, enrich: "batata" },
+    { group: "Cozidos e frutas", name: "Batata-doce cozida", water: 80, enrich: "batata-doce" },
+    { group: "Cozidos e frutas", name: "Mandioca cozida", water: 69, enrich: "mandioca" },
+    { group: "Cozidos e frutas", name: "Abóbora cozida", water: 90, enrich: "abóbora" },
+    { group: "Cozidos e frutas", name: "Banana", water: 75, enrich: "banana" },
+    { group: "Ovos, leite e gordura", name: "Ovos", water: 75, enrich: "ovos" },
+    { group: "Ovos, leite e gordura", name: "Leite integral", water: 87, enrich: "leite" },
+    { group: "Ovos, leite e gordura", name: "Leite desnatado", water: 91, enrich: "leite" },
+    { group: "Ovos, leite e gordura", name: "Leite em pó integral", water: 0, enrich: "leite" },
+    { group: "Ovos, leite e gordura", name: "Leite em pó desnatado", water: 0, enrich: "leite" },
     { group: "Ovos, leite e gordura", name: "Cacau em pó", water: 0 },
-    { group: "Ovos, leite e gordura", name: "Leitelho", water: 90 },
-    { group: "Ovos, leite e gordura", name: "Iogurte", water: 85 },
-    { group: "Ovos, leite e gordura", name: "Manteiga", water: 16 },
-    { group: "Ovos, leite e gordura", name: "Margarina sem sal", water: 16 },
-    { group: "Ovos, leite e gordura", name: "Margarina com sal", water: 16 },
-    { group: "Ovos, leite e gordura", name: "Mel", water: 17 },
-    { group: "Ovos, leite e gordura", name: "Melado", water: 22 },
+    { group: "Ovos, leite e gordura", name: "Leitelho", water: 90, enrich: "leite" },
+    { group: "Ovos, leite e gordura", name: "Iogurte", water: 85, enrich: "leite" },
+    { group: "Ovos, leite e gordura", name: "Manteiga", water: 16, enrich: "gordura" },
+    { group: "Ovos, leite e gordura", name: "Margarina sem sal", water: 16, enrich: "gordura" },
+    { group: "Ovos, leite e gordura", name: "Margarina com sal", water: 16, enrich: "gordura" },
+    { group: "Ovos, leite e gordura", name: "Mel", water: 17, enrich: "açúcar" },
+    { group: "Ovos, leite e gordura", name: "Melado", water: 22, enrich: "açúcar" },
   ];
+
+  // Pão enriquecido: quando ovos, leite, gordura, açúcar ou purês somam 5% ou mais,
+  // o nome do pão vem deles, não da hidratação (ovos numa "focaccia" seria contrassenso).
+  const ENRICHED_MIN = 5;
+  const BASE_MIN = 10;
+  const ENRICHED_NAMES = {
+    batata: "Pão de batata",
+    "batata-doce": "Pão de batata-doce",
+    mandioca: "Pão de mandioca",
+    "abóbora": "Pão de abóbora",
+    banana: "Pão de banana",
+    ovos: "Pão enriquecido com ovos",
+    leite: "Pão de leite",
+    gordura: "Pão amanteigado",
+    "açúcar": "Pão adoçado",
+  };
+  const BASES = ["batata", "batata-doce", "mandioca", "abóbora", "banana"];
+
+  function enrichedBread(ingredients) {
+    const totals = {};
+    let sum = 0;
+    ingredients.forEach((item) => {
+      if (item.role !== "extra" || item.custom) return;
+      const spec = ADDABLE.find((entry) => entry.name === item.name);
+      if (!spec || !spec.enrich) return;
+      const pct = Math.max(0, num(item.pct));
+      totals[spec.enrich] = (totals[spec.enrich] || 0) + pct;
+      sum += pct;
+    });
+    if (sum < ENRICHED_MIN) return null;
+    const eggs = totals.ovos || 0;
+    const fat = totals.gordura || 0;
+    if (eggs >= 15 || (eggs > 0 && fat >= 15)) return "Brioche";
+    const base = BASES.filter((key) => (totals[key] || 0) >= BASE_MIN).sort((x, y) => totals[y] - totals[x])[0];
+    if (base) return ENRICHED_NAMES[base];
+    const top = Object.keys(totals).sort((x, y) => totals[y] - totals[x])[0];
+    return ENRICHED_NAMES[top];
+  }
 
   function num(value) {
     if (typeof value === "number") return Number.isFinite(value) ? value : 0;
@@ -232,6 +270,7 @@
     const totalWeight = flour + rows.reduce((sum, row) => sum + row.grams, 0);
     const hydration = flour > 0 ? (totalWater / flour) * 100 : 0;
     const band = BANDS.find((item) => hydration <= item.max) || BANDS[BANDS.length - 1];
+    const enriched = enrichedBread(ingredients);
     const flourShare = totalWeight > 0 ? (flour / totalWeight) * 100 : 0;
     const waterShare = totalWeight > 0 ? (totalWater / totalWeight) * 100 : 0;
     const otherShare = Math.max(0, 100 - flourShare - waterShare);
@@ -248,6 +287,10 @@
       totalWeight,
       hydration,
       band,
+      enriched: !!enriched,
+      bread: enriched || band.pao,
+      // Pão enriquecido tem miolo fechado e macio, qualquer que seja a hidratação.
+      img: enriched ? BANDS.find((item) => item.feel === "macia").img : band.img,
       flourShare,
       waterShare,
       otherShare,
@@ -263,6 +306,7 @@
     matchRatio,
     splitLevain,
     levainProfile,
+    enrichedBread,
     gramsOf,
     convertYeast,
     compute,

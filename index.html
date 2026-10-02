@@ -53,12 +53,12 @@
         </div>
         <aside class="crumb-side">
           <div class="crumb-layout">
-            <img class="crumb-thumb" :src="result.band.img" alt="Corte do pão nesta faixa de hidratação">
+            <img class="crumb-thumb" :src="result.img" alt="Corte do pão nesta faixa de hidratação">
             <div>
               <p class="kicker side-kicker">Hidratação total</p>
               <p class="side-hyd" :data-final-hyd="result.hydration">{{ formatPct(result.hydration) }}<small>%</small></p>
               <p class="side-feel" :data-feel="result.band.feel">{{ result.band.sensacao }}</p>
-              <p class="side-bread">{{ result.band.pao }}</p>
+              <p class="side-bread" :data-enriched="result.enriched">{{ result.bread }}</p>
               <p class="side-mass" :data-total="result.totalWeight">{{ formatG(result.totalWeight) }} g <span>massa</span></p>
             </div>
           </div>
