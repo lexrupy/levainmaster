@@ -978,14 +978,9 @@ createApp({
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("Canvas indisponível");
 
-      // Linha sem observação fica baixa. Levain, fermento e teor de água guardam o texto embaixo.
+      // Linha sem observação fica baixa. O levain não repete aqui o bloco destacado.
       function ingredientNote(row) {
-        if (row.ferment === "levain" && result.value.levain?.valid) {
-          const lv = result.value.levain;
-          return "Levain " + state.levain.L + ":" + state.levain.A + ":" + state.levain.F
-            + " · hidratação " + formatPct(levainProfile.value?.hydration || 0) + "%"
-            + " · " + formatG(lv.seed) + " g isca, " + formatG(lv.water) + " g água, " + formatG(lv.flour) + " g farinha";
-        }
+        if (row.ferment === "levain") return "";
         if (row.custom) return "Teor de água " + formatPct(row.waterPct) + "%";
         if (row.waterPct > 0 && row.waterPct < 100) return formatPct(row.waterPct) + "% de água";
         if (row.ferment === "seco" || row.ferment === "fresco") {
