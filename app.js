@@ -201,29 +201,14 @@ createApp({
       return groups;
     });
 
-    // Meia lua da composição: farinha, água e outros, da esquerda para a direita,
-    // com 2 unidades de vão entre os trechos. Raio 52, centro (60, 58).
-    const compArcs = computed(() => {
-      const r = 52;
-      const gap = 2 / (Math.PI * r);
-      const point = (f) => {
-        const angle = Math.PI * (1 - f);
-        return (60 + r * Math.cos(angle)).toFixed(2) + " " + (58 - r * Math.sin(angle)).toFixed(2);
-      };
-      const parts = [
+    // Barra da composição: farinha, água e outros, da esquerda para a direita.
+    const compParts = computed(() =>
+      [
         { key: "flour", label: "Farinha", share: result.value.flourShare },
         { key: "water", label: "Água", share: result.value.waterShare },
         { key: "other", label: "Outros", share: result.value.otherShare },
-      ].filter((part) => part.share > 0.05);
-      let start = 0;
-      return parts.map((part, index) => {
-        const end = start + part.share / 100;
-        const from = index > 0 ? start + gap / 2 : start;
-        const to = Math.min(index < parts.length - 1 ? end - gap / 2 : end, 0.9999);
-        start = end;
-        return { ...part, d: "M " + point(from) + " A " + r + " " + r + " 0 0 1 " + point(Math.max(from, to)) };
-      });
-    });
+      ].filter((part) => part.share > 0.05)
+    );
 
     const waterPct = computed({
       get() {
@@ -663,7 +648,7 @@ createApp({
       waterDiffers,
       ratioId,
       levainProfile,
-      compArcs,
+      compParts,
       ratioGroups: Padeiro.RATIO_GROUPS,
       menuGroups,
       menuOpen,

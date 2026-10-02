@@ -42,17 +42,16 @@
               <button type="button" class="spin" @click="bumpFlour(-50)" aria-label="Diminuir farinha">▼</button>
             </div>
           </div>
-          <figure class="comp-arc">
-            <svg viewBox="0 0 120 64" role="img" :aria-label="'Composição da massa: farinha ' + formatPct(result.flourShare) + '%, água ' + formatPct(result.waterShare) + '%, outros ' + formatPct(result.otherShare) + '%'">
-              <path class="track" d="M 8 58 A 52 52 0 0 1 112 58"/>
-              <path v-for="seg in compArcs" :key="seg.key" :class="seg.key" :d="seg.d"><title>{{ seg.label }} {{ formatPct(seg.share) }}%</title></path>
-            </svg>
-            <figcaption class="arc-legend">
-              <span class="flour">Farinha<b>{{ formatPct(result.flourShare) }}%</b></span>
-              <span class="water">Água<b>{{ formatPct(result.waterShare) }}%</b></span>
-              <span class="other">Outros<b>{{ formatPct(result.otherShare) }}%</b></span>
-            </figcaption>
-          </figure>
+          <div class="comp-bar" role="img" :aria-label="'Composição da massa: farinha ' + formatPct(result.flourShare) + '%, água ' + formatPct(result.waterShare) + '%, outros ' + formatPct(result.otherShare) + '%'">
+            <span v-for="part in compParts" :key="part.key" :class="part.key" :style="{ flexGrow: part.share }" :title="part.label + ' ' + formatPct(part.share) + '%'"></span>
+          </div>
+          <div class="comp-legend">
+            <span class="flour">Farinha<b>{{ formatPct(result.flourShare) }}%</b></span>
+            <span class="water">Água<b>{{ formatPct(result.waterShare) }}%</b></span>
+            <span class="other">Outros<b>{{ formatPct(result.otherShare) }}%</b></span>
+          </div>
+          <p class="mass" :data-total="result.totalWeight"><b>{{ formatG(result.totalWeight) }} g</b><span>de massa</span></p>
+          <button type="button" class="save-quick" :class="{ done: savedFlash }" @click="openRecipes(true)">{{ savedFlash ? 'Salva ✓' : 'Salvar receita' }}</button>
         </div>
         <aside class="crumb-side">
           <div class="crumb-layout">
@@ -62,8 +61,6 @@
               <p class="side-hyd" :data-final-hyd="result.hydration">{{ formatPct(result.hydration) }}<small>%</small></p>
               <p class="side-feel" :data-feel="result.band.feel">{{ result.band.sensacao }}</p>
               <p class="side-bread" :data-enriched="result.enriched">{{ result.bread }}</p>
-              <p class="side-mass" :data-total="result.totalWeight">{{ formatG(result.totalWeight) }} g <span>massa</span></p>
-              <button type="button" class="save-quick" :class="{ done: savedFlash }" @click="openRecipes(true)">{{ savedFlash ? 'Salva ✓' : 'Salvar receita' }}</button>
             </div>
           </div>
         </aside>

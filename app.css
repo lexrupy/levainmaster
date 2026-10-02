@@ -136,7 +136,8 @@ input[type="number"] {
   gap: 12px;
 }
 
-.field-head { margin-bottom: 6px; }
+.field-head { margin-bottom: 2px; }
+.flour-side .field-head { justify-content: flex-start; gap: 8px; }
 
 label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb, .part label, .menu small {
   color: var(--muted);
@@ -195,7 +196,6 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   line-height: 1.15;
 }
 
-.side-mass span { font-weight: 500; }
 
 .side-hyd {
   margin: 0;
@@ -212,7 +212,7 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   font-weight: 650;
 }
 
-.side-feel, .side-bread, .side-mass {
+.side-feel, .side-bread {
   margin: 2px 0 0;
   font-size: 0.78rem;
   line-height: 1.25;
@@ -243,21 +243,17 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   overflow: hidden;
 }
 
-.side-mass {
-  color: var(--muted);
-  font-weight: 650;
-}
 
 .mega {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   margin-bottom: 0;
 }
 
 .mega input {
   flex: 0 0 auto;
-  width: calc((var(--flour-ch, 3) * 1ch) + 0.55ch) !important;
+  width: calc((var(--flour-ch, 3) * 1ch) + 0.15ch) !important;
   border: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
@@ -277,15 +273,19 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 .spins { display: flex; flex-direction: column; }
 
 .spin {
-  width: 40px;
-  height: 32px;
-  border-radius: 8px;
+  width: 34px;
+  height: 22px;
+  padding: 0;
+  margin: 0;
+  border-radius: 6px;
   color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1;
 }
 
 .spin:hover, .del:hover, .menu button:hover { background: #f6f1e8; }
 
-.hyd-head { margin-top: 16px; }
+.hyd-head { margin-top: 10px; }
 
 .hyd-num {
   font-size: 2rem;
@@ -835,36 +835,48 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   cursor: pointer;
 }
 
-/* Meia lua da composição, abaixo dos gramas de farinha */
-.comp-arc {
-  width: 150px;
-  margin: 10px 0 0;
+/* Composição da massa: barra empilhada logo abaixo dos gramas de farinha */
+.flour-side { min-width: 150px; }
+
+.comp-bar {
+  display: flex;
+  gap: 2px;
+  height: 10px;
+  margin-top: 8px;
 }
+.comp-bar span { min-width: 2px; border-radius: 2px; }
+.comp-bar span:first-child { border-radius: 4px 2px 2px 4px; }
+.comp-bar span:last-child { border-radius: 2px 4px 4px 2px; }
+.comp-bar span:only-child { border-radius: 4px; }
+.comp-bar .flour { background: var(--comp-flour); }
+.comp-bar .water { background: var(--comp-water); }
+.comp-bar .other { background: var(--comp-other); }
 
-.comp-arc svg { display: block; width: 100%; height: auto; overflow: visible; }
-
-.comp-arc path { fill: none; stroke-width: 12; }
-.comp-arc .track { stroke: #f0e8dc; }
-.comp-arc path.flour { stroke: var(--comp-flour); }
-.comp-arc path.water { stroke: var(--comp-water); }
-.comp-arc path.other { stroke: var(--comp-other); }
-
-.arc-legend {
+.comp-legend {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  margin-top: 6px;
+  grid-template-columns: repeat(3, auto);
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 5px;
   font-size: 0.7rem;
   font-weight: 650;
   line-height: 1.2;
-  text-align: center;
 }
+.comp-legend span { display: flex; flex-direction: column; }
+.comp-legend b { color: var(--ink); font-size: 0.82rem; font-weight: 680; }
+.comp-legend .flour { color: var(--comp-flour-text); }
+.comp-legend .water { color: var(--comp-water-text); }
+.comp-legend .other { color: var(--comp-other-text); }
 
-.arc-legend span { display: flex; flex-direction: column; }
-.arc-legend b { color: var(--ink); font-size: 0.82rem; font-weight: 680; }
-.arc-legend .flour { color: var(--comp-flour-text); }
-.arc-legend .water { color: var(--comp-water-text); }
-.arc-legend .other { color: var(--comp-other-text); }
+/* Peso da massa em destaque, abaixo da barra */
+.mass {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin: 8px 0 0;
+}
+.mass b { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.03em; color: var(--ink); }
+.mass span { font-size: 0.78rem; font-weight: 600; color: var(--muted); }
 
 /* Perfil da ativação do levain: textura, pico e sabor */
 .profile {
