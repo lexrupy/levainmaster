@@ -970,7 +970,9 @@ createApp({
       const pad = 64;
       const rows = result.value.rows;
       const hasLevain = result.value.levainOn;
-      const levainBlockY = 610;
+      const imageY = 370;
+      const imageH = 300;
+      const levainBlockY = imageY + imageH + 30;
       const levainBlockHeight = 272;
       const levainGap = 28;
       const top = levainBlockY + (hasLevain ? levainBlockHeight + levainGap : 0);
@@ -1083,9 +1085,7 @@ createApp({
       ctx.textAlign = "left";
 
       const imageX = pad;
-      const imageY = 370;
       const imageW = 420;
-      const imageH = 210;
       roundedRect(ctx, imageX, imageY, imageW, imageH, 20, "#efe6da");
       try {
         const image = new Image();
@@ -1106,19 +1106,31 @@ createApp({
       }
 
       const infoX = 520;
+      const fermentKinds = new Set(rows.filter((row) => Padeiro.isFerment(row)).map((row) => row.ferment));
+      const fermentacao = fermentKinds.size > 1 ? "Misto"
+        : fermentKinds.has("levain") ? "Levain"
+        : fermentKinds.has("fresco") ? "Fresco"
+        : fermentKinds.has("seco") ? "Seco"
+        : "—";
       ctx.fillStyle = "#8d7f70";
-      ctx.font = "650 18px Outfit, sans-serif";
-      ctx.fillText("TEXTURA", infoX, 400);
+      ctx.font = "650 20px Outfit, sans-serif";
+      ctx.fillText("FERMENTAÇÃO", infoX, 418);
+      ctx.fillStyle = "#2c241c";
+      ctx.font = "600 32px Outfit, sans-serif";
+      ctx.fillText(fermentacao, infoX, 460);
+      ctx.fillStyle = "#8d7f70";
+      ctx.font = "650 20px Outfit, sans-serif";
+      ctx.fillText("TEXTURA", infoX, 506);
       const feelColor = { firme: "#7a6244", macia: "#2f7a45", pegajosa: "#8a5a20", umida: "#8a3e28" }[result.value.band.feel] || "#8d7f70";
       ctx.fillStyle = feelColor;
-      ctx.font = "600 27px Outfit, sans-serif";
-      cardText(ctx, result.value.band.sensacao, infoX, 442, 420, 34, 2);
+      ctx.font = "600 32px Outfit, sans-serif";
+      cardText(ctx, result.value.band.sensacao, infoX, 548, 480, 38, 2);
       ctx.fillStyle = "#8d7f70";
-      ctx.font = "650 18px Outfit, sans-serif";
-      ctx.fillText(result.value.enriched ? "PÃO ENRIQUECIDO" : "PÃO TÍPICO", infoX, 510);
+      ctx.font = "650 20px Outfit, sans-serif";
+      ctx.fillText(result.value.enriched ? "PÃO ENRIQUECIDO" : "PÃO TÍPICO", infoX, 594);
       ctx.fillStyle = "#2c241c";
-      ctx.font = "600 26px Outfit, sans-serif";
-      cardText(ctx, result.value.bread, infoX, 548, 420, 33, 2);
+      ctx.font = "600 32px Outfit, sans-serif";
+      cardText(ctx, result.value.bread, infoX, 636, 480, 38, 2);
 
       if (hasLevain) {
         const lv = result.value.levain;
