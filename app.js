@@ -983,7 +983,7 @@ createApp({
         return { row, note, height: noteY + (noteLines - 1) * 18 + 20, nameY, noteY };
       });
       const rowsHeight = layouts.reduce((sum, item) => sum + item.height, 0);
-      const height = top + rowsHeight + 260;
+      const height = top + rowsHeight + 340;
       canvas.width = width;
       canvas.height = height;
 
@@ -1141,13 +1141,46 @@ createApp({
       });
 
       const footerY = rowY + 28;
-      roundedRect(ctx, pad, footerY, width - pad * 2, 82, 16, "#f7f2ea");
+      const footerH = 156;
+      roundedRect(ctx, pad, footerY, width - pad * 2, footerH, 16, "#f7f2ea");
       ctx.fillStyle = "#7d6244";
       ctx.font = "650 18px Outfit, sans-serif";
-      ctx.fillText("COMPOSIÇÃO DA MASSA", pad + 20, footerY + 30);
-      ctx.fillStyle = "#2c241c";
-      ctx.font = "600 19px Outfit, sans-serif";
-      ctx.fillText("Farinha " + formatPct(result.value.flourShare) + "%   ·   Água " + formatPct(result.value.waterShare) + "%   ·   Outros " + formatPct(result.value.otherShare) + "%", pad + 20, footerY + 61);
+      ctx.fillText("COMPOSIÇÃO DA MASSA", pad + 20, footerY + 32);
+      const barX = pad + 20;
+      const barW = width - pad * 2 - 40;
+      const parts = compParts.value;
+      const barY = footerY + 52;
+      const barH = 16;
+      if (parts.length) {
+        const gap = 3;
+        const inner = barW - gap * (parts.length - 1);
+        const totalShare = parts.reduce((sum, part) => sum + part.share, 0) || 1;
+        const widths = parts.map((part) => Math.max(6, Math.round(inner * part.share / totalShare)));
+        const used = widths.reduce((sum, item) => sum + item, 0);
+        widths[widths.length - 1] = Math.max(4, widths[widths.length - 1] + inner - used);
+        const colors = { flour: "#b8792e", water: "#2f80c0", other: "#6e9a35" };
+        let bx = barX;
+        widths.forEach((w, index) => {
+          roundedRect(ctx, bx, barY, Math.max(4, w), barH, parts.length === 1 ? 6 : 3, colors[parts[index].key] || "#b8792e");
+          bx += w + gap;
+        });
+      }
+      const legend = [
+        ["Farinha", result.value.flourShare, "#9e6828"],
+        ["Água", result.value.waterShare, "#2c78b4"],
+        ["Outros", result.value.otherShare, "#5a7e2b"],
+      ];
+      legend.forEach(([label, share, color], index) => {
+        const x = index === 0 ? barX : index === 2 ? barX + barW : barX + barW / 2;
+        ctx.textAlign = index === 0 ? "left" : index === 2 ? "right" : "center";
+        ctx.fillStyle = color;
+        ctx.font = "650 16px Outfit, sans-serif";
+        ctx.fillText(label, x, footerY + 96);
+        ctx.fillStyle = "#2c241c";
+        ctx.font = "680 22px Outfit, sans-serif";
+        ctx.fillText(formatPct(share) + "%", x, footerY + 124);
+      });
+      ctx.textAlign = "left";
       ctx.fillStyle = "#8d7f70";
       ctx.font = "500 16px Outfit, sans-serif";
       ctx.textAlign = "center";
