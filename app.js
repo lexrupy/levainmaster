@@ -171,6 +171,7 @@ createApp({
 
     const result = computed(() => Padeiro.compute(state));
     const ratioId = computed(() => Padeiro.matchRatio(state.levain.L, state.levain.A, state.levain.F));
+    const levainItem = computed(() => state.ingredients.find((item) => Padeiro.isFerment(item) && item.ferment === "levain") || null);
     const levainProfile = computed(() => Padeiro.levainProfile(state.levain.L, state.levain.A, state.levain.F));
     // Segundo fermento: o tipo que falta em relação ao principal.
     const secondFerment = computed(() => state.ingredients.find((item) => item.role === "ferment2") || null);
@@ -246,11 +247,14 @@ createApp({
       return editing.key === editKey(item, field);
     }
 
+    // field: "pct" ou um campo de gramas ("grams" na lista, "levainGrams" no modal do levain).
+    // Os de gramas recalculam o percentual sobre a farinha; chaves diferentes evitam abrir os dois juntos.
     function startEdit(item, field) {
-      if (field === "grams" && result.value.flour <= 0) return;
+      const grams = field !== "pct";
+      if (grams && result.value.flour <= 0) return;
       editing.key = editKey(item, field);
       editing.undo = item.pct;
-      editing.text = field === "grams"
+      editing.text = grams
         ? String(Math.round(rowOf(item.id).grams))
         : String(Math.round(Padeiro.num(item.pct) * 100) / 100);
     }
@@ -648,6 +652,7 @@ createApp({
       waterDiffers,
       ratioId,
       levainProfile,
+      levainItem,
       compParts,
       ratioGroups: Padeiro.RATIO_GROUPS,
       menuGroups,

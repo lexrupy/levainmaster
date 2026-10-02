@@ -557,6 +557,8 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 }
 
 .levain-grams small { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+.levain-grams { display: flex; align-items: baseline; gap: 2px; }
+.levain-grams .grams-input { font-size: 1.35rem; }
 
 .ratio-select { width: 100%; margin-bottom: 12px !important; padding: 8px 10px !important; height: auto !important; }
 

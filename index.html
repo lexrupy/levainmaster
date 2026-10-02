@@ -235,7 +235,10 @@
           <h2 id="levain-title">Ativar o levain</h2>
           <button type="button" class="del" @click="closeLevain" aria-label="Fechar">×</button>
         </header>
-        <p class="levain-grams">{{ formatG(result.levainGrams) }}<small> g na massa</small></p>
+        <p class="levain-grams" v-if="levainItem">
+          <input v-if="isEditing(levainItem, 'levainGrams')" v-focus class="grams-input" type="number" min="0" step="1" inputmode="decimal" :value="editing.text" @input="onEdit(levainItem, 'levainGrams', $event.target.value)" @blur="endEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc.prevent.stop="cancelEdit(levainItem)" aria-label="Gramas de levain na massa">
+          <button v-else type="button" class="grams-value" :disabled="result.flour <= 0" @click="startEdit(levainItem, 'levainGrams')" aria-label="Editar gramas de levain na massa" data-levain-grams>{{ formatG(result.levainGrams) }}</button><small> g na massa · {{ formatPctFine(levainItem.pct) }}% da farinha</small>
+        </p>
         <div class="parts">
           <div class="part part-ratio">
             <label for="ratio">Proporção</label>
