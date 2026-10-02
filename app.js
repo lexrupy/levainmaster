@@ -1205,10 +1205,14 @@ createApp({
       ctx.fillStyle = "#7d6244";
       ctx.font = "650 18px Outfit, sans-serif";
       ctx.fillText("COMPOSIÇÃO DA MASSA", pad + 20, footerY + 32);
-      const barX = pad + 20;
-      const barW = width - pad * 2 - 40;
+      const bodyX = pad + 12;
+      const bodyY = footerY + 48;
+      const bodyW = width - pad * 2 - 24;
+      roundedRect(ctx, bodyX, bodyY, bodyW, footerH - 60, 14, "#fffdfb");
+      const barX = bodyX + 16;
+      const barW = bodyW - 32;
       const parts = compParts.value;
-      const barY = footerY + 52;
+      const barY = bodyY + 16;
       const barH = 16;
       if (parts.length) {
         const gap = 3;
@@ -1234,10 +1238,10 @@ createApp({
         ctx.textAlign = index === 0 ? "left" : index === 2 ? "right" : "center";
         ctx.fillStyle = color;
         ctx.font = "650 16px Outfit, sans-serif";
-        ctx.fillText(label, x, footerY + 96);
+        ctx.fillText(label, x, bodyY + 50);
         ctx.fillStyle = "#2c241c";
         ctx.font = "680 22px Outfit, sans-serif";
-        ctx.fillText(formatPct(share) + "%", x, footerY + 124);
+        ctx.fillText(formatPct(share) + "%", x, bodyY + 76);
       });
       ctx.textAlign = "left";
       ctx.fillStyle = "#8d7f70";
