@@ -988,3 +988,24 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   }
   .levain-dialog .sheet-foot { margin-top: auto; }
 }
+
+/* Botão Salvar do card principal e o modal curto que ele abre */
+.save-quick {
+  margin: 8px 0 0;
+  padding: 5px 12px;
+  width: auto;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--sheet);
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 650;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.save-quick:hover { background: #f6f1e8; }
+.save-quick.done { border-color: var(--green); color: var(--green); }
+
+@media (max-width: 640px) {
+  .levain-dialog > .levain.compact { height: auto; }
+}

@@ -142,6 +142,9 @@ createApp({
     const recipes = ref(loadRecipes());
     const recipeName = ref("");
     const confirmDelete = ref(null);
+    const quickSave = ref(false);
+    const savedFlash = ref(false);
+    let flashTimer = null;
     const dateFormat = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
     const canInstall = ref(false);
     let deferredPrompt = null;
@@ -411,10 +414,13 @@ createApp({
       } catch (error) {}
     }
 
-    function openRecipes() {
+    // quick: aberto pelo botão Salvar do card, só com o campo de descrição.
+    function openRecipes(quick = false) {
       confirmDelete.value = null;
+      quickSave.value = quick === true;
       const dialog = recipesDialog.value;
       if (dialog && !dialog.open) dialog.showModal();
+      if (quickSave.value) nextTick(() => document.getElementById("recipe-name")?.focus());
     }
 
     function closeRecipes() {
@@ -437,6 +443,12 @@ createApp({
       });
       persistRecipes();
       recipeName.value = "";
+      if (quickSave.value) {
+        closeRecipes();
+        savedFlash.value = true;
+        clearTimeout(flashTimer);
+        flashTimer = setTimeout(() => (savedFlash.value = false), 2000);
+      }
     }
 
     function openRecipe(recipe) {
@@ -583,6 +595,8 @@ createApp({
       recipes,
       recipeName,
       confirmDelete,
+      quickSave,
+      savedFlash,
       openRecipes,
       closeRecipes,
       onRecipesClick,
