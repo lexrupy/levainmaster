@@ -1,6 +1,6 @@
 // Percentual do padeiro — © 2026 Alexandre da Silva
 // SPDX-License-Identifier: LGPL-3.0-or-later
-const CACHE = "padeiro-v57";
+const CACHE = "padeiro-v58";
 const FILES = [
   "./",
   "./index.html",
@@ -51,14 +51,26 @@ self.addEventListener("activate", (event) => {
 
 // Rede primeiro, revalidando com o servidor (cache: "no-cache"); o que chegar
 // atualiza o cache. Sem rede, com erro ou depois de NETWORK_TIMEOUT, vale o cache.
-// card.png não existe no servidor. A página grava a prévia no cache e este
-// pedido responde com ela, inline, para o navegador mostrar em vez de baixar.
+// /card e /card.png não existem no servidor. A página manda o PNG e este
+// worker responde com a imagem, para o navegador mostrar em vez de baixar.
+let cardBlob = null;
+
+const CARD_HEADERS = {
+  "Content-Type": "image/png",
+  "Content-Disposition": "inline",
+  "Cache-Control": "no-store",
+};
+
 function cardRequest() {
   return new Request(new URL("./card.png", self.location).href);
 }
 
 function isCardRequest(url) {
-  return url.pathname.endsWith("/card.png");
+  return /\/card(\.png)?$/.test(url.pathname);
+}
+
+function cardResponse(blob) {
+  return new Response(blob.slice(0, blob.size, "image/png"), { headers: CARD_HEADERS });
 }
 
 self.addEventListener("fetch", (event) => {
@@ -69,10 +81,11 @@ self.addEventListener("fetch", (event) => {
 
   if (isCardRequest(url)) {
     event.respondWith((async () => {
+      if (cardBlob) return cardResponse(cardBlob);
       const cache = await caches.open(CACHE);
       const hit = await cache.match(cardRequest());
       if (hit) return hit;
-      return new Response("Abra a calculadora com ?card para gerar a prévia.", {
+      return new Response("Abra a calculadora uma vez para gerar o card.", {
         status: 404,
         headers: { "Content-Type": "text/plain; charset=utf-8" },
       });
@@ -115,22 +128,12 @@ self.addEventListener("message", (event) => {
   if (!port) return;
   if (event.data === "version") {
     port.postMessage({ version: CACHE });
-  } else if (event.data && event.data.type === "card") {
+  } else if (event.data && event.data.type === "card" && event.data.blob) {
+    cardBlob = event.data.blob;
     event.waitUntil(
       caches
         .open(CACHE)
-        .then((cache) =>
-          cache.put(
-            cardRequest(),
-            new Response(event.data.blob, {
-              headers: {
-                "Content-Type": "image/png",
-                "Content-Disposition": "inline",
-                "Cache-Control": "no-store",
-              },
-            })
-          )
-        )
+        .then((cache) => cache.put(cardRequest(), cardResponse(cardBlob)))
         .then(() => port.postMessage({ ok: true }), () => port.postMessage({ ok: false }))
     );
   } else if (event.data === "refresh") {

@@ -186,6 +186,7 @@ createApp({
     const cardPreviewUrl = ref("");
     let cardPreviewTimer = 0;
     let cardPreviewObjectUrl = "";
+    let cardGeneration = 0;
     const dateFormat = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
     const canInstall = ref(false);
     let deferredPrompt = null;
@@ -907,10 +908,13 @@ createApp({
     }
 
     async function refreshCardPreview() {
-      if (!cardPreview) return;
+      const generation = ++cardGeneration;
       try {
         const blob = await makeRecipeCard();
+        if (generation !== cardGeneration) return;
         const stored = (await whenControlled()) && (await storeCard(blob));
+        if (generation !== cardGeneration) return;
+        if (!cardPreview) return;
         if (stored) {
           if (cardPreviewObjectUrl) {
             URL.revokeObjectURL(cardPreviewObjectUrl);
@@ -924,7 +928,7 @@ createApp({
         cardPreviewObjectUrl = url;
         cardPreviewUrl.value = url;
       } catch (error) {
-        cardPreviewUrl.value = "";
+        if (cardPreview) cardPreviewUrl.value = "";
       }
     }
 
@@ -1054,15 +1058,13 @@ createApp({
       { deep: true }
     );
 
-    if (cardPreview) {
-      watch(state, () => {
-        clearTimeout(cardPreviewTimer);
-        cardPreviewTimer = setTimeout(refreshCardPreview, 180);
-      }, { deep: true });
-    }
+    watch(state, () => {
+      clearTimeout(cardPreviewTimer);
+      cardPreviewTimer = setTimeout(refreshCardPreview, 180);
+    }, { deep: true });
 
     onMounted(() => {
-      if (cardPreview) refreshCardPreview();
+      refreshCardPreview();
       window.addEventListener("beforeinstallprompt", (event) => {
         event.preventDefault();
         deferredPrompt = event;

@@ -29,11 +29,11 @@
 
     <section v-if="cardPreview" class="sheet card-preview">
       <p class="kicker">Prévia do card</p>
-      <p class="hint">Página de teste. A imagem aparece aqui e não é baixada. Ao mudar a receita, ela atualiza.</p>
+      <p class="hint">A imagem é servida pelo app em <a href="card">card</a>. Ao mudar a receita, ela atualiza. Nada é baixado.</p>
       <p v-if="!cardPreviewUrl" class="hint">Preparando…</p>
       <img v-else class="card-preview-img" :src="cardPreviewUrl" alt="Card da receita, prévia de teste">
       <p class="card-preview-links">
-        <a v-if="cardPreviewUrl" href="card.png" target="_blank" rel="noopener">Abrir em tamanho real</a>
+        <a href="card" target="_blank" rel="noopener">Abrir em tamanho real</a>
         <a href="./">Fechar prévia</a>
       </p>
     </section>
