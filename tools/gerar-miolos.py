@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 # Percentual do padeiro — © 2026 Alexandre da Silva
 # SPDX-License-Identifier: LGPL-3.0-or-later
-"""Gera as ilustrações de miolo (img/miolo-N-*.svg), uma por faixa de BANDS.
+"""Gera as ilustrações de miolo (img/miolo-N-*.svg) e o brioche enriquecido.
 
 Mesmo pão e mesmo enquadramento em todas; só os alvéolos mudam.
 A semente é fixa, então rodar de novo gera os mesmos arquivos.
 
     python3 tools/gerar-miolos.py              # casca da foto (padrão)
     python3 tools/gerar-miolos.py --ilustrado  # pão todo desenhado
+    python3 tools/gerar-miolos.py --enriquecido     # recorte 3:2 da foto fornecida
+    python3 tools/gerar-miolos.py --enriquecido-svg # ilustração SVG do brioche
 
 No padrão, a casca, o pano e a faixa clara junto da casca vêm da foto
 CASCA_FOTO, embutida no SVG; o script acha o miolo na foto e gera só os
@@ -228,6 +230,7 @@ def svg(level, seed):
 
 def backup(out):
     current = sorted(out.glob("miolo-[0-9]-*.svg"))
+    current.extend(sorted(out.glob("miolo-enriquecido.*")))
     if not current:
         return
     dest = out / "backup" / datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -352,8 +355,72 @@ def svg_photo(level, seed, photo, crumb, tone):
 '''
 
 
+def svg_enriched(seed=1042):
+    """Ilustração temática de uma fatia de brioche, com miolo fino e macio."""
+    rng = random.Random(seed)
+    holes = []
+    # Poros pequenos e regulares, mantendo o aspecto de miolo enriquecido e fofo.
+    for row, y in enumerate(range(140, 326, 20)):
+        for col, x in enumerate(range(142, 470, 22)):
+            if ((x - 300) / 173) ** 2 + ((y - 262) / 120) ** 2 > 0.88:
+                continue
+            dx, dy = rng.uniform(-3, 3), rng.uniform(-2, 2)
+            rx, ry = rng.uniform(2.0, 3.8), rng.uniform(2.2, 4.0)
+            holes.append(
+                f'<ellipse cx="{x + dx:.1f}" cy="{y + dy:.1f}" rx="{rx:.1f}" ry="{ry:.1f}" '
+                'fill="#bc8b4e" opacity="0.50"/>'
+            )
+    crumb = "M 300 118 C 379 118 455 158 474 218 C 490 271 458 333 402 351 C 344 370 247 368 194 348 C 137 327 108 274 126 216 C 144 159 221 118 300 118 Z"
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}">
+<defs>
+  <linearGradient id="table" x2="0" y2="1"><stop stop-color="#f5f0e8"/><stop offset="1" stop-color="#e8dfd2"/></linearGradient>
+  <linearGradient id="crust" x2="0" y2="1"><stop stop-color="#6d3511"/><stop offset=".28" stop-color="#a85d1b"/><stop offset=".62" stop-color="#d28a35"/><stop offset=".86" stop-color="#bd7028"/><stop offset="1" stop-color="#754018"/></linearGradient>
+  <linearGradient id="crumb" x2="0" y2="1"><stop stop-color="#f8e9c8"/><stop offset="1" stop-color="#e9c98f"/></linearGradient>
+  <filter id="shadow"><feGaussianBlur stdDeviation="9"/></filter>
+  <filter id="relief"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="3" seed="7" result="n"/><feDiffuseLighting in="n" surfaceScale="2" lighting-color="#fff4df" result="l"><feDistantLight azimuth="235" elevation="52"/></feDiffuseLighting><feComposite in="SourceGraphic" in2="l" operator="arithmetic" k1="1" k2="0" k3="0" k4="0"/></filter>
+  <clipPath id="crumbclip"><path d="{crumb}"/></clipPath>
+</defs>
+<rect x="0" y="0" width="{W}" height="{H}" fill="url(#table)"/>
+<ellipse cx="300" cy="361" rx="202" ry="17" fill="#4a3420" opacity=".28" filter="url(#shadow)"/>
+<!-- Formato alto e arredondado de uma fatia de brioche. -->
+<path d="M 91 337 C 72 300 81 235 108 181 C 143 111 213 83 300 81 C 387 83 457 111 492 181 C 519 235 528 300 509 337 Q 300 375 91 337 Z" fill="#b9783a"/>
+<path d="{crumb}" fill="#f1dfba"/>
+<g clip-path="url(#crumbclip)">{''.join(holes)}</g>
+<path d="{crumb}" fill="none" stroke="#d2aa6b" stroke-width="2" opacity=".8"/>
+<path d="M 110 210 C 147 135 216 102 300 101 C 382 102 447 135 481 205" fill="none" stroke="#f1bf69" stroke-width="5" opacity=".48"/>
+</svg>
+'''
+
+
+def crop_enriched(out):
+    """Recorta a foto fornecida em 3:2 sem deformar as proporções do pão."""
+    from PIL import Image
+
+    source = Image.open(out / "brioche.jpeg").convert("RGB")
+    crop_width = round(source.height * 3 / 2)
+    left = (source.width - crop_width) // 2
+    cropped = source.crop((left, 0, left + crop_width, source.height))
+    cropped = cropped.resize((600, 400), Image.Resampling.LANCZOS)
+    path = out / "miolo-enriquecido.jpg"
+    cropped.save(path, "JPEG", quality=90, optimize=True, progressive=True)
+    return path
+
+
 def main():
     out = ROOT / "img"
+    enriched_svg_only = "--enriquecido-svg" in sys.argv[1:]
+    if enriched_svg_only:
+        backup(out)
+        path = out / "miolo-enriquecido.svg"
+        path.write_text(svg_enriched(), encoding="utf-8")
+        print(path.relative_to(out.parent), f"{path.stat().st_size // 1024} KB")
+        return
+    enriched_only = "--enriquecido" in sys.argv[1:]
+    if enriched_only:
+        backup(out)
+        path = crop_enriched(out)
+        print(path.relative_to(out.parent), f"{path.stat().st_size // 1024} KB")
+        return
     illustrated = "--ilustrado" in sys.argv[1:]
     photo = None if illustrated else use_photo()
     backup(out)
@@ -362,6 +429,8 @@ def main():
         text = svg(level, 1000 + i) if illustrated else svg_photo(level, 1000 + i, *photo)
         path.write_text(text, encoding="utf-8")
         print(path.relative_to(out.parent), f"{path.stat().st_size // 1024} KB")
+    path = crop_enriched(out)
+    print(path.relative_to(out.parent), f"{path.stat().st_size // 1024} KB")
 
 
 if __name__ == "__main__":

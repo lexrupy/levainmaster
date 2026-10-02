@@ -343,7 +343,7 @@
       enriched: !!enriched,
       bread: enriched || band.pao,
       // Pão enriquecido tem miolo fechado e macio, qualquer que seja a hidratação.
-      img: enriched ? BANDS.find((item) => item.feel === "macia").img : band.img,
+      img: enriched ? "img/miolo-enriquecido.jpg" : band.img,
       flourShare,
       waterShare,
       otherShare,
