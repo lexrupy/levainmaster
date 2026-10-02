@@ -30,15 +30,53 @@
     return groups;
   }, []);
 
+  // Faixas do app: escolhem textura, pão típico e imagem pela hidratação total.
+  // Os limites seguem as faixas típicas das fontes (backlog/0034); os pães se sobrepõem,
+  // então o nome é só um exemplo típico ("Típico de ...").
   const BANDS = [
     { max: 57, feel: "firme", sensacao: "Firme, fácil de modelar", pao: "Pão sovado", miolo: "Miolo denso, de alvéolos pequenos", img: "img/miolo-1-firme.svg" },
     { max: 62, feel: "firme", sensacao: "Rígida, segura o formato", pao: "Pão francês", miolo: "Miolo fechado e uniforme", img: "img/miolo-2-fechado.svg" },
-    { max: 67, feel: "macia", sensacao: "Macia e elástica", pao: "Baguete", miolo: "Miolo uniforme, levemente aberto", img: "img/miolo-3-macio.svg" },
-    { max: 72, feel: "macia", sensacao: "Levemente pegajosa", pao: "Pão de fermentação natural", miolo: "Miolo levemente aberto", img: "img/miolo-4-levemente-aberto.svg" },
-    { max: 78, feel: "pegajosa", sensacao: "Pegajosa", pao: "Ciabatta", miolo: "Alvéolos abertos e irregulares", img: "img/miolo-5-aberto-irregular.svg" },
-    { max: 84, feel: "umida", sensacao: "Bem úmida", pao: "Focaccia", miolo: "Miolo muito aberto", img: "img/miolo-6-muito-aberto.svg" },
+    { max: 68, feel: "macia", sensacao: "Macia e elástica", pao: "Baguete", miolo: "Miolo uniforme, levemente aberto", img: "img/miolo-3-macio.svg" },
+    { max: 78, feel: "macia", sensacao: "Levemente pegajosa", pao: "Pão de fermentação natural", miolo: "Miolo levemente aberto", img: "img/miolo-4-levemente-aberto.svg" },
+    { max: 85, feel: "pegajosa", sensacao: "Pegajosa", pao: "Ciabatta", miolo: "Alvéolos abertos e irregulares", img: "img/miolo-5-aberto-irregular.svg" },
+    { max: 95, feel: "umida", sensacao: "Bem úmida", pao: "Focaccia", miolo: "Miolo muito aberto", img: "img/miolo-6-muito-aberto.svg" },
     { max: Infinity, feel: "umida", sensacao: "Extremamente úmida", pao: "Focaccia de alta hidratação", miolo: "Miolo rendado, de alvéolos grandes", img: "img/miolo-7-rendado.svg" },
   ];
+
+  // Faixa típica de hidratação de cada pão, segundo as fontes (backlog/0034).
+  // approx: sem fonte com números; faixa estimada pelo app.
+  const BREAD_INFO = {
+    "Pão sovado": {
+      min: 50, max: 57, approx: true,
+      text: "Massa firme e bem sovada, de miolo fechado e macio. Pães de massa firme, como o bagel, ficam entre 52% e 58%.",
+    },
+    "Pão francês": {
+      min: 58, max: 63, approx: true,
+      text: "O pãozinho de padaria é de baixa hidratação: massa firme, casca fina e crocante e miolo leve.",
+    },
+    Baguete: {
+      min: 62, max: 68,
+      text: "Massa macia e elástica, que segura a modelagem comprida. Casca crocante e miolo uniforme, levemente aberto.",
+    },
+    "Pão de fermentação natural": {
+      min: 70, max: 82,
+      text: "Os pães rústicos de levain costumam ficar nessa faixa. Mais água abre o miolo, mas deixa a massa mais difícil de modelar.",
+    },
+    Ciabatta: {
+      min: 80, max: 90,
+      text: "Massa muito úmida, trabalhada com dobras em vez de sova. Alvéolos grandes e irregulares.",
+    },
+    Focaccia: {
+      min: 75, max: 88,
+      text: "Varia muito: a genovese tradicional fica perto de 55% a 60%; as modernas, de 70% a 80%; e há versões super-hidratadas, de 110% a 120%. Assada em forma, com bastante azeite.",
+    },
+    "Focaccia de alta hidratação": {
+      min: 90, max: 120,
+      text: "Massa quase líquida, que só se trabalha com dobras e forma bem untada. Miolo rendado, de alvéolos grandes.",
+    },
+  };
+
+  const ENRICHED_INFO = "Pão enriquecido: o nome vem dos ingredientes, não da hidratação. Ovos, leite, gordura, açúcar ou purês somando 5% ou mais da farinha deixam o miolo mais fechado e macio, e a água deles entra na hidratação total.";
 
   // Água que entra na hidratação da massa. Farinha e pó secos ficam em 0:
   // a umidade de laboratório (~12%) não é água livre, e a farinha base também não conta a dela.
@@ -312,6 +350,8 @@
   return {
     RATIOS,
     RATIO_GROUPS,
+    BREAD_INFO,
+    ENRICHED_INFO,
     BANDS,
     ADDABLE,
     num,

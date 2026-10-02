@@ -59,7 +59,7 @@
               <p class="kicker side-kicker">Hidratação total</p>
               <p class="side-hyd" :data-final-hyd="result.hydration">{{ formatPct(result.hydration) }}<small>%</small></p>
               <p class="side-feel" :data-feel="result.band.feel">{{ result.band.sensacao }}</p>
-              <p class="side-bread" :data-enriched="result.enriched">{{ result.bread }}</p>
+              <p class="side-bread" :data-enriched="result.enriched"><span class="bread-pre">Típico de</span> <button type="button" class="bread-link" @click="openBread()">{{ result.bread }}</button></p>
             </div>
           </div>
         </aside>
@@ -155,6 +155,33 @@
         </div>
       </div>
     </section>
+
+    <dialog ref="breadDialog" class="levain-dialog" @click="onBreadClick" aria-labelledby="bread-title">
+      <article class="levain bread-info" tabindex="-1" autofocus>
+        <header class="levain-head">
+          <h2 id="bread-title">{{ breadDetail.name }}</h2>
+          <button type="button" class="del" @click="closeBread" aria-label="Fechar">×</button>
+        </header>
+        <template v-if="!breadDetail.enriched">
+          <p class="bread-range">Hidratação típica: <b>{{ breadDetail.min }}% a {{ breadDetail.max }}%</b><span v-if="breadDetail.approx"> (aproximada)</span></p>
+          <p class="bread-where" v-if="breadDetail.current">Sua massa está com <b>{{ formatPct(result.hydration) }}%</b>, {{ breadDetail.where }}.</p>
+        </template>
+        <p class="bread-text">{{ breadDetail.text }}</p>
+        <p class="hint">A hidratação indica um pão típico, não o que você está fazendo: as faixas se sobrepõem, e dá para fazer focaccia a 60%.</p>
+        <p class="kicker bread-list-label">Pães por hidratação</p>
+        <table class="bread-table">
+          <thead><tr><th>Pão</th><th>Típico</th><th>No app</th></tr></thead>
+          <tbody>
+            <tr v-for="row in breadRows" :key="row.name" :class="{ on: row.name === breadDetail.name }">
+              <td><button type="button" class="bread-link" @click="openBread(row.name)">{{ row.name }}</button></td>
+              <td>{{ row.typical }}<span v-if="row.approx">*</span></td>
+              <td>{{ row.appRange }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="hint">* Faixa aproximada, sem fonte com números. Pães enriquecidos (com ovos, leite, gordura ou purês) recebem o nome pelos ingredientes.</p>
+      </article>
+    </dialog>
 
     <dialog ref="confirmDialog" class="levain-dialog confirm-dialog" @click="onConfirmClick" @close="answerConfirm(false)" aria-labelledby="confirm-title" aria-describedby="confirm-text">
       <article class="levain compact confirm">

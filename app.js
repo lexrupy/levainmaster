@@ -148,6 +148,8 @@ createApp({
     const levainDialog = ref(null);
     const recipesDialog = ref(null);
     const aboutDialog = ref(null);
+    const breadDialog = ref(null);
+    const breadShown = ref("");
     const about = reactive({ version: "", offline: false, persisted: false, checking: false, status: "", reload: false });
     const recipes = ref(loadRecipes());
     const recipeName = ref("");
@@ -353,6 +355,43 @@ createApp({
     // Clique fora do conteúdo (no fundo escurecido) fecha.
     function onDialogClick(event) {
       if (event.target === levainDialog.value) closeLevain();
+    }
+
+    // Modal do pão típico: faixa de hidratação das fontes, explicação e a lista dos outros.
+    const breadRows = computed(() => {
+      let low = 0;
+      return Padeiro.BANDS.map((band) => {
+        const info = Padeiro.BREAD_INFO[band.pao] || {};
+        const appRange = band.max === Infinity ? "acima de " + low + "%" : (low ? low + 1 : "até ") + (low ? "–" : "") + band.max + "%";
+        low = band.max;
+        return { name: band.pao, appRange, typical: info.min != null ? info.min + "–" + info.max + "%" : "", approx: !!info.approx };
+      });
+    });
+
+    const breadDetail = computed(() => {
+      const name = breadShown.value;
+      const info = Padeiro.BREAD_INFO[name];
+      const hyd = result.value.hydration;
+      if (!info) return { name, enriched: true, text: Padeiro.ENRICHED_INFO };
+      let where = "dentro da faixa típica";
+      if (hyd < info.min) where = "abaixo da faixa típica";
+      else if (hyd > info.max) where = "acima da faixa típica";
+      return { name, enriched: false, min: info.min, max: info.max, approx: !!info.approx, text: info.text, where, current: name === result.value.bread };
+    });
+
+    function openBread(name) {
+      breadShown.value = name || result.value.bread;
+      const dialog = breadDialog.value;
+      if (dialog && !dialog.open) dialog.showModal();
+    }
+
+    function closeBread() {
+      const dialog = breadDialog.value;
+      if (dialog && dialog.open) dialog.close();
+    }
+
+    function onBreadClick(event) {
+      if (event.target === breadDialog.value) closeBread();
     }
 
     // Sobre: versão, situação offline e busca de atualização.
@@ -660,6 +699,13 @@ createApp({
       levainDialog,
       recipesDialog,
       aboutDialog,
+      breadDialog,
+      breadShown,
+      breadRows,
+      breadDetail,
+      openBread,
+      closeBread,
+      onBreadClick,
       about,
       openAbout,
       closeAbout,
