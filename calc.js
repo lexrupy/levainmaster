@@ -109,6 +109,63 @@
     return Math.round(out * 100) / 100;
   }
 
+  // Perfil da ativação, a partir da hidratação (água ÷ farinha) e de quantas vezes
+  // a farinha da alimentação supera a isca. Tempos para 24–26 °C.
+  // Mais líquido e mais quente puxa para o láctico (suave, cremoso); mais firme
+  // e mais frio puxa para o acético (azedo). Alimentação pequena herda mais
+  // acidez da isca; alimentação grande dá um levain mais suave.
+  const FLAVORS = [
+    "Bem láctico: suave e cremoso",
+    "Láctico: suave, azedinho de iogurte",
+    "Equilibrado",
+    "Acético: mais azedo",
+    "Bem acético: azedo e pungente",
+  ];
+
+  const PEAK_TIMES = ["2 a 3 h", "3 a 4 h", "4 a 6 h", "6 a 8 h", "8 a 12 h", "12 h ou mais"];
+
+  function levainProfile(L, A, F) {
+    const l = Math.max(0, num(L));
+    const a = Math.max(0, num(A));
+    const f = Math.max(0, num(F));
+    if (l <= 0 || f <= 0) return null;
+    const hydration = (a / f) * 100;
+    const feed = f / l;
+    const stiff = hydration < 85;
+
+    let texture = "Cremosa, como um iogurte grosso";
+    if (hydration > 115) texture = "Líquida, escorre da colher";
+    else if (hydration < 70) texture = "Massa firme, que se sova na mão";
+    else if (stiff) texture = "Pastosa, mais firme que um iogurte";
+
+    let speed = feed <= 0.5 ? 0 : feed <= 1 ? 1 : feed <= 2 ? 2 : feed <= 3 ? 3 : feed <= 5 ? 4 : 5;
+    if (stiff) speed = Math.min(PEAK_TIMES.length - 1, speed + 1);
+
+    let score = hydration >= 95 ? 1 : hydration >= 75 ? 2 : hydration >= 60 ? 3 : 4;
+    if (feed <= 1) score += 1;
+    else if (feed >= 4) score -= 1;
+    score = Math.max(0, Math.min(4, score));
+
+    const tips = [];
+    if (feed <= 0.5) tips.push("Bom para reanimar uma isca fraca ou ter o levain pronto rápido. Carrega muita acidez da isca: use no pico, sem deixar passar.");
+    else if (feed <= 1) tips.push("Fica pronto rápido e concentra a acidez da isca. Passado do ponto, enfraquece o glúten da massa.");
+    else if (feed <= 3) tips.push("Meio-termo de tempo e acidez: dá para alimentar de manhã e usar à tarde.");
+    else if (feed <= 5) tips.push("Bom para alimentar à noite e usar de manhã. Mais fermento e menos acidez: sabor suave e miolo aberto.");
+    else tips.push("Fermentação longa e bem suave. Útil em dias quentes ou para esperar a noite toda sem passar do ponto.");
+    if (stiff) tips.push("Levain firme dá mais força à massa e puxa para o acético.");
+    if (hydration > 115) tips.push("Muito líquido fermenta rápido e puxa para o láctico.");
+
+    return {
+      hydration,
+      feed,
+      texture,
+      time: PEAK_TIMES[speed],
+      score,
+      flavor: FLAVORS[score],
+      tips,
+    };
+  }
+
   function gramsOf(flour, pct) {
     return (Math.max(0, num(flour)) * Math.max(0, num(pct))) / 100;
   }
@@ -205,6 +262,7 @@
     num,
     matchRatio,
     splitLevain,
+    levainProfile,
     gramsOf,
     convertYeast,
     compute,

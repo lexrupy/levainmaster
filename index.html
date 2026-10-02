@@ -181,6 +181,21 @@
           <span class="kicker">Hidratação do levain</span>
           <strong data-levain-hyd>{{ result.levain && result.levain.hydration != null ? formatPct(result.levain.hydration) + '%' : '—' }}</strong>
         </div>
+        <section class="profile" v-if="levainProfile" aria-label="Como fica esta ativação">
+          <dl class="profile-facts">
+            <div><dt>Textura</dt><dd data-levain-texture>{{ levainProfile.texture }}</dd></div>
+            <div><dt>Pico</dt><dd data-levain-time>{{ levainProfile.time }} <small>a 24–26 °C</small></dd></div>
+          </dl>
+          <div class="flavor">
+            <div class="flavor-scale" role="img" :aria-label="'Sabor: ' + levainProfile.flavor">
+              <span v-for="n in 5" :key="n" :class="{ on: n - 1 === levainProfile.score }"></span>
+            </div>
+            <div class="flavor-ends"><span>Láctico · suave</span><span>Acético · azedo</span></div>
+            <p class="flavor-name" data-levain-flavor>{{ levainProfile.flavor }}</p>
+          </div>
+          <p v-for="tip in levainProfile.tips" :key="tip" class="hint profile-tip">{{ tip }}</p>
+          <p class="hint">Mais quente (26–30 °C) puxa para o láctico; mais frio (abaixo de 22 °C), para o acético.</p>
+        </section>
         <p class="hint">A hidratação é a água dividida pela farinha desta alimentação. A água da isca não entra.</p>
         <p class="hint" v-if="result.levain && result.levain.valid">{{ formatG(result.levain.water) }} g dessa água entram na hidratação total da massa.</p>
         <button type="button" class="levain-done" @click="closeLevain">Concluir</button>

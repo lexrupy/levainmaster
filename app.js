@@ -102,6 +102,7 @@ createApp({
 
     const result = computed(() => Padeiro.compute(state));
     const ratioId = computed(() => Padeiro.matchRatio(state.levain.L, state.levain.A, state.levain.F));
+    const levainProfile = computed(() => Padeiro.levainProfile(state.levain.L, state.levain.A, state.levain.F));
     const menuGroups = computed(() => {
       const present = new Set(state.ingredients.map((row) => row.name));
       const groups = [];
@@ -362,6 +363,7 @@ createApp({
       waterPct,
       waterDiffers,
       ratioId,
+      levainProfile,
       compArcs,
       ratioGroups: Padeiro.RATIO_GROUPS,
       menuGroups,

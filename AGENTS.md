@@ -25,7 +25,7 @@ O service worker só registra em HTTP. Sirva a pasta e abra no navegador:
 python3 -m http.server 8769 --bind 127.0.0.1
 ```
 
-`file://` não instala o app. Depois de mudar HTML, CSS, JS ou imagens cacheadas, suba a constante `CACHE` em `ServiceWorker.js` (`padeiro-v20` hoje). A estratégia é rede primeiro, cache se a rede falhar.
+`file://` não instala o app. Depois de mudar HTML, CSS, JS ou imagens cacheadas, suba a constante `CACHE` em `ServiceWorker.js` (`padeiro-v21` hoje). A estratégia é rede primeiro, cache se a rede falhar.
 
 Não há suíte de testes. `node -e` consegue importar `calc.js`. Mudança de tela precisa ser exercida no navegador, no celular (cerca de 390 px) e na largura máxima do app (560 px).
 
@@ -40,6 +40,8 @@ A hidratação total é a água contada ÷ farinha da receita × 100. Entra a á
 O fermento biológico é seco (padrão, 1%) ou fresco. A mesma força pesa o triplo no fresco: `convertYeast` multiplica ou divide por 3 e arredonda a 2 casas. Trocar seco ↔ fresco converte o percentual. O levain fica no mesmo seletor; sair e voltar restaura o fermento anterior. Fermento não contribui água.
 
 O levain não é outra tela. Com o fermento em Levain, a ativação abre num modal (`<dialog>`): ao escolher Levain no seletor ou pelo lápis ao lado dele. Na linha do fermento ficam a proporção (à direita do lápis), a hidratação do levain (à direita do percentual) e os gramas de isca, água e farinha. O modal usa o percentual já digitado, em gramas, e pede a proporção L:A:F (levain : água : farinha), ordem brasileira. Os presets só preenchem os campos e ficam em dois grupos: hidratação 100% (2:1:1, 1:1:1, 1:2:2, 1:3:3, 1:4:4, 1:5:5, 1:10:10, da alimentação menor para a maior) e mais firmes (2:4:5, 1:2:3), ou personalizado. A hidratação do levain é água da alimentação ÷ farinha da alimentação. A água já presente na isca não entra. A água da alimentação entra na hidratação total da massa. Os gramas exibidos são inteiros que somam o total arredondado; a sobra vai para a isca.
+
+O modal mostra o perfil da ativação de `levainProfile` (`calc.js`): textura, tempo até o pico a 24–26 °C, posição entre láctico e acético numa escala de 5 e dicas. Ele vem da hidratação do levain e de quantas vezes a farinha da alimentação supera a isca, então também vale para o personalizado. Mais líquido e mais quente puxa para o láctico; mais firme e mais frio, para o acético; alimentação pequena herda mais acidez da isca.
 
 `BANDS` escolhe textura, pão típico e foto do miolo a partir da hidratação total. Cada faixa tem a sua imagem 3:2 (`img/miolo-N-*.svg`), gerada por `python3 tools/gerar-miolos.py` com semente fixa. A casca, o pano e a faixa clara junto da casca vêm da foto `img/miolo-firme.jpg`, embutida em cada SVG; o script acha o miolo na foto pela cor, traça o contorno e gera só os alvéolos dentro dele. Não apague `img/miolo-firme.jpg`: é a fonte da casca. Esse modo precisa de `numpy` e `Pillow` (só para gerar, o app não usa). `--ilustrado` gera o pão todo desenhado, sem a foto. Para ajustar uma faixa, mude `LEVELS` e gere de novo. Cada geração copia antes as imagens atuais para `img/backup/AAAAMMDD-HHMMSS/`, pasta que está no `.gitignore`. As fotos `img/miolo-*.jpg` não entram no cache. Não repita textura nem tipo de pão em outro ponto da tela.
 
