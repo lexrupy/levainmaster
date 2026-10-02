@@ -17,6 +17,10 @@ Não há bundler nem CDN. Tudo que a página carrega está no repositório.
 
 `vendor/` traz Vue 3.5 (`vue.global.prod.js`, com compilador), Pico.css 2.1 e a fonte Outfit. Não troque por CDN.
 
+## Publicação
+
+O app é publicado pelo GitHub Pages, direto da branch `main`, pasta raiz: `https://lexrupy.github.io/percentualpadeiro/`. Os caminhos são todos relativos, então ele funciona na subpasta. O `.nojekyll` vazio na raiz faz o Pages servir os arquivos como estão. Publicar é fazer push na `main` com o `CACHE` novo.
+
 ## Como abrir
 
 O service worker só registra em HTTP. Sirva a pasta e abra no navegador:
