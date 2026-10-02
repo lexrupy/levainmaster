@@ -30,6 +30,13 @@
     <section class="sheet">
       <div class="deck-row">
         <div class="flour-side">
+          <div class="screen-name">
+            <input v-if="recipeNameEditing" id="screen-recipe-name" v-focus class="name-input screen-recipe-name" v-model="state.recipeName" maxlength="80" placeholder="Nome da receita" autocomplete="off" @blur="finishRecipeNameEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc="finishRecipeNameEdit" aria-label="Nome da receita atual">
+            <button v-else type="button" class="screen-name-display" @click="editRecipeName" :aria-label="'Editar nome da receita: ' + state.recipeName" title="Editar nome da receita">
+              <span>{{ state.recipeName }}</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3z"/><path d="m13.5 8.5 3 3"/></svg>
+            </button>
+          </div>
           <div class="field-head">
             <label class="kicker" for="flour">Farinha</label>
             <span class="pill">100%</span>
@@ -51,7 +58,13 @@
             <span class="other">Outros<b>{{ formatPct(result.otherShare) }}%</b></span>
           </div>
           <p class="mass" :data-total="result.totalWeight"><b>{{ formatG(result.totalWeight) }} g</b><span>de massa</span></p>
-          <button type="button" class="save-quick" :class="{ done: savedFlash }" @click="openRecipes(true)">{{ savedFlash ? 'Salva ✓' : 'Salvar receita' }}</button>
+          <div class="recipe-card-actions">
+            <button type="button" class="save-quick" :class="{ done: savedFlash }" @click="openRecipes(true)">{{ savedFlash ? 'Salva ✓' : 'Salvar receita' }}</button>
+            <button type="button" class="share-card" @click="shareRecipeCard" :disabled="sharingCard" aria-label="Compartilhar receita como imagem" title="Compartilhar receita">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.6 6.6-4.2M8.7 13.4l6.6 4.2"/></svg>
+            </button>
+          </div>
+          <p class="share-status" aria-live="polite">{{ shareStatus }}</p>
         </div>
         <aside class="crumb-side">
           <div class="crumb-layout">
@@ -197,6 +210,20 @@
       </article>
     </dialog>
 
+    <dialog ref="duplicateDialog" class="levain-dialog confirm-dialog" @click="onDuplicateClick" @close="answerDuplicate(null)" aria-labelledby="duplicate-title" aria-describedby="duplicate-text">
+      <article class="levain compact confirm">
+        <header class="levain-head">
+          <h2 id="duplicate-title">Receita com esse nome já existe</h2>
+        </header>
+        <p id="duplicate-text" class="confirm-text">Já existe “{{ duplicateName }}”. Quer substituir essa receita ou salvar outra com o mesmo nome?</p>
+        <div class="duplicate-actions">
+          <button type="button" class="install" autofocus @click="answerDuplicate('new')">Criar novo</button>
+          <button type="button" class="levain-done" @click="answerDuplicate('replace')">Substituir</button>
+          <button type="button" class="duplicate-cancel" @click="answerDuplicate(null)">Cancelar</button>
+        </div>
+      </article>
+    </dialog>
+
     <dialog ref="aboutDialog" class="levain-dialog" @click="onAboutClick" aria-labelledby="about-title">
       <article class="levain about" tabindex="-1" autofocus>
         <header class="levain-head">
@@ -234,7 +261,7 @@
           <button type="button" class="del" @click="closeRecipes" aria-label="Fechar">×</button>
         </header>
         <form class="recipe-save" @submit.prevent="saveRecipe">
-          <label class="kicker" for="recipe-name">{{ quickSave ? 'Descrição' : 'Salvar a receita da tela' }}</label>
+          <label class="kicker" for="recipe-name">{{ quickSave ? 'Nome da receita' : 'Salvar a receita da tela' }}</label>
           <p class="recipe-meta">{{ summaryOf(state) }}</p>
           <div class="recipe-save-row">
             <input id="recipe-name" class="name-input" v-model="recipeName" maxlength="80" placeholder="Ex.: pão de domingo, forno a lenha" autocomplete="off">

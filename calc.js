@@ -277,6 +277,7 @@
 
   function defaultState() {
     return {
+      recipeName: "Minha Receita",
       flour: 500,
       ingredients: [
         { id: "agua", name: "Água", pct: 65, water: 100, role: "water" },

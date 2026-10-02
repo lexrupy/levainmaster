@@ -26,6 +26,15 @@ function versionLabel(cacheName) {
   return match ? match[1] : "";
 }
 
+function recipeNameKey(name) {
+  return String(name || "")
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .toLocaleLowerCase("pt-BR");
+}
+
 // Espera um service worker novo terminar de instalar e ativar.
 function untilActive(worker) {
   return new Promise((resolve) => {
@@ -126,6 +135,7 @@ function normalizeState(raw) {
   raw.levain.L = Math.max(0, Padeiro.num(raw.levain.L));
   raw.levain.A = Math.max(0, Padeiro.num(raw.levain.A));
   raw.levain.F = Math.max(0, Padeiro.num(raw.levain.F));
+  raw.recipeName = typeof raw.recipeName === "string" ? raw.recipeName.slice(0, 80) : "Minha Receita";
   return raw;
 }
 
@@ -158,14 +168,20 @@ createApp({
     const about = reactive({ version: "", offline: false, persisted: false, checking: false, status: "", reload: false });
     const recipes = ref(loadRecipes());
     const recipeName = ref("");
+    const recipeNameEditing = ref(false);
     // Modal de confirmação genérico: askConfirm({ title, message, confirmLabel, cancelLabel, danger })
     // devolve uma Promise com true (confirmou) ou false (cancelou, Esc ou clique no fundo).
     const confirmDialog = ref(null);
+    const duplicateDialog = ref(null);
+    const duplicateName = ref("");
     const confirmState = reactive({ title: "", message: "", confirmLabel: "Confirmar", cancelLabel: "Cancelar", danger: false });
     let confirmResolve = null;
+    let duplicateResolve = null;
     const quickSave = ref(false);
     const savedFlash = ref(false);
     let flashTimer = null;
+    const sharingCard = ref(false);
+    const shareStatus = ref("");
     const dateFormat = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
     const canInstall = ref(false);
     let deferredPrompt = null;
@@ -490,9 +506,10 @@ createApp({
       } catch (error) {}
     }
 
-    // quick: aberto pelo botão Salvar do card, só com o campo de descrição.
+    // O nome da tela vira o padrão no modal e pode ser ajustado antes de salvar.
     function openRecipes(quick = false) {
       quickSave.value = quick === true;
+      recipeName.value = state.recipeName || "";
       const dialog = recipesDialog.value;
       if (dialog && !dialog.open) dialog.showModal();
       if (quickSave.value) nextTick(() => document.getElementById("recipe-name")?.focus());
@@ -507,15 +524,28 @@ createApp({
       if (event.target === recipesDialog.value) closeRecipes();
     }
 
-    function saveRecipe() {
+    async function saveRecipe() {
       const name = recipeName.value.trim();
       if (!name) return;
-      recipes.value.unshift({
-        id: "r-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      const duplicateIndex = recipes.value.findIndex((item) => recipeNameKey(item.name) === recipeNameKey(name));
+      let replaceIndex = -1;
+      if (duplicateIndex >= 0) {
+        duplicateName.value = recipes.value[duplicateIndex].name || name;
+        const choice = await askDuplicate();
+        if (choice === null) return;
+        if (choice === "replace") replaceIndex = duplicateIndex;
+      }
+      state.recipeName = name;
+      const updated = {
+        id: replaceIndex >= 0
+          ? recipes.value[replaceIndex].id
+          : "r-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
         name,
         savedAt: new Date().toISOString(),
         state: JSON.parse(JSON.stringify(state)),
-      });
+      };
+      if (replaceIndex >= 0) recipes.value.splice(replaceIndex, 1);
+      recipes.value.unshift(updated);
       persistRecipes();
       recipeName.value = "";
       if (quickSave.value) {
@@ -526,6 +556,17 @@ createApp({
       }
     }
 
+    function editRecipeName() {
+      recipeNameEditing.value = true;
+      nextTick(() => document.getElementById("screen-recipe-name")?.focus());
+    }
+
+    function finishRecipeNameEdit() {
+      const clean = String(state.recipeName || "").trim();
+      state.recipeName = clean || "Minha Receita";
+      recipeNameEditing.value = false;
+    }
+
     function openRecipe(recipe) {
       const saved = normalizeState(JSON.parse(JSON.stringify(recipe.state)));
       if (!saved) return;
@@ -533,6 +574,7 @@ createApp({
       state.flour = saved.flour;
       state.ingredients = saved.ingredients;
       state.levain = saved.levain;
+      state.recipeName = typeof recipe.name === "string" ? recipe.name.slice(0, 80) : saved.recipeName;
       closeRecipes();
     }
 
@@ -556,6 +598,27 @@ createApp({
 
     function onConfirmClick(event) {
       if (event.target === confirmDialog.value) answerConfirm(false);
+    }
+
+    function askDuplicate() {
+      if (duplicateResolve) duplicateResolve(null);
+      return new Promise((resolve) => {
+        duplicateResolve = resolve;
+        const dialog = duplicateDialog.value;
+        if (dialog && !dialog.open) dialog.showModal();
+      });
+    }
+
+    function answerDuplicate(choice) {
+      const resolve = duplicateResolve;
+      duplicateResolve = null;
+      const dialog = duplicateDialog.value;
+      if (dialog && dialog.open) dialog.close();
+      if (resolve) resolve(choice);
+    }
+
+    function onDuplicateClick(event) {
+      if (event.target === duplicateDialog.value) answerDuplicate(null);
     }
 
     async function deleteRecipe(recipe) {
@@ -588,6 +651,265 @@ createApp({
         )
         .join(" + ");
       return formatG(res.flour) + " g de farinha · hidratação " + formatPct(res.hydration) + "% · " + text;
+    }
+
+    function roundedRect(ctx, x, y, width, height, radius, fill) {
+      cardRoundPath(ctx, x, y, width, height, radius);
+      ctx.fillStyle = fill;
+      ctx.fill();
+    }
+
+    function cardRoundPath(ctx, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + width - r, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+      ctx.lineTo(x + width, y + height - r);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+      ctx.lineTo(x + r, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function cardText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 2) {
+      const words = String(text || "").split(/\s+/);
+      let line = "";
+      let lines = [];
+      for (const word of words) {
+        const next = line ? line + " " + word : word;
+        if (ctx.measureText(next).width > maxWidth && line) {
+          lines.push(line);
+          line = word;
+        } else line = next;
+      }
+      if (line) lines.push(line);
+      if (lines.length > maxLines) {
+        lines = lines.slice(0, maxLines);
+        let last = lines[maxLines - 1];
+        while (last && ctx.measureText(last + "…").width > maxWidth) last = last.slice(0, -1);
+        lines[maxLines - 1] = last.trimEnd() + "…";
+      }
+      lines.forEach((part, index) => ctx.fillText(part, x, y + index * lineHeight));
+      return lines.length;
+    }
+
+    async function makeRecipeCard() {
+      if (document.fonts?.ready) await document.fonts.ready;
+      const width = 1080;
+      const pad = 64;
+      const rows = result.value.rows;
+      const rowHeight = 88;
+      const hasLevain = result.value.levainOn;
+      const levainBlockY = 610;
+      const levainBlockHeight = 202;
+      const top = levainBlockY + (hasLevain ? levainBlockHeight + 28 : 0);
+      const height = top + rows.length * rowHeight + 260;
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas indisponível");
+
+      ctx.fillStyle = "#f3efe6";
+      ctx.fillRect(0, 0, width, height);
+      roundedRect(ctx, 36, 36, width - 72, height - 72, 34, "#fffdfb");
+
+      ctx.fillStyle = "#7d6244";
+      ctx.font = "700 24px Outfit, sans-serif";
+      ctx.fillText("PERCENTUAL DO PADEIRO", pad, 100);
+      ctx.fillStyle = "#2c241c";
+      ctx.font = "700 48px Outfit, sans-serif";
+      cardText(ctx, state.recipeName.trim() || "Minha Receita", pad, 160, width - pad * 2, 54, 1);
+      ctx.fillStyle = "#8d7f70";
+      ctx.font = "500 22px Outfit, sans-serif";
+      ctx.fillText(new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(new Date()), pad, 198);
+
+      const statY = 232;
+      const statW = 290;
+      const statGap = 18;
+      const stats = [
+        ["FARINHA", formatG(result.value.flour) + " g"],
+        ["HIDRATAÇÃO TOTAL", formatPct(result.value.hydration) + "%"],
+        ["PESO DA MASSA", formatG(result.value.totalWeight) + " g"],
+      ];
+      stats.forEach(([label, value], index) => {
+        const x = pad + index * (statW + statGap);
+        roundedRect(ctx, x, statY, statW, 108, 18, "#f7f2ea");
+        ctx.fillStyle = "#8d7f70";
+        ctx.font = "650 17px Outfit, sans-serif";
+        ctx.fillText(label, x + 20, statY + 34);
+        ctx.fillStyle = "#2c241c";
+        ctx.font = "700 34px Outfit, sans-serif";
+        ctx.fillText(value, x + 20, statY + 79);
+      });
+
+      const imageX = pad;
+      const imageY = 370;
+      const imageW = 420;
+      const imageH = 210;
+      roundedRect(ctx, imageX, imageY, imageW, imageH, 20, "#efe6da");
+      try {
+        const image = new Image();
+        image.src = result.value.img;
+        await image.decode();
+        const scale = Math.max(imageW / image.naturalWidth, imageH / image.naturalHeight);
+        const cropW = imageW / scale;
+        const cropH = imageH / scale;
+        ctx.save();
+        cardRoundPath(ctx, imageX, imageY, imageW, imageH, 20);
+        ctx.clip();
+        ctx.drawImage(image, (image.naturalWidth - cropW) / 2, (image.naturalHeight - cropH) / 2, cropW, cropH, imageX, imageY, imageW, imageH);
+        ctx.restore();
+      } catch (error) {
+        ctx.fillStyle = "#7d6244";
+        ctx.font = "600 22px Outfit, sans-serif";
+        ctx.fillText("Miolo do pão", imageX + 24, imageY + imageH / 2);
+      }
+
+      const infoX = 520;
+      ctx.fillStyle = "#8d7f70";
+      ctx.font = "650 18px Outfit, sans-serif";
+      ctx.fillText("TEXTURA", infoX, 400);
+      ctx.fillStyle = "#2c241c";
+      ctx.font = "600 27px Outfit, sans-serif";
+      cardText(ctx, result.value.band.sensacao, infoX, 442, 420, 34, 2);
+      ctx.fillStyle = "#8d7f70";
+      ctx.font = "650 18px Outfit, sans-serif";
+      ctx.fillText(result.value.enriched ? "PÃO ENRIQUECIDO" : "PÃO TÍPICO", infoX, 510);
+      ctx.fillStyle = "#2c241c";
+      ctx.font = "600 26px Outfit, sans-serif";
+      cardText(ctx, result.value.bread, infoX, 548, 420, 33, 2);
+
+      if (hasLevain) {
+        const lv = result.value.levain;
+        const profile = levainProfile.value;
+        roundedRect(ctx, pad, levainBlockY, width - pad * 2, levainBlockHeight, 18, "#f7f2ea");
+        ctx.fillStyle = "#7d6244";
+        ctx.font = "700 22px Outfit, sans-serif";
+        ctx.fillText("LEVAIN USADO", pad + 22, levainBlockY + 38);
+        ctx.fillStyle = "#2c241c";
+        ctx.font = "600 17px Outfit, sans-serif";
+        ctx.fillText("Na massa: " + formatG(result.value.levainGrams) + " g (" + formatPctFine(levainItem.value?.pct || 0) + "%) · proporção L:A:F " + state.levain.L + ":" + state.levain.A + ":" + state.levain.F, pad + 22, levainBlockY + 76);
+        ctx.fillStyle = "#2c241c";
+        ctx.font = "500 16px Outfit, sans-serif";
+        const feedParts = lv?.valid
+          ? formatG(lv.seed) + " g isca + " + formatG(lv.water) + " g água + " + formatG(lv.flour) + " g farinha · hidratação " + formatPct(lv.hydration) + "%"
+          : "Alimentação ainda não configurada";
+        cardText(ctx, "Alimentação: " + feedParts, pad + 22, levainBlockY + 109, width - pad * 2 - 44, 22, 2);
+        const texture = profile ? profile.texture : "—";
+        const peak = profile ? profile.time + " a 24–26 °C" : "—";
+        ctx.fillText("Textura: " + texture + " · Pico: " + peak, pad + 22, levainBlockY + 151);
+        const acidity = profile ? profile.flavor + " · nível " + (profile.score + 1) + "/5" : "—";
+        ctx.fillText("Perfil de acidez: " + acidity, pad + 22, levainBlockY + 184);
+      }
+
+      const headingY = top;
+      ctx.fillStyle = "#2c241c";
+      ctx.font = "700 30px Outfit, sans-serif";
+      ctx.fillText("Ingredientes", pad, headingY);
+      ctx.fillStyle = "#8d7f70";
+      ctx.font = "650 17px Outfit, sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText("PERCENTUAL", 790, headingY);
+      ctx.fillText("GRAMAS", width - pad, headingY);
+      ctx.textAlign = "left";
+
+      rows.forEach((row, index) => {
+        const y = headingY + 28 + index * rowHeight;
+        ctx.strokeStyle = "#efe6da";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(pad, y);
+        ctx.lineTo(width - pad, y);
+        ctx.stroke();
+        ctx.fillStyle = "#2c241c";
+        ctx.font = "600 23px Outfit, sans-serif";
+        cardText(ctx, row.name || "Ingrediente", pad, y + 33, 480, 27, 2);
+        ctx.fillStyle = "#7d6244";
+        ctx.font = "600 22px Outfit, sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText(formatPctFine(row.pct) + "%", 790, y + 34);
+        ctx.fillStyle = "#2c241c";
+        ctx.font = "700 24px Outfit, sans-serif";
+        ctx.fillText(formatG(row.grams) + " g", width - pad, y + 34);
+        ctx.textAlign = "left";
+        if (row.ferment === "levain" && result.value.levain?.valid) {
+          ctx.fillStyle = "#8d7f70";
+          ctx.font = "500 15px Outfit, sans-serif";
+          cardText(ctx, "Levain " + state.levain.L + ":" + state.levain.A + ":" + state.levain.F + " · hidratação " + formatPct(levainProfile.value?.hydration || 0) + "% · " + formatG(result.value.levain.seed) + " g isca, " + formatG(result.value.levain.water) + " g água, " + formatG(result.value.levain.flour) + " g farinha", pad, y + 57, width - pad * 2, 18, 2);
+        } else if (row.custom) {
+          ctx.fillStyle = "#8d7f70";
+          ctx.font = "500 15px Outfit, sans-serif";
+          ctx.fillText("Teor de água " + formatPct(row.waterPct) + "%", pad, y + 57);
+        } else if (row.waterPct > 0 && row.waterPct < 100) {
+          ctx.fillStyle = "#8d7f70";
+          ctx.font = "500 15px Outfit, sans-serif";
+          ctx.fillText(formatPct(row.waterPct) + "% de água", pad, y + 57);
+        } else if (row.ferment === "seco" || row.ferment === "fresco") {
+          const to = row.ferment === "seco" ? "fresco" : "seco";
+          ctx.fillStyle = "#8d7f70";
+          ctx.font = "500 15px Outfit, sans-serif";
+          ctx.fillText("Equivale a " + formatPct(Padeiro.convertYeast(row.pct, row.ferment, to)) + "% de " + to, pad, y + 57);
+        }
+      });
+
+      const footerY = headingY + 28 + rows.length * rowHeight + 28;
+      roundedRect(ctx, pad, footerY, width - pad * 2, 82, 16, "#f7f2ea");
+      ctx.fillStyle = "#7d6244";
+      ctx.font = "650 18px Outfit, sans-serif";
+      ctx.fillText("COMPOSIÇÃO DA MASSA", pad + 20, footerY + 30);
+      ctx.fillStyle = "#2c241c";
+      ctx.font = "600 19px Outfit, sans-serif";
+      ctx.fillText("Farinha " + formatPct(result.value.flourShare) + "%   ·   Água " + formatPct(result.value.waterShare) + "%   ·   Outros " + formatPct(result.value.otherShare) + "%", pad + 20, footerY + 61);
+      ctx.fillStyle = "#8d7f70";
+      ctx.font = "500 16px Outfit, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("Feito com Percentual do padeiro", width / 2, height - 62);
+      ctx.textAlign = "left";
+
+      return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Não foi possível gerar a imagem")), "image/png"));
+    }
+
+    function downloadRecipeCard(blob) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "receita-percentual-do-padeiro.png";
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    async function shareRecipeCard() {
+      if (sharingCard.value) return;
+      sharingCard.value = true;
+      shareStatus.value = "Preparando imagem…";
+      try {
+        const blob = await makeRecipeCard();
+        const file = typeof File !== "undefined" ? new File([blob], "receita-percentual-do-padeiro.png", { type: "image/png" }) : null;
+        if (file && navigator.share && navigator.canShare?.({ files: [file] })) {
+          try {
+            await navigator.share({ files: [file], title: "Minha receita de pão", text: "Receita feita no Percentual do padeiro" });
+            shareStatus.value = "Receita compartilhada.";
+          } catch (error) {
+            if (error?.name === "AbortError") {
+              shareStatus.value = "Compartilhamento cancelado.";
+              return;
+            }
+            downloadRecipeCard(blob);
+            shareStatus.value = "Imagem baixada. Você já pode compartilhar a receita.";
+          }
+        } else {
+          downloadRecipeCard(blob);
+          shareStatus.value = "Imagem baixada. Você já pode compartilhar a receita.";
+        }
+      } catch (error) {
+        shareStatus.value = "Não foi possível preparar a imagem.";
+      } finally {
+        sharingCard.value = false;
+      }
     }
 
     function onRatio(id) {
@@ -728,12 +1050,22 @@ createApp({
       reloadApp,
       recipes,
       recipeName,
+      recipeNameEditing,
+      editRecipeName,
+      finishRecipeNameEdit,
       confirmDialog,
+      duplicateDialog,
+      duplicateName,
       confirmState,
       answerConfirm,
       onConfirmClick,
+      answerDuplicate,
+      onDuplicateClick,
       quickSave,
       savedFlash,
+      sharingCard,
+      shareStatus,
+      shareRecipeCard,
       openRecipes,
       closeRecipes,
       onRecipesClick,

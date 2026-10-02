@@ -143,6 +143,27 @@ input[type="number"] {
   padding: 14px;
   margin-bottom: 8px;
 }
+.screen-name { min-width: 0; margin: 0 0 10px; }
+.screen-name-display {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+.screen-name-display span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.screen-name-display svg { width: 16px; height: 16px; flex: none; fill: none; stroke: var(--brown-soft); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.screen-name-display:focus-visible { outline: 2px solid var(--brown-soft); outline-offset: 2px; }
+.screen-recipe-name { margin: 0 0 10px !important; }
 
 .field-head, .ing-top, .final-head, .total-row {
   display: flex;
@@ -1070,6 +1091,29 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 .save-quick:hover { background: #f6f1e8; }
 .save-quick.done { border-color: var(--green); color: var(--green); }
 
+.recipe-card-actions { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.recipe-card-actions .save-quick { margin: 0; }
+.share-card {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--sheet);
+  color: var(--brown);
+  cursor: pointer;
+}
+.share-card:hover { background: #f6f1e8; }
+.share-card:disabled { opacity: 0.55; cursor: progress; }
+.share-card svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.share-card:focus-visible { outline: 2px solid var(--brown-soft); outline-offset: 2px; }
+.share-status { margin: 0; color: var(--muted); font-size: 0.66rem; line-height: 1.25; }
+.share-status:empty { display: none; }
+
 @media (max-width: 640px) {
   .levain-dialog > .levain.compact { height: auto; }
 }
@@ -1081,6 +1125,10 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 .confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .confirm-actions button { min-height: 46px; margin: 0; padding: 10px 12px; border-radius: 12px; font-size: 0.95rem; font-weight: 650; }
 .confirm-actions .install { box-shadow: none; }
+.duplicate-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.duplicate-actions button { min-height: 46px; margin: 0; padding: 10px 12px; border-radius: 12px; font-size: 0.95rem; font-weight: 650; }
+.duplicate-actions .install { box-shadow: none; }
+.duplicate-actions .duplicate-cancel { grid-column: 1 / -1; box-shadow: none; background: transparent; border: 1px solid var(--line); }
 .levain-done.danger { background: var(--wet); }
 .confirm-dialog > .levain.compact { height: auto; }
 
