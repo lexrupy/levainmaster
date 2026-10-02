@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Percentual do padeiro — © 2026 Alexandre da Silva
+# SPDX-License-Identifier: LGPL-3.0-or-later
 """Gera as ilustrações de miolo (img/miolo-N-*.svg), uma por faixa de BANDS.
 
 Mesmo pão e mesmo enquadramento em todas; só os alvéolos mudam.

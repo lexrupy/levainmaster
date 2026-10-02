@@ -4,6 +4,10 @@ Calculadora de percentual do padeiro em português, instalável como PWA no Andr
 
 Responda ao Alexandre em português.
 
+## Licença
+
+© 2026 Alexandre da Silva, sob a GNU LGPL 3.0 ou posterior: texto em `COPYING.LESSER`, que remete à GPL 3.0 em `COPYING`. Cada arquivo do projeto começa com `SPDX-License-Identifier: LGPL-3.0-or-later`. As dependências em `vendor/` mantêm as licenças delas: Vue e Pico CSS (MIT, aviso no topo de cada arquivo) e a fonte Outfit (SIL OFL 1.1, texto em `vendor/OFL-Outfit.txt`, que precisa acompanhar a fonte). O modal Sobre mostra autoria, licença e créditos.
+
 ## Arquivos
 
 Não há bundler nem CDN. Tudo que a página carrega está no repositório.
@@ -29,7 +33,7 @@ O service worker só registra em HTTP. Sirva a pasta e abra no navegador:
 python3 -m http.server 8769 --bind 127.0.0.1
 ```
 
-`file://` não instala o app. Depois de mudar HTML, CSS, JS ou imagens cacheadas, suba a constante `CACHE` em `ServiceWorker.js` (`padeiro-v45` hoje). O app funciona 100% offline depois da primeira visita. A estratégia é rede primeiro, revalidando com o servidor (`cache: "no-cache"`); sem rede, com erro ou depois de 3 s (`NETWORK_TIMEOUT`), vale o cache, e a busca segue em segundo plano atualizando o cache. A instalação de uma versão nova baixa os arquivos com `cache: "reload"` e só apaga a versão anterior depois que a nova está completa; se falhar, a anterior continua. Todo arquivo que a página carrega precisa estar em `FILES`. O número da versão que o app mostra vem de `CACHE` (`padeiro-v45` → versão 45): subir o `CACHE` é publicar uma versão nova. O ícone ao lado do nome abre o modal Sobre, com a versão, se o app está offline e se os dados estão protegidos. "Verificar atualizações" chama `registration.update()`: com versão nova, instala e oferece recarregar; sem versão nova, pede ao service worker (mensagem `refresh`) para baixar de novo todos os arquivos direto do servidor. A página fala com o service worker por `postMessage` (`version`, `refresh`). A página pede `navigator.storage.persist()` para o navegador não apagar o cache e as receitas quando faltar espaço.
+`file://` não instala o app. Depois de mudar HTML, CSS, JS ou imagens cacheadas, suba a constante `CACHE` em `ServiceWorker.js` (`padeiro-v46` hoje). O app funciona 100% offline depois da primeira visita. A estratégia é rede primeiro, revalidando com o servidor (`cache: "no-cache"`); sem rede, com erro ou depois de 3 s (`NETWORK_TIMEOUT`), vale o cache, e a busca segue em segundo plano atualizando o cache. A instalação de uma versão nova baixa os arquivos com `cache: "reload"` e só apaga a versão anterior depois que a nova está completa; se falhar, a anterior continua. Todo arquivo que a página carrega precisa estar em `FILES`. O número da versão que o app mostra vem de `CACHE` (`padeiro-v46` → versão 46): subir o `CACHE` é publicar uma versão nova. O ícone ao lado do nome abre o modal Sobre, com a versão, se o app está offline e se os dados estão protegidos. "Verificar atualizações" chama `registration.update()`: com versão nova, instala e oferece recarregar; sem versão nova, pede ao service worker (mensagem `refresh`) para baixar de novo todos os arquivos direto do servidor. A página fala com o service worker por `postMessage` (`version`, `refresh`). A página pede `navigator.storage.persist()` para o navegador não apagar o cache e as receitas quando faltar espaço.
 
 Não há suíte de testes. `node -e` consegue importar `calc.js`. Mudança de tela precisa ser exercida no navegador, no celular (cerca de 390 px) e na largura máxima do app (560 px).
 

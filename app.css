@@ -1,3 +1,5 @@
+/* Percentual do padeiro — © 2026 Alexandre da Silva
+   SPDX-License-Identifier: LGPL-3.0-or-later */
 @font-face {
   font-family: Outfit;
   src: url("vendor/outfit-latin.woff2") format("woff2");
@@ -1106,3 +1108,18 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 .bread-table td { padding: 6px 4px; border-bottom: 1px solid var(--line); background: transparent; vertical-align: top; }
 .bread-table td:not(:first-child), .bread-table th:not(:first-child) { white-space: nowrap; text-align: right; }
 .bread-table tr.on td { background: var(--sand-bg); font-weight: 650; }
+
+/* Sobre: autoria e licença */
+.about-credits {
+  text-align: left;
+  margin: 16px 0 0;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  background: transparent;
+}
+.about-credits p { margin: 0 0 4px; }
+.about-credits p:first-child { color: var(--ink); font-weight: 650; }
+.about-credits a { color: var(--brown); }

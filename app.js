@@ -1,3 +1,5 @@
+// Percentual do padeiro — © 2026 Alexandre da Silva
+// SPDX-License-Identifier: LGPL-3.0-or-later
 const { createApp, reactive, computed, watch, ref, onMounted, nextTick } = Vue;
 
 const STORAGE_KEY = "percentual-padeiro-v1";

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Percentual do padeiro — © 2026 Alexandre da Silva — SPDX-License-Identifier: LGPL-3.0-or-later -->
 <html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="utf-8">
@@ -218,6 +219,11 @@
         <button type="button" class="levain-done" :disabled="about.checking" @click="checkUpdate">{{ about.checking ? 'Verificando…' : 'Verificar atualizações' }}</button>
         <p class="about-status" aria-live="polite" data-about-status>{{ about.status }}</p>
         <button v-if="about.reload" type="button" class="install about-reload" @click="reloadApp">Recarregar agora</button>
+        <footer class="about-credits">
+          <p>© 2026 Alexandre da Silva</p>
+          <p>Software livre sob a licença <a href="https://www.gnu.org/licenses/lgpl-3.0.html" target="_blank" rel="noopener">GNU LGPL 3.0 ou posterior</a>. <a href="https://github.com/lexrupy/percentualpadeiro" target="_blank" rel="noopener">Código-fonte</a>.</p>
+          <p>Usa <a href="https://vuejs.org" target="_blank" rel="noopener">Vue</a> e <a href="https://picocss.com" target="_blank" rel="noopener">Pico CSS</a> (licença MIT) e a fonte <a href="https://github.com/Outfitio/Outfit-Fonts" target="_blank" rel="noopener">Outfit</a> (SIL Open Font License 1.1).</p>
+        </footer>
       </article>
     </dialog>
 
