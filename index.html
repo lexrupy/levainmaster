@@ -28,15 +28,16 @@
     </header>
 
     <section v-if="cardPreview" class="sheet card-preview">
-      <p class="kicker">{{ card3Preview ? 'Prévia do card 3' : card2Preview ? 'Prévia do card 2' : 'Prévia do card' }}</p>
-      <p class="hint">A imagem é servida pelo app em <a :href="card3Preview ? 'card3' : card2Preview ? 'card2' : 'card'">{{ card3Preview ? 'card3' : card2Preview ? 'card2' : 'card' }}</a>. Ao mudar a receita, ela atualiza. Nada é baixado.</p>
+      <p class="kicker">Prévia do {{ previewName === 'card' ? 'card' : previewName.replace('card', 'card ') }}</p>
+      <p class="hint">A imagem é servida pelo app em <a :href="previewName">{{ previewName }}</a>. Ao mudar a receita, ela atualiza. Nada é baixado.</p>
       <p v-if="!cardPreviewUrl" class="hint">Preparando…</p>
       <img v-else class="card-preview-img" :src="cardPreviewUrl" alt="Card da receita, prévia de teste">
       <p class="card-preview-links">
-        <a :href="card3Preview ? 'card3' : card2Preview ? 'card2' : 'card'" target="_blank" rel="noopener">Abrir em tamanho real</a>
-        <a v-if="card2Preview || card3Preview" href="?card">Card atual</a>
-        <a v-if="!card2Preview" href="?card2">Card 2</a>
-        <a v-if="!card3Preview" href="?card3">Card 3</a>
+        <a :href="previewName" target="_blank" rel="noopener">Abrir em tamanho real</a>
+        <a v-if="previewName !== 'card'" href="?card">Card atual</a>
+        <a v-if="previewName !== 'card2'" href="?card2">Card 2</a>
+        <a v-if="previewName !== 'card3'" href="?card3">Card 3</a>
+        <a v-if="previewName !== 'card4'" href="?card4">Card 4</a>
         <a href="./">Fechar prévia</a>
       </p>
     </section>
