@@ -18,12 +18,11 @@
   <div id="app" class="app">
     <header class="top">
       <button type="button" class="brand" @click="openAbout" aria-label="Sobre o Percentual do padeiro">
-        <img src="icons/icon-192.png" alt="" width="30" height="30">
+        <img src="icons/icon-192.png" alt="" width="34" height="34">
         <span>Percentual do padeiro</span>
       </button>
       <div class="top-actions">
         <button type="button" class="install" @click="openRecipes(false)">Receitas</button>
-        <button v-if="canInstall" type="button" class="install" @click="install">Instalar</button>
       </div>
     </header>
 
@@ -188,6 +187,7 @@
           <div><dt>Dados protegidos</dt><dd data-about-persisted>{{ about.persisted ? 'Sim' : 'Não' }}</dd></div>
         </dl>
         <p class="hint" v-if="!about.persisted">Sem proteção, o navegador pode apagar o app e as receitas se faltar espaço. Instalar o app costuma liberar a proteção.</p>
+        <button v-if="canInstall" type="button" class="install about-install" @click="install">Instalar o app</button>
         <button type="button" class="levain-done" :disabled="about.checking" @click="checkUpdate">{{ about.checking ? 'Verificando…' : 'Verificar atualizações' }}</button>
         <p class="about-status" aria-live="polite" data-about-status>{{ about.status }}</p>
         <button v-if="about.reload" type="button" class="install about-reload" @click="reloadApp">Recarregar agora</button>

@@ -70,15 +70,25 @@ input[type="number"] {
 .app {
   width: min(560px, 100%);
   margin: 0 auto;
-  padding: calc(18px + env(safe-area-inset-top)) 16px calc(36px + env(safe-area-inset-bottom));
+  padding: 0 16px calc(36px + env(safe-area-inset-bottom));
 }
 
+/* Barra do topo fixa: ícone, nome, Receitas e Instalar ficam visíveis ao rolar.
+   Ela ocupa a largura toda da coluna (sangra os 16 px do .app) e cobre a área do relógio. */
 .top {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 16px;
+  margin: 0 -16px 8px;
+  padding: calc(6px + env(safe-area-inset-top)) 16px 6px;
+  background: rgba(243, 239, 230, 0.9);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(80, 55, 30, 0.06);
 }
 
 .brand {
@@ -91,15 +101,18 @@ input[type="number"] {
   border-radius: 10px;
   background: transparent;
   color: var(--ink);
-  font-size: 0.95rem;
-  font-weight: 650;
+  font-size: 1.05rem;
+  font-weight: 700;
   letter-spacing: -0.02em;
   cursor: pointer;
   width: auto;
 }
 
-.brand img { width: 30px; height: 30px; border-radius: 8px; flex: none; }
-.brand span { text-align: left; line-height: 1.15; }
+.brand img { width: 34px; height: 34px; border-radius: 9px; flex: none; }
+.brand { min-width: 0; }
+.brand span { text-align: left; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.top-actions { flex: none; }
+.top-actions .install { margin: 0; padding: 7px 14px; }
 .brand:hover { background: #f6f1e8; }
 .brand:focus-visible { outline: 2px solid var(--brown-soft); outline-offset: 2px; }
 
@@ -123,10 +136,10 @@ input[type="number"] {
 .sheet {
   background: var(--sheet);
   border: 1px solid rgba(80, 55, 30, 0.06);
-  border-radius: 24px;
+  border-radius: 18px;
   box-shadow: var(--shadow);
-  padding: 20px 18px 18px;
-  margin-bottom: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
 }
 
 .field-head, .ing-top, .final-head, .total-row {
@@ -416,10 +429,10 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 
 .section-label {
   text-align: center;
-  margin: 2px 0 14px;
+  margin: 0 0 10px;
 }
 
-.ing-block + .ing-block { margin-top: 10px; }
+.ing-block + .ing-block { margin-top: 8px; }
 
 .ing {
   display: grid;
@@ -427,8 +440,8 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   gap: 10px;
   align-items: center;
   border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 12px;
+  border-radius: 14px;
+  padding: 10px;
   background: #fff;
 }
 
@@ -586,7 +599,7 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 .add-btn {
   width: 100%;
   border: 1px dashed #e0d3c2 !important;
-  border-radius: 16px;
+  border-radius: 14px;
   padding: 12px;
   color: var(--brown);
   font-weight: 650;
@@ -1045,3 +1058,5 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 .confirm-actions .install { box-shadow: none; }
 .levain-done.danger { background: var(--wet); }
 .confirm-dialog > .levain.compact { height: auto; }
+
+.about-install { width: 100%; margin: 0 0 8px; padding: 12px; box-shadow: none; font-size: 0.95rem; }
