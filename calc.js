@@ -171,10 +171,10 @@
     const feed = f / l;
     const stiff = hydration < 85;
 
-    let texture = "Cremosa, como um iogurte grosso";
+    let texture = "Cremosa, como iogurte grosso";
     if (hydration > 115) texture = "Líquida, escorre da colher";
-    else if (hydration < 70) texture = "Massa firme, que se sova na mão";
-    else if (stiff) texture = "Pastosa, mais firme que um iogurte";
+    else if (hydration < 70) texture = "Firme, de sovar na mão";
+    else if (stiff) texture = "Pastosa, mais firme que iogurte";
 
     let speed = feed <= 0.5 ? 0 : feed <= 1 ? 1 : feed <= 2 ? 2 : feed <= 3 ? 3 : feed <= 5 ? 4 : 5;
     if (stiff) speed = Math.min(PEAK_TIMES.length - 1, speed + 1);

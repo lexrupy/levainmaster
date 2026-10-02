@@ -916,12 +916,14 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   border: 1px solid var(--line);
 }
 
+/* Textura fica com o espaço que sobrar; o pico vai para a ponta direita. */
 .profile-facts {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
   margin: 0 0 12px;
 }
+.profile-facts > div:last-child { text-align: right; }
 
 .profile-facts dt { margin: 0; color: var(--muted); font-size: 0.72rem; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; }
 .profile-facts dd { margin: 2px 0 0; font-size: 0.92rem; font-weight: 620; line-height: 1.25; }
