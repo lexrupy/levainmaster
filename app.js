@@ -679,7 +679,7 @@ createApp({
       ctx.closePath();
     }
 
-    function cardText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 2) {
+    function cardLines(ctx, text, maxWidth, maxLines = 2) {
       const words = String(text || "").split(/\s+/);
       let line = "";
       let lines = [];
@@ -697,6 +697,11 @@ createApp({
         while (last && ctx.measureText(last + "…").width > maxWidth) last = last.slice(0, -1);
         lines[maxLines - 1] = last.trimEnd() + "…";
       }
+      return lines;
+    }
+
+    function cardText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 2) {
+      const lines = cardLines(ctx, text, maxWidth, maxLines);
       lines.forEach((part, index) => ctx.fillText(part, x, y + index * lineHeight));
       return lines.length;
     }
@@ -706,17 +711,53 @@ createApp({
       const width = 1080;
       const pad = 64;
       const rows = result.value.rows;
-      const rowHeight = 88;
       const hasLevain = result.value.levainOn;
       const levainBlockY = 610;
       const levainBlockHeight = 202;
-      const top = levainBlockY + (hasLevain ? levainBlockHeight + 28 : 0);
-      const height = top + rows.length * rowHeight + 260;
+      const levainGap = 68;
+      const top = levainBlockY + (hasLevain ? levainBlockHeight + levainGap : 0);
       const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("Canvas indisponível");
+
+      // Linha sem observação fica baixa. Levain, fermento e teor de água guardam o texto embaixo.
+      function ingredientNote(row) {
+        if (row.ferment === "levain" && result.value.levain?.valid) {
+          const lv = result.value.levain;
+          return "Levain " + state.levain.L + ":" + state.levain.A + ":" + state.levain.F
+            + " · hidratação " + formatPct(levainProfile.value?.hydration || 0) + "%"
+            + " · " + formatG(lv.seed) + " g isca, " + formatG(lv.water) + " g água, " + formatG(lv.flour) + " g farinha";
+        }
+        if (row.custom) return "Teor de água " + formatPct(row.waterPct) + "%";
+        if (row.waterPct > 0 && row.waterPct < 100) return formatPct(row.waterPct) + "% de água";
+        if (row.ferment === "seco" || row.ferment === "fresco") {
+          const to = row.ferment === "seco" ? "fresco" : "seco";
+          return "Equivale a " + formatPct(Padeiro.convertYeast(row.pct, row.ferment, to)) + "% de " + to;
+        }
+        return "";
+      }
+
+      const layouts = rows.map((row) => {
+        const note = ingredientNote(row);
+        ctx.font = "600 23px Outfit, sans-serif";
+        const nameLines = Math.max(1, cardLines(ctx, row.name || "Ingrediente", 480, 2).length);
+        let noteLines = 0;
+        if (note) {
+          ctx.font = "500 15px Outfit, sans-serif";
+          noteLines = Math.max(1, cardLines(ctx, note, width - pad * 2, 2).length);
+        }
+        const nameY = 34;
+        const nameStep = 27;
+        if (!noteLines) {
+          return { row, note, height: nameY + (nameLines - 1) * nameStep + 18, nameY, noteY: 0 };
+        }
+        const noteY = nameY + (nameLines - 1) * nameStep + 24;
+        return { row, note, height: noteY + (noteLines - 1) * 18 + 20, nameY, noteY };
+      });
+      const rowsHeight = layouts.reduce((sum, item) => sum + item.height, 0);
+      const height = top + rowsHeight + 260;
+      canvas.width = width;
+      canvas.height = height;
 
       ctx.fillStyle = "#f3efe6";
       ctx.fillRect(0, 0, width, height);
@@ -839,8 +880,10 @@ createApp({
       ctx.fillText("GRAMAS", width - pad, headingY);
       ctx.textAlign = "left";
 
-      rows.forEach((row, index) => {
-        const y = headingY + 28 + index * rowHeight;
+      let rowY = headingY + 28;
+      layouts.forEach((item) => {
+        const row = item.row;
+        const y = rowY;
         ctx.strokeStyle = "#efe6da";
         ctx.lineWidth = 1;
         ctx.beginPath();
@@ -849,36 +892,24 @@ createApp({
         ctx.stroke();
         ctx.fillStyle = "#2c241c";
         ctx.font = "600 23px Outfit, sans-serif";
-        cardText(ctx, row.name || "Ingrediente", pad, y + 33, 480, 27, 2);
+        cardText(ctx, row.name || "Ingrediente", pad, y + item.nameY, 480, 27, 2);
         ctx.fillStyle = "#7d6244";
         ctx.font = "600 22px Outfit, sans-serif";
         ctx.textAlign = "right";
-        ctx.fillText(formatPctFine(row.pct) + "%", 790, y + 34);
+        ctx.fillText(formatPctFine(row.pct) + "%", 790, y + item.nameY);
         ctx.fillStyle = "#2c241c";
         ctx.font = "700 24px Outfit, sans-serif";
-        ctx.fillText(formatG(row.grams) + " g", width - pad, y + 34);
+        ctx.fillText(formatG(row.grams) + " g", width - pad, y + item.nameY);
         ctx.textAlign = "left";
-        if (row.ferment === "levain" && result.value.levain?.valid) {
+        if (item.note) {
           ctx.fillStyle = "#8d7f70";
           ctx.font = "500 15px Outfit, sans-serif";
-          cardText(ctx, "Levain " + state.levain.L + ":" + state.levain.A + ":" + state.levain.F + " · hidratação " + formatPct(levainProfile.value?.hydration || 0) + "% · " + formatG(result.value.levain.seed) + " g isca, " + formatG(result.value.levain.water) + " g água, " + formatG(result.value.levain.flour) + " g farinha", pad, y + 57, width - pad * 2, 18, 2);
-        } else if (row.custom) {
-          ctx.fillStyle = "#8d7f70";
-          ctx.font = "500 15px Outfit, sans-serif";
-          ctx.fillText("Teor de água " + formatPct(row.waterPct) + "%", pad, y + 57);
-        } else if (row.waterPct > 0 && row.waterPct < 100) {
-          ctx.fillStyle = "#8d7f70";
-          ctx.font = "500 15px Outfit, sans-serif";
-          ctx.fillText(formatPct(row.waterPct) + "% de água", pad, y + 57);
-        } else if (row.ferment === "seco" || row.ferment === "fresco") {
-          const to = row.ferment === "seco" ? "fresco" : "seco";
-          ctx.fillStyle = "#8d7f70";
-          ctx.font = "500 15px Outfit, sans-serif";
-          ctx.fillText("Equivale a " + formatPct(Padeiro.convertYeast(row.pct, row.ferment, to)) + "% de " + to, pad, y + 57);
+          cardText(ctx, item.note, pad, y + item.noteY, width - pad * 2, 18, 2);
         }
+        rowY += item.height;
       });
 
-      const footerY = headingY + 28 + rows.length * rowHeight + 28;
+      const footerY = rowY + 28;
       roundedRect(ctx, pad, footerY, width - pad * 2, 82, 16, "#f7f2ea");
       ctx.fillStyle = "#7d6244";
       ctx.font = "650 18px Outfit, sans-serif";
