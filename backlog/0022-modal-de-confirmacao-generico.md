@@ -26,6 +26,7 @@ Para apagar uma receita, o botão Apagar virava "Confirmar" no primeiro toque. E
 - [x] Com cliques reais, o primeiro Esc fecha só a confirmação e o segundo fecha as receitas
 - [x] Confirmar apaga a receita da lista e do `localStorage`
 - [x] Cancelar e Apagar têm a mesma altura em 390 px
+- [x] A confirmação aparece centralizada na tela (ajuste posterior; os outros modais continuam abrindo pelo topo)
 
 ## Observação
 
