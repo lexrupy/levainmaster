@@ -927,7 +927,16 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 
 .profile-facts dt { margin: 0; color: var(--muted); font-size: 0.72rem; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; }
 .profile-facts dd { margin: 2px 0 0; font-size: 0.92rem; font-weight: 620; line-height: 1.25; }
-.profile-facts dd small { display: block; color: var(--muted); font-size: 0.72rem; font-weight: 500; }
+.profile-facts .dt-note { margin-left: 4px; letter-spacing: 0.02em; text-transform: none; color: inherit; font-weight: inherit; }
+/* A coluna do pico tem a largura do "8 a 12 h"; o rótulo de cima avança para a esquerda,
+   sobre o espaço livre ao lado de "Textura", sem alargar a coluna. */
+.profile-facts > div:last-child dt {
+  display: flex;
+  justify-content: flex-end;
+  width: 0;
+  margin-left: auto;
+  white-space: nowrap;
+}
 
 .flavor-scale {
   display: grid;

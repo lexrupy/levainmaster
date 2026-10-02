@@ -273,7 +273,7 @@
         <section class="profile" v-if="levainProfile" aria-label="Como fica esta ativação">
           <dl class="profile-facts">
             <div><dt>Textura</dt><dd data-levain-texture>{{ levainProfile.texture }}</dd></div>
-            <div><dt>Pico</dt><dd data-levain-time>{{ levainProfile.time }} <small>a 24–26 °C</small></dd></div>
+            <div><dt>Pico <span class="dt-note">· a 24–26 °C</span></dt><dd data-levain-time>{{ levainProfile.time }}</dd></div>
           </dl>
           <div class="flavor">
             <div class="flavor-scale" role="img" :aria-label="'Sabor: ' + levainProfile.flavor">
