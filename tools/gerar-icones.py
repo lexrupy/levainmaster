@@ -11,14 +11,19 @@ centralizada e no tamanho que cabe em cada caso.
 
     python3 tools/gerar-icones.py
 
+Gera também icons/glifo.png, o ícone da página (topo e Sobre): a ilustração
+inteira com o fundo transparente, sem o quadrado e a moldura, para a figura
+aparecer maior em 34 e 52 px.
+
 Antes de gerar, os ícones atuais vão para icons/backup/AAAAMMDD-HHMMSS/
-(pasta fora do git, no .gitignore). Precisa de Pillow.
+(pasta fora do git, no .gitignore). Precisa de Pillow e numpy.
 """
 
 import shutil
 from datetime import datetime
 from pathlib import Path
 
+import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -27,6 +32,8 @@ SOURCE = ICONS / "fonte-icone.png"
 
 PAPER = (229, 214, 181)        # bege do cartão da arte original
 ART_BOX = (48, 132, 472, 468)  # ilustração dentro da moldura, em px da arte de 512
+GLYPH = "glifo.png"
+GLYPH_SIZE = 128
 
 # nome, tamanho, fração do lado que a ilustração pode ocupar (pela diagonal)
 OUTPUTS = [
@@ -63,8 +70,27 @@ def icon(size, fill):
     return canvas
 
 
+def glyph():
+    """A ilustração inteira (pão, pote, copo, trigo e selo), com o bege do papel transparente."""
+    src = Image.open(SOURCE).convert("RGB").crop(ART_BOX)
+    px = np.asarray(src).astype(float)
+    dist = np.sqrt(((px - np.array(PAPER, float)) ** 2).sum(-1))
+    alpha = np.clip((dist - 28) / 30, 0, 1)  # perto do bege some; os contornos ficam
+    alpha = Image.fromarray((alpha * 255).astype("uint8")).filter(ImageFilter.MedianFilter(5)).filter(ImageFilter.GaussianBlur(0.8))
+    rgba = src.copy()
+    rgba.putalpha(alpha)
+    rgba = rgba.crop(rgba.getchannel("A").point(lambda v: 255 if v > 40 else 0).getbbox())  # justa na figura
+    size = GLYPH_SIZE
+    scale = size / max(rgba.size)
+    w, h = round(rgba.width * scale), round(rgba.height * scale)
+    out = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    out.alpha_composite(rgba.resize((w, h), Image.LANCZOS), ((size - w) // 2, (size - h) // 2))
+    return out
+
+
 def backup():
-    current = [ICONS / name for name, *_ in OUTPUTS if (ICONS / name).exists()]
+    names = [name for name, *_ in OUTPUTS] + [GLYPH]
+    current = [ICONS / name for name in names if (ICONS / name).exists()]
     if not current:
         return
     dest = ICONS / "backup" / datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -80,6 +106,9 @@ def main():
         path = ICONS / name
         icon(size, fill).save(path, optimize=True)
         print(path.relative_to(ROOT), f"{size}x{size}", f"{path.stat().st_size // 1024} KB")
+    path = ICONS / GLYPH
+    glyph().save(path, optimize=True)
+    print(path.relative_to(ROOT), f"{GLYPH_SIZE}x{GLYPH_SIZE}", f"{path.stat().st_size // 1024} KB")
 
 
 if __name__ == "__main__":

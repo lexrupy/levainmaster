@@ -1,6 +1,6 @@
 // Percentual do padeiro — © 2026 Alexandre da Silva
 // SPDX-License-Identifier: LGPL-3.0-or-later
-const CACHE = "padeiro-v47";
+const CACHE = "padeiro-v48";
 const FILES = [
   "./",
   "./index.html",
@@ -23,6 +23,7 @@ const FILES = [
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png",
   "./icons/icon-maskable-512.png",
+  "./icons/glifo.png",
 ];
 
 // Sem resposta da rede nesse tempo, serve o cache (sinal fraco não trava o app).
