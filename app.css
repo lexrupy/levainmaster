@@ -353,10 +353,24 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   font-size: 0.75rem;
 }
 
-.slider-labels span {
+/* Atalhos: centrados sobre a posição do valor no trilho (o polegar tem 26 px) */
+.slider-labels button {
   position: absolute;
+  left: calc(13px + (100% - 26px) * var(--f));
   transform: translateX(-50%);
+  margin: 0;
+  padding: 2px 4px;
+  width: auto;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: 1.2;
+  cursor: pointer;
 }
+.slider-labels button:hover { color: var(--ink); background: #f6f1e8; }
+.slider-labels button.on { color: var(--ink); font-weight: 700; }
 
 .feel {
   display: flex;

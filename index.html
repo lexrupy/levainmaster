@@ -76,10 +76,7 @@
       <div class="slider">
         <input id="agua" type="range" min="30" max="110" step="1" v-model.number="waterPct">
         <div class="slider-labels">
-          <span style="left:31%">55%</span>
-          <span style="left:44%">65%</span>
-          <span style="left:53%">72%</span>
-          <span style="left:69%">85%</span>
+          <button v-for="mark in waterMarks" :key="mark" type="button" :class="{ on: Math.round(waterPct) === mark }" :style="{ '--f': (mark - 30) / 80 }" @click="waterPct = mark" :aria-label="'Água em ' + mark + '%'">{{ mark }}%</button>
         </div>
       </div>
     </section>

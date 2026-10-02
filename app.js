@@ -236,6 +236,9 @@ createApp({
       },
     });
 
+    // Atalhos abaixo do slider da água: tocar leva direto ao valor.
+    const waterMarks = [55, 65, 72, 85];
+
     const waterDiffers = computed(() => Math.abs(result.value.hydration - waterPct.value) >= 0.15);
 
     function formatG(value) {
@@ -656,6 +659,7 @@ createApp({
       state,
       result,
       waterPct,
+      waterMarks,
       waterDiffers,
       ratioId,
       levainProfile,
