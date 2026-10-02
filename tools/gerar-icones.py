@@ -11,7 +11,7 @@ centralizada e no tamanho que cabe em cada caso.
 
     python3 tools/gerar-icones.py
 
-Gera também icons/glifo.png, o ícone da página (topo e Sobre): a arte
+Gera também icons/glifo.jpg, o ícone da página (topo e Sobre): a arte
 recortada por dentro da moldura, sem a borda, para a figura aparecer maior
 em 34 e 52 px.
 
@@ -32,8 +32,8 @@ SOURCE = ICONS / "fonte-icone.png"
 PAPER = (229, 214, 181)        # bege do cartão da arte original
 ART_BOX = (48, 132, 472, 468)  # ilustração dentro da moldura, em px da arte de 512
 INNER_BOX = (38, 36, 476, 474)  # quadrado por dentro da moldura dupla da arte de 512
-GLYPH = "glifo.png"
-GLYPH_SIZE = 128
+GLYPH = "glifo.jpg"  # sem transparência: JPEG fica bem mais leve
+GLYPH_SIZE = 256  # o Sobre mostra com 104 px; 256 cobre telas de alta densidade
 
 # nome, tamanho, fração do lado que a ilustração pode ocupar (pela diagonal)
 OUTPUTS = [
@@ -95,7 +95,7 @@ def main():
         icon(size, fill).save(path, optimize=True)
         print(path.relative_to(ROOT), f"{size}x{size}", f"{path.stat().st_size // 1024} KB")
     path = ICONS / GLYPH
-    glyph().save(path, optimize=True)
+    glyph().save(path, quality=88, optimize=True, progressive=True)
     print(path.relative_to(ROOT), f"{GLYPH_SIZE}x{GLYPH_SIZE}", f"{path.stat().st_size // 1024} KB")
 
 
