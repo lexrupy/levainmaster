@@ -2,8 +2,8 @@
 
 - **Autor:** Alexandre da Silva
 - **Data:** 2026-10-01
-- **Status:** proposta
-- **Arquivos:** `tests/ui/*.spec.js`, `playwright.config.js`, `package.json`, `.gitignore`
+- **Status:** concluída
+- **Arquivos:** `tests/ui/chrome.mjs`, `tests/ui/run.mjs`, `package.json`, `AGENTS.md`
 
 ## Contexto
 
@@ -21,6 +21,10 @@ Playwright como dependência só de desenvolvimento. Ele não entra no app nem n
 - Cada teste começa com `localStorage` limpo
 - Ler valores pelos `data-*` que já existem (`data-final-hyd`, `data-total`, `data-grams`, `data-levain-*`)
 
+## O que foi feito
+
+A decisão ficou no script em Node, sem Playwright e sem `node_modules`. `tests/ui/chrome.mjs` sobe o Chrome já instalado e fala com a página pelo protocolo de depuração. `tests/ui/run.mjs` (`npm run test:ui`) percorre os nove cenários em 390 px e em 560 px, com `localStorage` limpo, e também os casos das tarefas 0082, 0084, o card compartilhado e a 0085. O servidor em `http://127.0.0.1:8769` precisa estar no ar. A hidratação de 55% compara o número com folga de 0,05 e o texto visível `55%`, porque o atributo guarda o float cru (`55.00000000000001`) e a tela mostra uma casa. Nada em `vendor/`, `index.html` ou `ServiceWorker.js` importa esses arquivos. Não há `node_modules` para ignorar.
+
 Primeiros cenários:
 
 1. Receita inicial mostra 840 g e 65%
@@ -37,11 +41,15 @@ Comparação de captura de tela (`toHaveScreenshot`) fica para depois. Ela quebr
 
 ## Critérios de aceite
 
-- [ ] `npm run test:ui` roda os cenários nos dois tamanhos
-- [ ] `node_modules/` e os relatórios do Playwright estão no `.gitignore`
-- [ ] Nada em `vendor/`, `index.html` ou `ServiceWorker.js` depende do Playwright
-- [ ] `AGENTS.md` explica como instalar e rodar
+- [x] `npm run test:ui` roda os nove cenários em 390 px e em 560 px
+- [x] Não há Playwright nem `node_modules`; o `.gitignore` não precisou de pasta de relatório
+- [x] Nada em `vendor/`, `index.html` ou `ServiceWorker.js` depende do executor
+- [x] `AGENTS.md` explica como rodar, sem passo de instalação
 
-## Decisão em aberto
+## Como verificar
 
-Este é o primeiro `node_modules` do projeto, ainda que só para desenvolvimento. A alternativa sem dependência seria um script em `node` que controla o Chrome pelo protocolo de depuração. Funciona, mas dá bem mais código para manter.
+Com `python3 -m http.server 8769 --bind 127.0.0.1` no ar, `npm run test:ui`. A última linha é `UI OK`.
+
+## Decisão
+
+Sem dependência. O Chrome instalado é controlado por `tests/ui/chrome.mjs`. Comparação de captura de tela continua de fora.
