@@ -184,6 +184,35 @@
     };
   }
 
+  function gcd(a, b) {
+    a = Math.abs(a);
+    b = Math.abs(b);
+    while (b) {
+      const t = b;
+      b = a % b;
+      a = t;
+    }
+    return a;
+  }
+
+  // Pesos soltos → proporção. 2 g, 50 g e 50 g viram 1:25:25.
+  // Números quebrados demais voltam para 1 : água/isca : farinha/isca, com 2 casas.
+  function ratioFromGrams(seed, water, flour) {
+    const s = Math.max(0, num(seed));
+    const a = Math.max(0, num(water));
+    const f = Math.max(0, num(flour));
+    if (s + a + f <= 0) return { L: 0, A: 0, F: 0 };
+    const scaled = [s, a, f].map((n) => Math.round(n * 100));
+    const g = scaled.reduce((x, y) => gcd(x, y)) || 1;
+    const L = scaled[0] / g;
+    const A = scaled[1] / g;
+    const F = scaled[2] / g;
+    if (s > 0 && (L > 100 || A > 1000 || F > 1000)) {
+      return { L: 1, A: Math.round((a / s) * 100) / 100, F: Math.round((f / s) * 100) / 100 };
+    }
+    return { L, A, F };
+  }
+
   // O fermento fresco pesa o triplo do seco para a mesma força.
   function convertYeast(pct, from, to) {
     const value = Math.max(0, num(pct));
@@ -360,6 +389,7 @@
     num,
     matchRatio,
     splitLevain,
+    ratioFromGrams,
     levainProfile,
     isFerment,
     enrichedBread,

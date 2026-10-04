@@ -378,7 +378,29 @@ createApp({
     }
 
     // A ativação do levain fica num modal; a linha do fermento mostra o resumo.
+    // O simulador reusa o modal, com gramas soltas, sem gravar na receita.
+    const levainSim = ref(false);
+    const sim = reactive({ total: 100, L: 1, A: 2, F: 2, seed: 20, water: 40, flour: 40 });
+
+    function simGrams(value) {
+      return Math.round(Padeiro.num(value) * 100) / 100;
+    }
+
+    function fillSimGrams() {
+      const split = Padeiro.splitLevain(sim.total, sim.L, sim.A, sim.F);
+      sim.seed = split.valid ? simGrams(split.seed) : 0;
+      sim.water = split.valid ? simGrams(split.water) : 0;
+      sim.flour = split.valid ? simGrams(split.flour) : 0;
+    }
+
     function openLevain() {
+      levainSim.value = false;
+      const dialog = levainDialog.value;
+      if (dialog && !dialog.open) dialog.showModal();
+    }
+
+    function openLevainSim() {
+      levainSim.value = true;
       const dialog = levainDialog.value;
       if (dialog && !dialog.open) dialog.showModal();
     }
@@ -2067,10 +2089,66 @@ createApp({
     function onRatio(id) {
       const preset = Padeiro.RATIOS.find((item) => item.id === id);
       if (!preset) return;
+      if (levainSim.value) {
+        sim.L = preset.L;
+        sim.A = preset.A;
+        sim.F = preset.F;
+        fillSimGrams();
+        return;
+      }
       state.levain.L = preset.L;
       state.levain.A = preset.A;
       state.levain.F = preset.F;
     }
+
+    function setSimPart(key, value) {
+      sim[key] = value === "" ? "" : String(value).replace(",", ".");
+      if (value !== "") fillSimGrams();
+    }
+
+    function settleSimPart(key) {
+      sim[key] = Math.max(0, Padeiro.num(sim[key]));
+      fillSimGrams();
+    }
+
+    function setSimTotal(value) {
+      sim.total = value === "" ? "" : String(value).replace(",", ".");
+      if (value !== "") fillSimGrams();
+    }
+
+    function settleSimTotal() {
+      sim.total = Math.max(0, Padeiro.num(sim.total));
+      fillSimGrams();
+    }
+
+    // Os pesos mandam: o total é a soma e a proporção vira personalizada.
+    function setSimGram(key, value) {
+      sim[key] = value === "" ? "" : String(value).replace(",", ".");
+      const seed = Padeiro.num(sim.seed);
+      const water = Padeiro.num(sim.water);
+      const flour = Padeiro.num(sim.flour);
+      sim.total = simGrams(seed + water + flour);
+      const ratio = Padeiro.ratioFromGrams(seed, water, flour);
+      sim.L = ratio.L;
+      sim.A = ratio.A;
+      sim.F = ratio.F;
+    }
+
+    function settleSimGram(key) {
+      sim[key] = simGrams(Math.max(0, Padeiro.num(sim[key])));
+      setSimGram(key, sim[key]);
+    }
+
+    const simProfile = computed(() => {
+      const l = Padeiro.num(sim.L);
+      const a = Padeiro.num(sim.A);
+      const f = Padeiro.num(sim.F);
+      if (l + a + f <= 0 || f <= 0) return null;
+      return Padeiro.levainProfile(l, a, f);
+    });
+
+    const simRatioId = computed(() => Padeiro.matchRatio(sim.L, sim.A, sim.F));
+    const shownProfile = computed(() => (levainSim.value ? simProfile.value : levainProfile.value));
 
     function setPart(key, value) {
       state.levain[key] = value === "" ? "" : Math.max(0, Padeiro.num(value));
@@ -2240,6 +2318,18 @@ createApp({
       formatDate,
       summaryOf,
       openLevain,
+      openLevainSim,
+      levainSim,
+      sim,
+      simProfile,
+      simRatioId,
+      shownProfile,
+      setSimPart,
+      settleSimPart,
+      setSimTotal,
+      settleSimTotal,
+      setSimGram,
+      settleSimGram,
       closeLevain,
       onDialogClick,
       canInstall,

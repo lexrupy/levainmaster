@@ -504,7 +504,7 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   font-weight: 620;
 }
 
-.ferment-select, .ratio-select, .pct input, .part input, .name-input, .water-edit input {
+.ferment-select, .ratio-select, .pct input, .part input, .name-input, .water-edit input, .sim-gram {
   border: 1px solid var(--line-strong) !important;
   background: #fff !important;
   box-shadow: none !important;
@@ -655,6 +655,14 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 .split dd { margin: 1px 0 0; font-size: 0.95rem; font-weight: 680; white-space: nowrap; }
 .split .split-hyd { grid-column: 4; background: var(--sand-bg); border-color: var(--line-strong); }
 .split .split-hyd dd { font-size: 1.05rem; }
+.split .sim-gram {
+  width: 100%;
+  padding: 2px 4px !important;
+  height: auto !important;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 680;
+}
 
 .add-wrap { position: relative; margin-top: 12px; }
 
@@ -1004,6 +1012,11 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 
 /* Receitas salvas */
 .top-actions { display: flex; gap: 8px; }
+@media (max-width: 430px) {
+  .top { gap: 8px; }
+  .top-actions { gap: 6px; }
+  .top-actions .install { padding: 7px 10px; }
+}
 
 .recipes .recipe-save { margin: 10px 0 16px; }
 .recipe-save-row { display: flex; gap: 8px; margin-top: 8px; }

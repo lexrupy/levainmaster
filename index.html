@@ -23,6 +23,7 @@
         <span>Percentual do padeiro</span>
       </button>
       <div class="top-actions">
+        <button type="button" class="install" @click="openLevainSim">Levain</button>
         <button type="button" class="install" @click="openRecipes(false)">Receitas</button>
       </div>
     </header>
@@ -308,19 +309,23 @@
     </dialog>
 
     <dialog ref="levainDialog" class="levain-dialog" @click="onDialogClick" aria-labelledby="levain-title">
-      <article v-if="result.levainOn" class="levain" tabindex="-1" autofocus>
+      <article v-if="levainSim || result.levainOn" class="levain" tabindex="-1" autofocus>
         <header class="levain-head">
-          <h2 id="levain-title">Ativar o levain</h2>
+          <h2 id="levain-title">{{ levainSim ? 'Simulador de levain' : 'Ativar o levain' }}</h2>
           <button type="button" class="del" @click="closeLevain" aria-label="Fechar">×</button>
         </header>
-        <p class="levain-grams" v-if="levainItem">
+        <p class="levain-grams" v-if="levainSim">
+          <input class="grams-input" type="number" min="0" step="0.01" inputmode="decimal" :value="sim.total" @input="setSimTotal($event.target.value)" @blur="settleSimTotal" @keydown.enter.prevent="$event.target.blur()" aria-label="Gramas totais do levain" data-sim-total>
+          <small> g no total</small>
+        </p>
+        <p class="levain-grams" v-else-if="levainItem">
           <input v-if="isEditing(levainItem, 'levainGrams')" v-focus class="grams-input" type="number" min="0" step="1" inputmode="decimal" :value="editing.text" @input="onEdit(levainItem, 'levainGrams', $event.target.value)" @blur="endEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc.prevent.stop="cancelEdit(levainItem)" aria-label="Gramas de levain na massa">
           <button v-else type="button" class="grams-value" :disabled="result.flour <= 0" @click="startEdit(levainItem, 'levainGrams')" aria-label="Editar gramas de levain na massa" data-levain-grams>{{ formatG(result.levainGrams) }}</button><small> g na massa · {{ formatPctFine(levainItem.pct) }}% da farinha</small>
         </p>
         <div class="parts">
           <div class="part part-ratio">
             <label for="ratio">Proporção</label>
-            <select id="ratio" class="ratio-select" :value="ratioId" @change="onRatio($event.target.value)">
+            <select id="ratio" class="ratio-select" :value="levainSim ? simRatioId : ratioId" @change="onRatio($event.target.value)">
               <optgroup v-for="group in ratioGroups" :key="group.name" :label="group.name">
                 <option v-for="ratio in group.items" :key="ratio.id" :value="ratio.id">{{ ratio.id }}</option>
               </optgroup>
@@ -329,44 +334,57 @@
           </div>
           <div class="part">
             <label for="part-l">Isca</label>
-            <input id="part-l" type="number" min="0" step="1" inputmode="decimal" :value="state.levain.L" @input="setPart('L', $event.target.value)" @blur="settlePart('L')">
+            <input id="part-l" type="number" min="0" step="any" inputmode="decimal" :value="levainSim ? sim.L : state.levain.L" @input="levainSim ? setSimPart('L', $event.target.value) : setPart('L', $event.target.value)" @blur="levainSim ? settleSimPart('L') : settlePart('L')">
           </div>
           <span class="colon">:</span>
           <div class="part">
             <label for="part-a">Água</label>
-            <input id="part-a" type="number" min="0" step="1" inputmode="decimal" :value="state.levain.A" @input="setPart('A', $event.target.value)" @blur="settlePart('A')">
+            <input id="part-a" type="number" min="0" step="any" inputmode="decimal" :value="levainSim ? sim.A : state.levain.A" @input="levainSim ? setSimPart('A', $event.target.value) : setPart('A', $event.target.value)" @blur="levainSim ? settleSimPart('A') : settlePart('A')">
           </div>
           <span class="colon">:</span>
           <div class="part">
             <label for="part-f">Farinha</label>
-            <input id="part-f" type="number" min="0" step="1" inputmode="decimal" :value="state.levain.F" @input="setPart('F', $event.target.value)" @blur="settlePart('F')">
+            <input id="part-f" type="number" min="0" step="any" inputmode="decimal" :value="levainSim ? sim.F : state.levain.F" @input="levainSim ? setSimPart('F', $event.target.value) : setPart('F', $event.target.value)" @blur="levainSim ? settleSimPart('F') : settlePart('F')">
           </div>
         </div>
         <dl class="split">
-          <div><dt>Isca</dt><dd data-levain-seed>{{ formatG(result.levain ? result.levain.seed : 0) }} g</dd></div>
-          <div><dt>Água</dt><dd data-levain-water>{{ formatG(result.levain ? result.levain.water : 0) }} g</dd></div>
-          <div><dt>Farinha</dt><dd data-levain-flour>{{ formatG(result.levain ? result.levain.flour : 0) }} g</dd></div>
-          <div class="split-hyd"><dt>Hidratação</dt><dd data-levain-hyd>{{ levainProfile ? formatPct(levainProfile.hydration) + '%' : '—' }}</dd></div>
+          <div>
+            <dt>Isca</dt>
+            <dd v-if="!levainSim" data-levain-seed>{{ formatG(result.levain ? result.levain.seed : 0) }} g</dd>
+            <dd v-else><input class="sim-gram" type="number" min="0" step="0.01" inputmode="decimal" :value="sim.seed" @input="setSimGram('seed', $event.target.value)" @blur="settleSimGram('seed')" aria-label="Gramas de isca" data-sim-seed></dd>
+          </div>
+          <div>
+            <dt>Água</dt>
+            <dd v-if="!levainSim" data-levain-water>{{ formatG(result.levain ? result.levain.water : 0) }} g</dd>
+            <dd v-else><input class="sim-gram" type="number" min="0" step="0.01" inputmode="decimal" :value="sim.water" @input="setSimGram('water', $event.target.value)" @blur="settleSimGram('water')" aria-label="Gramas de água" data-sim-water></dd>
+          </div>
+          <div>
+            <dt>Farinha</dt>
+            <dd v-if="!levainSim" data-levain-flour>{{ formatG(result.levain ? result.levain.flour : 0) }} g</dd>
+            <dd v-else><input class="sim-gram" type="number" min="0" step="0.01" inputmode="decimal" :value="sim.flour" @input="setSimGram('flour', $event.target.value)" @blur="settleSimGram('flour')" aria-label="Gramas de farinha" data-sim-flour></dd>
+          </div>
+          <div class="split-hyd"><dt>Hidratação</dt><dd data-levain-hyd>{{ shownProfile ? formatPct(shownProfile.hydration) + '%' : '—' }}</dd></div>
         </dl>
-        <section class="profile" v-if="levainProfile" aria-label="Como fica esta ativação">
+        <section class="profile" v-if="shownProfile" aria-label="Como fica esta ativação">
           <dl class="profile-facts">
-            <div><dt>Textura</dt><dd data-levain-texture>{{ levainProfile.texture }}</dd></div>
-            <div><dt>Pico</dt><dd data-levain-time>{{ levainProfile.time }} <small>a 24–26 °C</small></dd></div>
+            <div><dt>Textura</dt><dd data-levain-texture>{{ shownProfile.texture }}</dd></div>
+            <div><dt>Pico</dt><dd data-levain-time>{{ shownProfile.time }} <small>a 24–26 °C</small></dd></div>
           </dl>
           <div class="flavor">
-            <div class="flavor-scale" role="img" :aria-label="'Sabor: ' + levainProfile.flavor">
-              <span v-for="n in 5" :key="n" :class="{ on: n - 1 === levainProfile.score }"></span>
+            <div class="flavor-scale" role="img" :aria-label="'Sabor: ' + shownProfile.flavor">
+              <span v-for="n in 5" :key="n" :class="{ on: n - 1 === shownProfile.score }"></span>
             </div>
             <div class="flavor-ends"><span>Láctico · suave</span><span>Acético · azedo</span></div>
-            <p class="flavor-name" data-levain-flavor>{{ levainProfile.flavor }}</p>
+            <p class="flavor-name" data-levain-flavor>{{ shownProfile.flavor }}</p>
           </div>
-          <p v-for="tip in levainProfile.tips" :key="tip" class="hint profile-tip">{{ tip }}</p>
+          <p v-for="tip in shownProfile.tips" :key="tip" class="hint profile-tip">{{ tip }}</p>
           <p class="hint">Mais quente (26–30 °C) puxa para o láctico; mais frio (abaixo de 22 °C), para o acético.</p>
         </section>
         <p class="hint">A hidratação é a água dividida pela farinha desta alimentação. A água da isca não entra.</p>
-        <p class="hint" v-if="result.levain && result.levain.valid">{{ formatG(result.levain.water) }} g dessa água entram na hidratação total da massa.</p>
+        <p class="hint" v-if="levainSim">Estas gramas não entram na receita. Mudar isca, água ou farinha recalcula a proporção.</p>
+        <p class="hint" v-else-if="result.levain && result.levain.valid">{{ formatG(result.levain.water) }} g dessa água entram na hidratação total da massa.</p>
         <div class="sheet-foot">
-          <button type="button" class="levain-done" @click="closeLevain">Concluir</button>
+          <button type="button" class="levain-done" @click="closeLevain">{{ levainSim ? 'Fechar' : 'Concluir' }}</button>
         </div>
       </article>
     </dialog>
