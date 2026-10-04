@@ -2,7 +2,7 @@
 
 - **Autor:** Alexandre da Silva
 - **Data:** 2026-10-04
-- **Status:** proposta
+- **Status:** concluída
 - **Arquivos:** `app.js`, `calc.js`, `index.html`
 
 ## Contexto
@@ -19,16 +19,16 @@ Exemplo: farinha 250 g, água no atalho 65%, sal 2%, fermento 1%.
 
 O mesmo 1 g aparece com 250 g ou 750 g nos atalhos 55% e 85%. A receita inicial (500 g, 65%) fecha em 840 g porque nenhum peso cai em ,5.
 
-## Proposta
+## O que foi feito
 
-Os gramas inteiros mostrados nas linhas somam o peso da massa mostrado no card. A conta exata da hidratação não muda.
+`balanceShown` reparte os inteiros para somarem o peso arredondado da massa. No empate de ,5 o grama fica na primeira linha: a água de 162,5 g continua 163 g e o fermento de 2,5 g aparece 2 g. A hidratação segue nos gramas exatos. O card usa o mesmo inteiro da lista. `CACHE` subiu para `padeiro-v89`.
 
 ## Critérios de aceite
 
-- [ ] Farinha 250 g, água 65%, sal 2%, fermento 1%: a soma das linhas inteiras é o peso da massa mostrado
-- [ ] O mesmo fecha em 250 g e 750 g com água a 55% e a 85%
-- [ ] A receita inicial continua 840 g e hidratação 65%
-- [ ] A hidratação continua saindo dos gramas exatos, não dos inteiros da lista
+- [x] Farinha 250 g, água 65%, sal 2%, fermento 1%: a soma das linhas inteiras é o peso da massa mostrado
+- [x] O mesmo fecha em 250 g e 750 g com água a 55% e a 85%
+- [x] A receita inicial continua 840 g e hidratação 65%
+- [x] A hidratação continua saindo dos gramas exatos, não dos inteiros da lista
 
 ## Como verificar
 

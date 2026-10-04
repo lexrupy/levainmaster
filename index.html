@@ -162,7 +162,7 @@
           </div>
           <div class="grams" :data-grams="item.role">
             <input v-if="isEditing(item, 'grams')" v-focus class="grams-input" type="number" min="0" step="1" inputmode="decimal" :value="editing.text" @input="onEdit(item, 'grams', $event.target.value)" @blur="endEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc="cancelEdit(item)" :aria-label="'Gramas de ' + (item.name || 'ingrediente')">
-            <button v-else type="button" class="grams-value" :disabled="result.flour <= 0" @click="startEdit(item, 'grams')" :aria-label="'Editar gramas de ' + (item.name || 'ingrediente')">{{ formatG(rowOf(item.id).grams) }}</button><small>g</small>
+            <button v-else type="button" class="grams-value" :disabled="result.flour <= 0" @click="startEdit(item, 'grams')" :aria-label="'Editar gramas de ' + (item.name || 'ingrediente')">{{ formatG(rowOf(item.id).shown) }}</button><small>g</small>
           </div>
         </div>
       </div>

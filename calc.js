@@ -390,6 +390,23 @@
     return (Math.max(0, num(flour)) * Math.max(0, num(pct))) / 100;
   }
 
+  // Inteiros que somam o arredondado do total. O grama do empate em ,5 fica na primeira linha.
+  function balanceShown(values) {
+    const exact = values.map((value) => Math.max(0, num(value)));
+    const shown = exact.map((value) => Math.floor(value));
+    let left = Math.round(exact.reduce((sum, value) => sum + value, 0)) - shown.reduce((sum, value) => sum + value, 0);
+    const order = exact
+      .map((value, index) => ({ index, frac: value - shown[index] }))
+      .sort((a, b) => b.frac - a.frac || a.index - b.index);
+    let guard = 0;
+    while (left > 0 && order.length && guard < exact.length * 4) {
+      shown[order[guard % order.length].index] += 1;
+      left -= 1;
+      guard += 1;
+    }
+    return shown;
+  }
+
   function weighLevain(split) {
     if (!split || !split.valid) return split;
     const total = Math.round(split.seed + split.water + split.flour);
@@ -450,6 +467,11 @@
       };
     });
 
+    const shown = balanceShown([flour, ...rows.map((row) => row.grams)]);
+    rows.forEach((row, index) => {
+      row.shown = shown[index + 1];
+    });
+
     const totalWater = rows.reduce((sum, row) => sum + row.water, 0);
     const totalWeight = flour + rows.reduce((sum, row) => sum + row.grams, 0);
     const hydration = flour > 0 ? (totalWater / flour) * 100 : 0;
@@ -498,6 +520,7 @@
     isFerment,
     enrichedBread,
     gramsOf,
+    balanceShown,
     convertYeast,
     compute,
     defaultState,

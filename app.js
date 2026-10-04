@@ -411,7 +411,7 @@ createApp({
       editing.key = editKey(item, field);
       editing.undo = item.pct;
       editing.text = grams
-        ? String(Math.round(rowOf(item.id).grams))
+        ? String(rowOf(item.id).shown)
         : String(Math.round(Padeiro.num(item.pct) * 100) / 100);
     }
 
@@ -1101,7 +1101,7 @@ createApp({
         ctx.fillText(formatPctFine(row.pct) + "%", 790, y + item.nameY);
         ctx.fillStyle = "#2c241c";
         ctx.font = "700 24px Outfit, sans-serif";
-        ctx.fillText(formatG(row.grams) + " g", width - pad, y + item.nameY);
+        ctx.fillText(formatG(row.shown) + " g", width - pad, y + item.nameY);
         ctx.textAlign = "left";
         if (item.note) {
           ctx.fillStyle = "#8d7f70";
@@ -1380,7 +1380,7 @@ createApp({
         ctx.fillText(formatPctFine(row.pct) + "%", 790, y + item.nameY);
         ctx.fillStyle = "#2c241c";
         ctx.font = "700 24px Outfit, sans-serif";
-        ctx.fillText(formatG(row.grams) + " g", rowRight, y + item.nameY);
+        ctx.fillText(formatG(row.shown) + " g", rowRight, y + item.nameY);
         ctx.textAlign = "left";
         if (item.note) {
           ctx.fillStyle = "#8d7f70";
@@ -1815,7 +1815,7 @@ createApp({
         ctx.fillText(formatPctFine(row.pct) + "%", 790, y + item.nameY);
         ctx.fillStyle = "#2c241c";
         ctx.font = "700 24px Outfit, sans-serif";
-        ctx.fillText(formatG(row.grams) + " g", width - pad, y + item.nameY);
+        ctx.fillText(formatG(row.shown) + " g", width - pad, y + item.nameY);
         ctx.textAlign = "left";
         if (item.note) {
           ctx.fillStyle = "#8d7f70";
@@ -2079,7 +2079,7 @@ createApp({
         ctx.fillText(formatPctFine(row.pct) + "%", 790, y + item.nameY);
         ctx.fillStyle = "#2c241c";
         ctx.font = "700 24px Outfit, sans-serif";
-        ctx.fillText(formatG(row.grams) + " g", width - pad, y + item.nameY);
+        ctx.fillText(formatG(row.shown) + " g", width - pad, y + item.nameY);
         ctx.textAlign = "left";
         if (item.note) {
           ctx.fillStyle = "#8d7f70";
@@ -2548,7 +2548,7 @@ createApp({
     }
 
     function rowOf(id) {
-      return result.value.rows.find((row) => row.id === id) || { grams: 0, water: 0 };
+      return result.value.rows.find((row) => row.id === id) || { grams: 0, water: 0, shown: 0 };
     }
 
     async function install() {
