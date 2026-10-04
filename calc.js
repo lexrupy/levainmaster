@@ -375,8 +375,11 @@
     }
     const test = orderedRange(calibration.tempLo, calibration.tempHi) || { lo: 24, hi: 26 };
     const mid = (test.lo + test.hi) / 2;
-    const shortH = center * Math.pow(2, (mid - requested.hi) / 10);
-    const longH = center * Math.pow(2, (mid - requested.lo) / 10);
+    let shortH = center * Math.pow(2, (mid - requested.hi) / 10);
+    let longH = center * Math.pow(2, (mid - requested.lo) / 10);
+    // Alimentação muito menor que a isca leva o log abaixo de zero. A tela não mostra hora negativa nem 0 h.
+    if (roundHalfHour(shortH) < 0.5) shortH = 0.5;
+    if (roundHalfHour(longH) < 0.5) longH = 0.5;
     const name = String(calibration.name || "").trim() || "Calibração";
     return { time: formatHourSpan(shortH, longH), label: name, stiff, hot, general: false };
   }
