@@ -1,6 +1,6 @@
 // Percentual do padeiro — © 2026 Alexandre da Silva
 // SPDX-License-Identifier: LGPL-3.0-or-later
-const CACHE = "padeiro-v92";
+const CACHE = "padeiro-v93";
 const FILES = [
   "./",
   "./index.html",
@@ -51,9 +51,9 @@ self.addEventListener("activate", (event) => {
 
 // Rede primeiro, revalidando com o servidor (cache: "no-cache"); o que chegar
 // atualiza o cache. Sem rede, com erro ou depois de NETWORK_TIMEOUT, vale o cache.
-// /card, /card2, /card3 e /card4 (e os .png) não existem no servidor. A página
-// manda os PNG e este worker responde com a imagem, para o navegador mostrar em vez de baixar.
-const cardBlobs = { card: null, card2: null, card3: null, card4: null };
+// /card (e card.png) não existe no servidor. A página manda o PNG e este worker
+// responde com a imagem, para o navegador mostrar em vez de baixar.
+const cardBlobs = { card: null };
 
 const CARD_HEADERS = {
   "Content-Type": "image/png",
@@ -65,11 +65,7 @@ function cardRequest(file) {
   return new Request(new URL(file, self.location).href);
 }
 
-// O número maior vem antes: card4 não pode cair em card.
 function cardKind(url) {
-  if (/\/card4(\.png)?$/.test(url.pathname)) return "card4";
-  if (/\/card3(\.png)?$/.test(url.pathname)) return "card3";
-  if (/\/card2(\.png)?$/.test(url.pathname)) return "card2";
   if (/\/card(\.png)?$/.test(url.pathname)) return "card";
   return "";
 }
