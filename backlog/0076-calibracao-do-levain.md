@@ -42,12 +42,12 @@ Fora disso o teste não grava. Na tela, o tempo todo: «Outros pesos na mesma pr
 Nada menos que isto, senão não há calibração:
 
 - nome, em geral a farinha, obrigatório, até 40 caracteres, só para reconhecer
-- temperatura dos potes, em °C
+- temperatura dos potes, em °C, opcional
 - hora em que os dois foram misturados, a mesma
 - hora do pico de volume do 1:1:1, confirmada quando começa a perder estrutura
 - hora do pico de volume do 1:5:5, do mesmo jeito
 
-O nome não entra na conta. As duas durações precisam ser positivas, e o 1:5:5 precisa ter levado mais tempo que o 1:1:1. Se um pico passou batido, o par se descarta. Não existe calibração pela metade.
+O nome e a temperatura não entram na conta. Campo de temperatura vazio vale 24–26 °C, a mesma referência das faixas gerais. As duas durações precisam ser positivas, e o 1:5:5 precisa ter levado mais tempo que o 1:1:1. Se um pico passou batido, o par se descarta. Não existe calibração pela metade.
 
 ### A conta
 
@@ -57,7 +57,7 @@ Para hidratação de 85% ou mais, na temperatura do teste:
 
 `t(r) = t1 + (t5 − t1) × ln(r) / ln(5)`
 
-Exemplo combinado: `t1` = 4 h, `t5` = 10 h, teste a 22 °C, estimativa a 22 °C. A hora mostrada arredonda para meia hora.
+Exemplo combinado: `t1` = 4 h, `t5` = 10 h. A hora mostrada arredonda para meia hora, com ou sem temperatura anotada.
 
 | Proporção | r | Conta | Na tela |
 | --- | --- | --- | --- |
@@ -73,11 +73,9 @@ Abaixo de 85% a conta de cima segue para a mesma alimentação, e o resultado mu
 
 ### Temperatura
 
-A temperatura da estimativa é a única variável livre depois do par. O seletor da calibração fica no Sobre. O campo da temperatura fica no modal do levain, e também no simulador, só quando há calibração ativa. Começa na temperatura do teste.
+A temperatura fica só no registro do teste, e é opcional. Quem consegue segurar a temperatura da cozinha já fez isso nos dois potes. As horas medidas já são o relógio dessa condição. Não há um segundo campo, no modal do levain nem no simulador, para pedir outra temperatura e esticar a hora.
 
-`t(T) = t(T do teste) × 2 ^ ((T do teste − T) / 10)`
-
-Entre 18 e 28 °C essa hora segue redonda como as outras. Fora desse intervalo a mesma conta aparece com o aviso de que a estimativa é larga. Acima de 30 °C o aviso diz que a levedura perde ritmo e o número é só um guia. Sem calibração não há campo de temperatura e não há esta conta. Não se esfria nem se esquenta a faixa geral.
+Campo vazio grava e mostra 24–26 °C. Um valor preenchido, por exemplo 22 °C, só identifica o par. A tabela de horas é a mesma nos dois casos. Não se converte um teste a 22 °C para a faixa de 24–26 °C, nem o contrário.
 
 ### Onde fica na tela
 
@@ -90,22 +88,22 @@ O ícone ao lado do nome abre o Sobre, como hoje. Nesse modal, depois dos fatos 
 
 Nenhuma devolve as faixas gerais. Apagar a que estava em uso também. Quem usa sempre a mesma farinha escolhe uma vez.
 
-No modal do levain e no simulador, a hora mostra a origem: o nome da calibração, ou «Faixa geral». Não há seletor ali. Com calibração ativa, a hora é a estimativa em meia hora, não a faixa «16 a 24 h». Sem calibração, o texto da hora é o de `PEAK_TIMES`, igual ao de hoje.
+No modal do levain e no simulador, a hora mostra a origem: o nome da calibração, com a temperatura anotada ou «24–26 °C», ou «Faixa geral». Não há seletor nem campo de temperatura ali. Com calibração ativa, a hora é a estimativa em meia hora, não a faixa «16 a 24 h». Sem calibração, o texto da hora é o de `PEAK_TIMES`, igual ao de hoje.
 
 ### O que fica gravado
 
-Chave nova no `localStorage`, `percentual-padeiro-calibracoes-v1`, separada de `percentual-padeiro-v1` e de `percentual-padeiro-receitas-v1`. Cada item tem `id`, `name`, `savedAt`, `t1Hours`, `t5Hours`, `tempC` e os pesos anotados. A ativa é um `id` ou vazio. Abrir uma receita não troca a calibração. Limpar a receita da tela não apaga a lista. Outra farinha, ou a mesma daqui a semanas, é outro par, com outro nome. Não se edita a conta de um par já gravado: grava-se outro ou apaga-se.
+Chave nova no `localStorage`, `percentual-padeiro-calibracoes-v1`, separada de `percentual-padeiro-v1` e de `percentual-padeiro-receitas-v1`. Cada item tem `id`, `name`, `savedAt`, `t1Hours`, `t5Hours`, `tempC` e os pesos anotados. `tempC` vazio significa 24–26 °C. A ativa é um `id` ou vazio. Abrir uma receita não troca a calibração. Limpar a receita da tela não apaga a lista. Outra farinha, ou a mesma daqui a semanas, é outro par, com outro nome. Não se edita a conta de um par já gravado: grava-se outro ou apaga-se.
 
-A hora calibrada não entra em `levainProfile`. Uma função ao lado recebe o perfil, a calibração ativa e a temperatura pedida. Sem calibração, o chamador usa `profile.time`.
+A hora calibrada não entra em `levainProfile`. Uma função ao lado recebe o perfil e a calibração ativa. Sem calibração, o chamador usa `profile.time`.
 
 ## Critérios de aceite
 
 - [ ] Sem calibração, os presets do apêndice A de `teorias do levain.md` mantêm hora, sabor e textura. O 1:25:25 segue «16 a 24 h» e «Bem láctico: suave e cremoso». O 2:4:5 segue «8 a 12 h» e «Pastosa, mais firme que iogurte»
-- [ ] Não há campo de temperatura nem seletor de calibração no modal do levain enquanto nenhuma estiver ativa
-- [ ] O teste só grava com nome, temperatura, hora de mistura e os dois picos, com o 1:5:5 mais lento que o 1:1:1
+- [ ] O modal do levain e o simulador não têm campo de temperatura nem seletor de calibração
+- [ ] O teste grava com nome, hora de mistura e os dois picos, com o 1:5:5 mais lento que o 1:1:1. Sem temperatura anotada, o par fica como 24–26 °C
 - [ ] 10 g + 50 g + 50 g é aceito como 1:5:5. Um 1:2:2 não grava
 - [ ] O aviso sobre erro de pesagem está na tela de registro
-- [ ] Com `t1` = 4, `t5` = 10 e 22 °C, o 1:25:25 a 22 °C mostra 16 h e o nome da calibração. A 26 °C a hora é menor, pela potência de 2 acima, e o sabor não muda
+- [ ] Com `t1` = 4 e `t5` = 10, o 1:25:25 mostra 16 h e o nome da calibração, igual com 22 °C anotados e com o campo vazio. O vazio aparece como 24–26 °C. O sabor não muda
 - [ ] Abaixo de 85% a hora passa pelo degrau da faixa geral, no exemplo do 1:2:3
 - [ ] Escolher «Faixa geral», ou apagar a calibração em uso, devolve o texto antigo da hora
 - [ ] Limpar a receita da tela não remove as calibrações
@@ -116,8 +114,8 @@ A hora calibrada não entra em `levainProfile`. Uma função ao lado recebe o pe
 
 Na branch, `node` compara `levainProfile` dos presets com e sem o módulo de calibração carregado e nenhuma calibração ativa. Os tempos têm de ser os de hoje.
 
-No navegador, sem calibração, abrir o levain da receita e o simulador e ler a hora geral. Registrar o par do exemplo (4 h e 10 h a 22 °C), escolher o nome no Sobre e conferir a tabela desta tarefa no simulador, a 22 °C e a 26 °C. Confirmar um 1:2:3. Voltar para «Faixa geral» e ver a faixa antiga. Limpar a receita e ver que a calibração continua no Sobre. Repetir a 390 px e a 560 px.
+No navegador, sem calibração, abrir o levain da receita e o simulador e ler a hora geral. Registrar o par do exemplo (4 h e 10 h), uma vez com 22 °C e outra com o campo vazio. As horas da tabela são as mesmas. A vazia mostra 24–26 °C. Confirmar um 1:2:3. Voltar para «Faixa geral» e ver a faixa antiga. Limpar a receita e ver que a calibração continua no Sobre. Repetir a 390 px e a 560 px.
 
 ## Fora do escopo
 
-Não muda sabor, textura nem dicas. Não modela o momento de uso depois do pico. Não calibra com um pote só. Não coloca temperatura em cima da faixa geral. Não reescreve a dica «Fermentação longa e bem suave» quando a hora calibrada for curta. Não usa o 2:50:50 de 3 de outubro: a queda de estrutura não foi anotada. Não grava a calibração dentro da receita salva.
+Não muda sabor, textura nem dicas. Não modela o momento de uso depois do pico. Não calibra com um pote só. Não converte a hora calibrada de uma temperatura para outra. Não coloca temperatura em cima da faixa geral. Não reescreve a dica «Fermentação longa e bem suave» quando a hora calibrada for curta. Não usa o 2:50:50 de 3 de outubro: a queda de estrutura não foi anotada. Não grava a calibração dentro da receita salva.
