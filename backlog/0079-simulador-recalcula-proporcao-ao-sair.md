@@ -2,7 +2,7 @@
 
 - **Autor:** Alexandre da Silva
 - **Data:** 2026-10-04
-- **Status:** proposta
+- **Status:** concluída
 - **Arquivos:** `app.js`, `index.html`, `calc.js`
 
 ## Contexto
@@ -18,17 +18,17 @@ Exemplos medidos com `splitLevain` e `ratioFromGrams`:
 
 O degrau está em `speedIndex`: alimentação 5 cai em «8 a 12 h» e 5,01 já cai em «12 a 16 h».
 
-## Proposta
+## O que foi feito
 
-Sair do campo sem editar conserva a proporção, a hora, o sabor e o total. Digitar um peso de propósito continua mandando na proporção, como o comentário de `setSimGram` descreve.
+`settleSimGram` só devolve o campo às duas casas quando o número já estava nessa precisão. A proporção fica. Um peso diferente, ou com mais casas do que as duas exibidas, continua chamando `setSimGram`. `CACHE` subiu para `padeiro-v87`.
 
 ## Critérios de aceite
 
-- [ ] 26 g em 1:5:5, sair da isca sem digitar, continua 1:5:5 e «8 a 12 h»
-- [ ] 20 g em 1:10:10, sair de um grama sem digitar, continua «12 a 16 h»
-- [ ] 23 g em 1:4:4, sair sem digitar, conserva «Bem láctico»
-- [ ] 100 g em 1:1:1, sair sem digitar, conserva o total 100
-- [ ] Digitar outro peso de isca, água ou farinha ainda recalcula a proporção
+- [x] 26 g em 1:5:5, sair da isca sem digitar, continua 1:5:5 e «8 a 12 h»
+- [x] 20 g em 1:10:10, sair de um grama sem digitar, continua «12 a 16 h»
+- [x] 23 g em 1:4:4, sair sem digitar, conserva «Bem láctico»
+- [x] 100 g em 1:1:1, sair sem digitar, conserva o total 100
+- [x] Digitar outro peso de isca, água ou farinha ainda recalcula a proporção
 
 ## Como verificar
 

@@ -2245,9 +2245,16 @@ createApp({
       sim.F = ratio.F;
     }
 
+    // Sair sem mudar o número não reinterpreta o grama já arredondado.
+    // 2,36 vindo de 1:5:5 continuaria 1:5,01 se a conta rodasse de novo.
     function settleSimGram(key) {
-      sim[key] = simGrams(Math.max(0, Padeiro.num(sim[key])));
-      setSimGram(key, sim[key]);
+      const text = String(sim[key] ?? "").trim().replace(",", ".");
+      const raw = Math.max(0, Padeiro.num(text));
+      const rounded = simGrams(raw);
+      const untouched = text !== "" && Math.abs(raw - rounded) < 1e-9;
+      sim[key] = rounded;
+      if (untouched) return;
+      setSimGram(key, rounded);
     }
 
     const simProfile = computed(() => {
