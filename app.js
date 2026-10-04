@@ -815,9 +815,10 @@ createApp({
     }
 
     function summaryOf(saved) {
-      const res = Padeiro.compute(saved);
-      const lv = saved.levain || {};
-      const text = (saved.ingredients || [])
+      const source = saved && typeof saved === "object" ? saved : {};
+      const res = Padeiro.compute(source);
+      const lv = source.levain || {};
+      const text = (Array.isArray(source.ingredients) ? source.ingredients : [])
         .filter((item) => Padeiro.isFerment(item))
         .map((item) =>
           item.ferment === "levain"

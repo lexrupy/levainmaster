@@ -133,7 +133,7 @@
     const totals = {};
     let sum = 0;
     ingredients.forEach((item) => {
-      if (item.role !== "extra" || item.custom) return;
+      if (!item || item.role !== "extra" || item.custom) return;
       const spec = ADDABLE.find((entry) => entry.name === item.name);
       if (!spec || !spec.enrich) return;
       const pct = Math.max(0, num(item.pct));
@@ -386,7 +386,7 @@
 
   // Fermento principal ("ferment") ou segundo fermento ("ferment2"): um biológico e um levain.
   function isFerment(item) {
-    return item.role === "ferment" || item.role === "ferment2";
+    return !!item && (item.role === "ferment" || item.role === "ferment2");
   }
 
   function gramsOf(flour, pct) {
@@ -443,7 +443,9 @@
   // Entra a água da receita, a água da alimentação do levain e o teor de água de cada ingrediente.
   function compute(state) {
     const flour = Math.max(0, num(state.flour));
-    const ingredients = Array.isArray(state.ingredients) ? state.ingredients : [];
+    const ingredients = (Array.isArray(state.ingredients) ? state.ingredients : []).filter(
+      (item) => item && typeof item === "object"
+    );
     // O levain pode ser o fermento principal (role "ferment") ou o segundo (role "ferment2").
     const levainRow = ingredients.find((item) => isFerment(item) && item.ferment === "levain");
     const levainOn = !!levainRow;

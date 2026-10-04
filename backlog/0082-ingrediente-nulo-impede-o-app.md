@@ -2,8 +2,8 @@
 
 - **Autor:** Alexandre da Silva
 - **Data:** 2026-10-04
-- **Status:** proposta
-- **Arquivos:** `app.js`, `calc.js`, `index.html`
+- **Status:** concluída
+- **Arquivos:** `app.js`, `calc.js`
 
 ## Contexto
 
@@ -15,12 +15,16 @@ O app atual não grava esse estado. O buraco é uma lista já corrompida no `loc
 
 Uma receita salva com ingrediente nulo não impede o app de abrir. A lista mostra o que der para ler, ou omite essa receita. Abrir continua passando por `normalizeState`.
 
+## O que foi feito
+
+`compute` ignora item que não é objeto, então o resumo da lista não quebra com um `null` no meio dos ingredientes. `isFerment` e `enrichedBread` também recusam item vazio. `summaryOf` só percorre a lista se ela for um array. Abrir continua em `normalizeState`, que já descartava o nulo e recusa a receita se faltarem água, sal ou fermento. O formato do que o app grava não mudou. `CACHE` subiu para `padeiro-v91`.
+
 ## Critérios de aceite
 
-- [ ] Uma lista com uma receita válida e outra com um ingrediente `null` abre o app
-- [ ] A receita válida continua abrindo
-- [ ] A corrompida não derruba a tela; ou some da lista, ou abre só se `normalizeState` a aceitar
-- [ ] Receita gravada pelo app, sem corrupção, continua igual
+- [x] Uma lista com uma receita válida e outra com um ingrediente `null` abre o app
+- [x] A receita válida continua abrindo
+- [x] A corrompida não derruba a tela; ou some da lista, ou abre só se `normalizeState` a aceitar
+- [x] Receita gravada pelo app, sem corrupção, continua igual
 
 ## Como verificar
 
