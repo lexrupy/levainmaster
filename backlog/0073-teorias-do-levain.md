@@ -11,7 +11,7 @@ As conversas sobre acidez, tempo de pico, textura, volume e os potes já feitos 
 
 ## O que foi feito
 
-- `teorias do levain.md`, na raiz: experimentos (1:25:25 na madrugada de 1º de outubro de 2026, textura a 100%, 2:4:5, três potes ainda por fazer, gramas inteiros), discussão com a literatura e a lista do que ficou de fora da conta.
+- `teorias do levain.md`, na raiz: experimentos (1:25:25 na madrugada de 1º de outubro de 2026, textura a 100%, 2:4:5, gramas inteiros), discussão com a literatura e a lista do que ficou de fora da conta. O ensaio dos três potes saiu do texto: não teve conclusão.
 - `AGENTS.md` aponta o arquivo na lista e de novo junto do perfil.
 - O Markdown não entra em `FILES` nem sobe o `CACHE`. O apêndice B diz como gerar o PDF com pandoc.
 

@@ -20,7 +20,7 @@ No 100%, recém-misturado, o levain me parece mais firme que o iogurte comum daq
 
 Sobre o sabor, a literatura que li com o app não pede para inverter a escala. Mais água puxa o láctico e, em geral, mais acidez total; a massa firme baixa a acidez total e sobe a parte do acético, e o pão pode sair até mais suave no conjunto porque a levedura ganha da bactéria. O quadro da Helena (helena.fermentonatural) fala de velocidade e de diluir a acidez que a isca carrega. Quando ela quer menos azedinho, diminui a isca e aumenta a farinha. Isso combina com a alimentação grande do app. Se a água não sobe junto, a hidratação cai e a minha escala anda para o acético. O 1:3:3, com água e farinha juntas, continua “láctico, suave”.
 
-Ficou de fora, de propósito: o momento em que eu uso o levain depois do pico, um campo de temperatura, o tipo de farinha e o vigor da isca. Um teste de três potes, no mesmo dia e com os mesmos 2 g / 50 g / 50 g, ainda vai separar isca fraca de farinha nova. Até lá o relógio e a escala ficam como estão.
+Ficou de fora, de propósito: o momento em que eu uso o levain depois do pico, um campo de temperatura, o tipo de farinha e o vigor da isca. O relógio e a escala ficam como estão.
 
 ## 1. Introdução
 
@@ -116,23 +116,7 @@ A tabela inteira dos presets, como a função responde hoje, está no apêndice.
 
 **O que fica em aberto.** Eu já tinha notado que os firmes, os que não são duros, seguram a estrutura por mais tempo. O 2:4:5 segurou o bastante para não virar caldo, e não chegou a ser o firme que faz cúpula. O domo continua hipótese para a faixa que eu não fiz.
 
-### 4.4 Três potes no mesmo dia
-
-Ainda não executei. Deixo o protocolo aqui para não misturar as causas quando fizer.
-
-A seção 4.1 pode ter sido uma isca fraca, uma farinha rápida, ou as duas coisas. Vou repetir os mesmos 2 g, 50 g e 50 g, na mesma cozinha, e anotar só a hora do pico de volume.
-
-| Pote | Isca | Farinha | O que isola |
-| --- | --- | --- | --- |
-| 1 | A isca da véspera, a que pode ter sido fraca | A farinha da véspera | Referência do dia 1º |
-| 2 | O fermento principal | A farinha da véspera | Troca só a isca |
-| 3 | O fermento principal | Farinha nova | Troca só a farinha |
-
-Pote 1 contra pote 2 lê o vigor. Pote 2 contra pote 3 lê a farinha. Não vou anotar o quanto passou do pico, nem a hora em que eu usaria o levain no pão. O app, por decisão minha, olha o pico, não o momento de uso.
-
-Quem diz que farinha integral deixa o fermento mais azedo tem um apoio de laboratório, e eu ainda não tenho o meu pote. Martínez-Anaya e colegas (1994) acharam que a taxa de extração da farinha governava a acidez total e o acético mais do que a quantidade de água. Se o pote 3 for integral ou de extração mais alta e o pico vier mais cedo e o sabor mais agudo, a literatura e a cozinha passam a falar a mesma coisa. Até lá, tipo de farinha não entra na conta.
-
-### 4.5 O peso inteiro
+### 4.4 O peso inteiro
 
 Isto não é um pote. É a decisão de como o modal da receita mostra os gramas, tomada depois de eu esbarrar nela.
 
@@ -188,9 +172,9 @@ Por volta de 4:37, quando ela quer uma fermentação em que não se sinta tanto 
 
 A proporção manda no tempo até o pico de volume. A hidratação manda em como esse volume aparece e por quanto tempo a estrutura segura o gás. Eu não achei, e a leitura também não me trouxe, uma tabela estável do tipo “esta proporção dobra, aquela sobe 25%”. Quem trabalha a 100% costuma chamar o pico quando o volume anda perto do dobro, e uma cultura forte pode chegar perto do triplo antes de a espuma ceder. Eu não medi o múltiplo no dia 1º. Medi a hora.
 
-A faixa do app para alimentação acima de 10 vezes nasceu da prática de padeiros (alimentações de 1:5:5 e 1:10:10 levando a manhã ou a noite), registrada nas notas do próprio app, e foi partida em 12 a 16 h e 16 a 24 h quando entrou o 1:20:20. O meu único ponto experimental nessa faixa é 12h30 a cerca de 20 °C, com uma isca que pode não ter sido a principal. Um ponto não recalibra sete faixas.
+A faixa do app para alimentação acima de 10 vezes nasceu da prática de padeiros (alimentações de 1:5:5 e 1:10:10 levando a manhã ou a noite), registrada nas notas do próprio app, e foi partida em 12 a 16 h e 16 a 24 h quando entrou o 1:20:20. O meu único ponto experimental nessa faixa é 12h30 a cerca de 20 °C. Um ponto não recalibra sete faixas.
 
-Temperatura média do dia, que eu tinha vontade de informar para o app estimar o tempo, continua uma boa ideia. Entra depois que o relógio a 24–26 °C deixar de ser lento para o meu fermento principal, e com a curva de Gänzle e colegas (1998) na cabeça: não é um botão linear de 20 a 35 °C. Passado do pico, eu fui explícito: o app não tem como considerar o momento de uso. Considera o pico. Isso não vamos modelar.
+Temperatura média do dia, que eu tinha vontade de informar para o app estimar o tempo, continua uma boa ideia. Entra depois que o relógio a 24–26 °C deixar de ser lento para o meu fermento, e com a curva de Gänzle e colegas (1998) na cabeça: não é um botão linear de 20 a 35 °C. Passado do pico, eu fui explícito: o app não tem como considerar o momento de uso. Considera o pico. Isso não vamos modelar.
 
 ### 5.4 Volume, domo e a palavra “firme”
 
@@ -212,7 +196,7 @@ Estas decisões são minhas, tomadas depois das seções 4 e 5. O código contin
 2. Não modelar o momento de uso, depois do pico. O marco é o pico de volume.
 3. Não somar temperatura em cima das faixas atuais. O meu pico a 20 °C foi mais cedo que a faixa escrita para 24–26 °C.
 4. Não deixar as horas até o pico mudarem o sabor, enquanto o relógio não for o do meu fermento. A hipótese do degrau de volta está escrita na seção 5.2 e parada.
-5. Não criar campo de vigor da isca nem de tipo de farinha antes do teste dos três potes.
+5. Tipo de farinha e vigor da isca não entram na conta.
 6. Manter, na receita, gramas inteiros que fecham o peso do levain, com a sobra na isca. O simulador fica com as casas decimais e sem vínculo com a receita.
 
 ## 7. Conclusão
@@ -223,7 +207,7 @@ Confirma a textura. O 100% é cremoso depois que descansa, mais firme que o iogu
 
 Confirma o sentido da acidez. Mais água puxa o láctico. Alimentação grande dilui o azedo da isca, que é o que a Helena aponta aos 4:37 quando a água sobe junto. Massa firme muda o caráter para o acético e pode, ao mesmo tempo, azedar menos o pão, porque a levedura leva vantagem. Extração da farinha e aceptores como a frutose pesam tanto ou mais que a água. A escala é uma bússola, não um ensaio.
 
-Derruba a pressa de colocar temperatura ou de punir o sabor pela hora longa. O único pico que eu cronometrei, 12h30 a cerca de 20 °C num 1:25:25, é mais rápido que a faixa quente do app. O próximo dado é o dos três potes, com a mesma pesagem, variando uma coisa de cada vez, e anotando só a hora do pico.
+Derruba a pressa de colocar temperatura ou de punir o sabor pela hora longa. O único pico que eu cronometrei, 12h30 a cerca de 20 °C num 1:25:25, é mais rápido que a faixa quente do app.
 
 ## Referências
 
