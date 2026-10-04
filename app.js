@@ -197,6 +197,13 @@ function formatTempNumber(value) {
   return Number.isInteger(rounded) ? String(rounded) : String(rounded).replace(".", ",");
 }
 
+// O input type=number rejeita vírgula. O rótulo é que usa o formato com vírgula.
+function formatTempField(value) {
+  const n = Padeiro.num(value);
+  const rounded = Math.round(n * 10) / 10;
+  return String(rounded);
+}
+
 function formatTempRange(lo, hi) {
   return formatTempNumber(lo) + "–" + formatTempNumber(hi) + " °C";
 }
@@ -2320,13 +2327,13 @@ createApp({
 
     function settleTempFields() {
       applyTempFields();
-      tempFields.lo = formatTempNumber(sessionTemp.lo);
-      tempFields.hi = formatTempNumber(sessionTemp.hi);
+      tempFields.lo = formatTempField(sessionTemp.lo);
+      tempFields.hi = formatTempField(sessionTemp.hi);
     }
 
     function openTemp() {
-      tempFields.lo = formatTempNumber(sessionTemp.lo);
-      tempFields.hi = formatTempNumber(sessionTemp.hi);
+      tempFields.lo = formatTempField(sessionTemp.lo);
+      tempFields.hi = formatTempField(sessionTemp.hi);
       const dialog = tempDialog.value;
       if (dialog && !dialog.open) dialog.showModal();
     }
@@ -2582,8 +2589,8 @@ createApp({
         if (!item) return;
         sessionTemp.lo = item.tempLo;
         sessionTemp.hi = item.tempHi;
-        tempFields.lo = formatTempNumber(item.tempLo);
-        tempFields.hi = formatTempNumber(item.tempHi);
+        tempFields.lo = formatTempField(item.tempLo);
+        tempFields.hi = formatTempField(item.tempHi);
       }
     );
 

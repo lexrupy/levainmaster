@@ -2,7 +2,7 @@
 
 - **Autor:** Alexandre da Silva
 - **Data:** 2026-10-04
-- **Status:** proposta
+- **Status:** concluída
 - **Arquivos:** `app.js`, `index.html`
 
 ## Contexto
@@ -11,17 +11,17 @@ O piso e o teto da sessão aceitam meio grau (`step="0.5"`) e a conta usa esse v
 
 O registro do teste não usa `formatTempNumber`. Lá, `22.5` permanece no campo.
 
-## Proposta
+## O que foi feito
 
-O piso e o teto da sessão continuam visíveis depois do blur e ao reabrir a telinha, inclusive com meio grau. A conta segue o número que está na tela.
+O campo da sessão passa a receber o número com ponto (`24.5`), que o `input type="number"` aceita. O rótulo do termômetro continua com vírgula. O registro dos dois potes não usava esse formato e ficou como estava. `CACHE` subiu para `padeiro-v88`.
 
 ## Critérios de aceite
 
-- [ ] Digitar piso 24,5, sair do campo, e o piso continua 24,5
-- [ ] Fechar e abrir a telinha de novo mostra 24,5 e o teto que estava
-- [ ] O rótulo do termômetro e a hora usam essa faixa
-- [ ] Atalhos inteiros (24–26 e os demais) continuam preenchendo os dois campos
-- [ ] Trocar a calibração ativa não esvazia um extremo quebrado
+- [x] Digitar piso 24,5, sair do campo, e o piso continua 24,5
+- [x] Fechar e abrir a telinha de novo mostra 24,5 e o teto que estava
+- [x] O rótulo do termômetro e a hora usam essa faixa
+- [x] Atalhos inteiros (24–26 e os demais) continuam preenchendo os dois campos
+- [x] Trocar a calibração ativa não esvazia um extremo quebrado
 
 ## Como verificar
 
