@@ -2,7 +2,7 @@
 
 - **Autor:** Alexandre da Silva
 - **Data:** 2026-10-04
-- **Status:** proposta
+- **Status:** concluída
 - **Arquivos:** `index.html`, `app.js`
 
 ## Contexto
@@ -13,13 +13,17 @@ O percentual da água aceita qualquer número ≥ 0 pelo campo da linha. O slide
 
 Um percentual fora de 30–110 permanece até o usuário escolher outro de propósito. O controle não pode mostrar 30 enquanto o rótulo diz 20, nem 110 enquanto o rótulo diz 120.
 
+## O que foi feito
+
+O mínimo do slider é o menor entre 30 e a água da receita, e o máximo é o maior entre 110 e essa água. Em 20% o polegar fica em 20; em 120%, em 120. A seta anda um passo a partir desse número, em vez de gravar 30 ou 109. Os atalhos continuam os mesmos e a posição deles usa o mínimo e o máximo de agora. `CACHE` subiu para `padeiro-v92`.
+
 ## Critérios de aceite
 
-- [ ] Água em 20%: o rótulo fica 20% e uma seta no slider não grava outro percentual sozinha
-- [ ] Água em 120%: o rótulo fica 120% e uma seta no slider não grava 109%
-- [ ] Arrastar o slider para um valor de propósito continua gravando esse percentual
-- [ ] Atalhos 55%, 65%, 72% e 85% continuam levando a água direto ao valor
-- [ ] A hidratação total continua podendo diferir da água da receita
+- [x] Água em 20%: o rótulo fica 20% e uma seta no slider não grava outro percentual sozinha
+- [x] Água em 120%: o rótulo fica 120% e uma seta no slider não grava 109%
+- [x] Arrastar o slider para um valor de propósito continua gravando esse percentual
+- [x] Atalhos 55%, 65%, 72% e 85% continuam levando a água direto ao valor
+- [x] A hidratação total continua podendo diferir da água da receita
 
 ## Como verificar
 

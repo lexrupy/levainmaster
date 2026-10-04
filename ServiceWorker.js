@@ -1,6 +1,6 @@
 // Percentual do padeiro — © 2026 Alexandre da Silva
 // SPDX-License-Identifier: LGPL-3.0-or-later
-const CACHE = "padeiro-v91";
+const CACHE = "padeiro-v92";
 const FILES = [
   "./",
   "./index.html",

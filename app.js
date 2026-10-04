@@ -380,6 +380,51 @@ createApp({
 
     // Atalhos abaixo do slider da água: tocar leva direto ao valor.
     const waterMarks = [55, 65, 72, 85];
+    // O trilho usual é 30–110. Fora disso, a ponta acompanha o número e fica lá
+    // enquanto a água não volta para dentro: se o mínimo só mudasse depois do valor,
+    // o navegador gravaria 30 ou 109 por cima do que foi digitado.
+    const sliderBound = reactive({ min: 30, max: 110 });
+    const sliderMin = computed(() => sliderBound.min);
+    const sliderMax = computed(() => sliderBound.max);
+    let syncingSlider = false;
+
+    function syncSliderBound(value) {
+      const pct = Math.max(0, Padeiro.num(value));
+      if (pct < 30 || pct > 110) {
+        if (pct < sliderBound.min) sliderBound.min = pct;
+        if (pct > sliderBound.max) sliderBound.max = pct;
+      } else {
+        sliderBound.min = 30;
+        sliderBound.max = 110;
+      }
+    }
+
+    function onWaterSlide(event) {
+      if (syncingSlider) return;
+      waterPct.value = Math.max(0, Padeiro.num(event.target.value));
+    }
+
+    function settleSlider() {
+      const min = sliderBound.min;
+      const max = sliderBound.max;
+      const shown = waterPct.value;
+      syncingSlider = true;
+      nextTick(() => {
+        const input = document.getElementById("agua");
+        if (input) {
+          input.min = String(min);
+          input.max = String(max);
+          input.value = String(shown);
+        }
+        syncingSlider = false;
+      });
+    }
+
+    syncSliderBound(waterPct.value);
+    watch(waterPct, (value) => {
+      syncSliderBound(value);
+      settleSlider();
+    });
 
     const waterDiffers = computed(() => Math.abs(result.value.hydration - waterPct.value) >= 0.15);
 
@@ -2598,6 +2643,7 @@ createApp({
     watch(calStore, persistCalibrations, { deep: true });
 
     onMounted(() => {
+      settleSlider();
       refreshCardPreview();
       window.addEventListener("beforeinstallprompt", (event) => {
         event.preventDefault();
@@ -2614,6 +2660,9 @@ createApp({
       result,
       waterPct,
       waterMarks,
+      sliderMin,
+      sliderMax,
+      onWaterSlide,
       waterDiffers,
       ratioId,
       levainProfile,

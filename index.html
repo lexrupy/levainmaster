@@ -103,9 +103,9 @@
         <div class="hyd-num"><span>{{ formatPct(waterPct) }}</span><small>%</small></div>
       </div>
       <div class="slider">
-        <input id="agua" type="range" min="30" max="110" step="1" v-model.number="waterPct">
+        <input id="agua" type="range" :min="sliderMin" :max="sliderMax" step="1" :value="waterPct" @input="onWaterSlide">
         <div class="slider-labels">
-          <button v-for="mark in waterMarks" :key="mark" type="button" :class="{ on: Math.round(waterPct) === mark }" :style="{ '--f': (mark - 30) / 80 }" @click="waterPct = mark" :aria-label="'Água em ' + mark + '%'">{{ mark }}%</button>
+          <button v-for="mark in waterMarks" :key="mark" type="button" :class="{ on: Math.round(waterPct) === mark }" :style="{ '--f': (mark - sliderMin) / (sliderMax - sliderMin) }" @click="waterPct = mark" :aria-label="'Água em ' + mark + '%'">{{ mark }}%</button>
         </div>
       </div>
     </section>
