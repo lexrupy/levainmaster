@@ -16,6 +16,8 @@ Mantenho um levain em casa e um app que estima, a partir da proporção isca : �
 
 Na madrugada de 1º de outubro de 2026 pesei 2 g de isca, 50 g de água e 50 g de farinha Rosesol tipo 1. Chamei de 1:20:20; a proporção real é 1:25:25. A cozinha estava na casa dos 20 °C. O volume chegou ao pico por volta de 12h30 e começou a baixar por volta de 13h30. O app, para uma alimentação acima de 10 vezes a isca, marca 16 a 24 h a 24–26 °C. O meu pico foi mais cedo, e numa cozinha mais fria. Por isso não coloquei temperatura em cima desse relógio: a regra prática de dobrar o tempo a cada 10 °C a menos alongaria ainda mais uma previsão que já passou do que eu vi.
 
+Em 3 de outubro, às 22h, montei outra vez a mesma proporção, escrita como 2:50:50. No dia 4, às 13h13, cerca de 15 h depois, o volume parecia estar no pico ou chegando nele. A queda ainda não foi vista, então essa hora não fecha o experimento.
+
 No 100%, recém-misturado, o levain me parece mais firme que o iogurte comum daqui. Com o tempo ele se liquefaz, sobretudo depois da geladeira, e continua elástico. Acima de 100% eu ainda não fiz. No 2:4:5 (80% de água) ficou só um pouco mais pastoso: não se nivela sozinho, pede colher ou espátula, e quando fermenta sobe por igual, sem domo. O rótulo do app para essa faixa, “pastosa, mais firme que iogurte”, descreve o que eu vi. O domo, se aparecer, deve ser coisa de massa mais sólida, abaixo de uns 70%, que eu ainda não sovei na mão.
 
 Sobre o sabor, a literatura que li com o app não pede para inverter a escala. Mais água puxa o láctico e, em geral, mais acidez total; a massa firme baixa a acidez total e sobe a parte do acético, e o pão pode sair até mais suave no conjunto porque a levedura ganha da bactéria. O quadro da Helena (helena.fermentonatural) fala de velocidade e de diluir a acidez que a isca carrega. Quando ela quer menos azedinho, diminui a isca e aumenta a farinha. Isso combina com a alimentação grande do app. Se a água não sobe junto, a hidratação cai e a minha escala anda para o acético. O 1:3:3, com água e farinha juntas, continua “láctico, suave”.
@@ -86,7 +88,19 @@ A tabela inteira dos presets, como a função responde hoje, está no apêndice.
 
 **Onde não fecha.** O pico chegou antes do começo da faixa, e a cozinha estava uns 5 °C abaixo da temperatura para a qual a faixa foi escrita. Se eu esfriasse o relógio atual com a regra de que a cada 10 °C a menos o tempo dobra (Q10 por volta de 2), aqueles 16 a 24 h virariam algo como 22 a 34 h. A previsão ficaria pior, não melhor. O relógio de base, no meu fermento, já é lento demais para receber um desconto de frio.
 
-### 4.2 Textura do levain a 100%
+### 4.2 O mesmo 1:25:25, ainda sem a queda
+
+**Quando.** Misturado em 3 de outubro de 2026, às 22h. Olhado em 4 de outubro, às 13h13. Entre uma hora e outra, 15 h 13 min.
+
+**O que eu pesei.** Proporção 2:50:50. Simplifica para 1:25:25, a mesma relação da seção 4.1: hidratação 100%, farinha 25 vezes a isca. Nesta nota não registrei o peso total, a marca da farinha nem a temperatura.
+
+**O que aconteceu, até aqui.** Às 13h13 o volume parecia estar alcançando o pico, ou já ter alcançado. Não vi a perda de estrutura. A hora do pico fica em aberto até eu notar que ele murchou.
+
+**O que o app diz.** A mesma faixa da seção 4.1: 16 a 24 h a 24–26 °C, “bem láctico”, “cremosa, como iogurte grosso”. Às 15 h 13 min o pote está na porta dessa faixa, ainda sem a queda que fecharia a conta.
+
+**O que já dá para comparar.** O pico fechado de 1º de outubro foi às 12h30, cerca de 12 h e meia depois da mistura. Este, se o pico for mesmo por volta das 13h13, teria levado umas 15 h. Pode ter passado antes, e eu só olhei agora. Pode ainda estar subindo. As duas leituras esperam a hora em que a estrutura cair.
+
+### 4.3 Textura do levain a 100%
 
 **O que eu fiz.** Alimentações a 100% de água, a família do 1:2:2, do 1:5:5 e também a da seção 4.1. Ainda não passei de 100%.
 
@@ -100,7 +114,7 @@ A tabela inteira dos presets, como a função responde hoje, está no apêndice.
 
 **Onde eu calibro o rótulo.** A frase descreve o levain que já descansou e fermentou. No minuto em que a farinha acaba de entrar, o meu 100% é mais duro que esse iogurte. A pesquisa que acompanhou a conversa leu isso assim: a rede ainda está inteira; proteases e ácido vão cortando; na geladeira o gás se dissolve, a espuma murcha e o ácido segue devagar. O que sobra de elástico é glúten que ainda estica e já não segura o volume. Eu não medi gás nem proteína. A leitura combina com a colher.
 
-### 4.3 A proporção 2:4:5
+### 4.4 A proporção 2:4:5
 
 **O que eu pesei.** Isca, água e farinha em 2:4:5. Hidratação 80%. Alimentação 2,5 vezes a isca.
 
@@ -116,7 +130,7 @@ A tabela inteira dos presets, como a função responde hoje, está no apêndice.
 
 **O que fica em aberto.** Eu já tinha notado que os firmes, os que não são duros, seguram a estrutura por mais tempo. O 2:4:5 segurou o bastante para não virar caldo, e não chegou a ser o firme que faz cúpula. O domo continua hipótese para a faixa que eu não fiz.
 
-### 4.4 O peso inteiro
+### 4.5 O peso inteiro
 
 Isto não é um pote. É a decisão de como o modal da receita mostra os gramas, tomada depois de eu esbarrar nela.
 
@@ -172,7 +186,7 @@ Por volta de 4:37, quando ela quer uma fermentação em que não se sinta tanto 
 
 A proporção manda no tempo até o pico de volume. A hidratação manda em como esse volume aparece e por quanto tempo a estrutura segura o gás. Eu não achei, e a leitura também não me trouxe, uma tabela estável do tipo “esta proporção dobra, aquela sobe 25%”. Quem trabalha a 100% costuma chamar o pico quando o volume anda perto do dobro, e uma cultura forte pode chegar perto do triplo antes de a espuma ceder. Eu não medi o múltiplo no dia 1º. Medi a hora.
 
-A faixa do app para alimentação acima de 10 vezes nasceu da prática de padeiros (alimentações de 1:5:5 e 1:10:10 levando a manhã ou a noite), registrada nas notas do próprio app, e foi partida em 12 a 16 h e 16 a 24 h quando entrou o 1:20:20. O meu único ponto experimental nessa faixa é 12h30 a cerca de 20 °C. Um ponto não recalibra sete faixas.
+A faixa do app para alimentação acima de 10 vezes nasceu da prática de padeiros (alimentações de 1:5:5 e 1:10:10 levando a manhã ou a noite), registrada nas notas do próprio app, e foi partida em 12 a 16 h e 16 a 24 h quando entrou o 1:20:20. O ponto fechado nessa faixa é 12h30 a cerca de 20 °C. O segundo pote, a mesma proporção, estava às 15 h 13 min sem a queda anotada. Nem o ponto fechado nem o aberto recalibram sete faixas.
 
 Temperatura média do dia, que eu tinha vontade de informar para o app estimar o tempo, continua uma boa ideia. Entra depois que o relógio a 24–26 °C deixar de ser lento para o meu fermento, e com a curva de Gänzle e colegas (1998) na cabeça: não é um botão linear de 20 a 35 °C. Passado do pico, eu fui explícito: o app não tem como considerar o momento de uso. Considera o pico. Isso não vamos modelar.
 
@@ -207,7 +221,7 @@ Confirma a textura. O 100% é cremoso depois que descansa, mais firme que o iogu
 
 Confirma o sentido da acidez. Mais água puxa o láctico. Alimentação grande dilui o azedo da isca, que é o que a Helena aponta aos 4:37 quando a água sobe junto. Massa firme muda o caráter para o acético e pode, ao mesmo tempo, azedar menos o pão, porque a levedura leva vantagem. Extração da farinha e aceptores como a frutose pesam tanto ou mais que a água. A escala é uma bússola, não um ensaio.
 
-Derruba a pressa de colocar temperatura ou de punir o sabor pela hora longa. O único pico que eu cronometrei, 12h30 a cerca de 20 °C num 1:25:25, é mais rápido que a faixa quente do app.
+Derruba a pressa de colocar temperatura ou de punir o sabor pela hora longa. O pico que eu fechei, 12h30 a cerca de 20 °C num 1:25:25, é mais rápido que a faixa quente do app. O segundo pote da mesma proporção, olhado às 15 h, ainda espera a hora em que perder a estrutura.
 
 ## Referências
 
