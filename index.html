@@ -74,6 +74,9 @@
           </div>
           <p class="mass" :data-total="result.totalWeight"><b>{{ formatG(result.totalWeight) }} g</b><span>de massa</span></p>
           <div class="recipe-card-actions">
+            <button type="button" class="clear-recipe" @click="clearRecipe" aria-label="Limpar a receita da tela" title="Limpar a receita">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="8" width="19" height="8" rx="2"/><path d="M8 8v8"/></svg>
+            </button>
             <button type="button" class="save-quick" :class="{ done: savedFlash }" @click="openRecipes(true)">{{ savedFlash ? 'Salva ✓' : 'Salvar receita' }}</button>
             <button type="button" class="share-card" @click="shareRecipeCard" :disabled="sharingCard" aria-label="Compartilhar receita como imagem" title="Compartilhar receita">
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.6 6.6-4.2M8.7 13.4l6.6 4.2"/></svg>

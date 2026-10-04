@@ -593,6 +593,26 @@ createApp({
       closeRecipes();
     }
 
+    // Zera só a tela. Abrir uma receita copia o estado; não existe edição da receita salva.
+    async function clearRecipe() {
+      const ok = await askConfirm({
+        title: "Limpar a receita?",
+        message: "A tela volta à receita inicial: 500 g de farinha, 65% de água, 2% de sal e 1% de fermento seco, com o nome Minha Receita. As receitas salvas continuam na lista.",
+        confirmLabel: "Limpar",
+        danger: true,
+      });
+      if (!ok) return;
+      const fresh = Padeiro.defaultState();
+      endEdit();
+      recipeNameEditing.value = false;
+      savedFlash.value = false;
+      clearTimeout(flashTimer);
+      state.flour = fresh.flour;
+      state.ingredients = fresh.ingredients;
+      state.levain = fresh.levain;
+      state.recipeName = fresh.recipeName;
+    }
+
     function askConfirm(options) {
       if (confirmResolve) confirmResolve(false);
       Object.assign(confirmState, { title: "", message: "", confirmLabel: "Confirmar", cancelLabel: "Cancelar", danger: false }, options);
@@ -2215,6 +2235,7 @@ createApp({
       onRecipesClick,
       saveRecipe,
       openRecipe,
+      clearRecipe,
       deleteRecipe,
       formatDate,
       summaryOf,

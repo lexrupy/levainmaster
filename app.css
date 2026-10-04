@@ -1111,7 +1111,8 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 
 .recipe-card-actions { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
 .recipe-card-actions .save-quick { margin: 0; }
-.share-card {
+.share-card,
+.clear-recipe {
   display: grid;
   place-items: center;
   width: 34px;
@@ -1125,10 +1126,13 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   color: var(--brown);
   cursor: pointer;
 }
-.share-card:hover { background: #f6f1e8; }
+.share-card:hover,
+.clear-recipe:hover { background: #f6f1e8; }
 .share-card:disabled { opacity: 0.55; cursor: progress; }
-.share-card svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.share-card:focus-visible { outline: 2px solid var(--brown-soft); outline-offset: 2px; }
+.share-card svg,
+.clear-recipe svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.share-card:focus-visible,
+.clear-recipe:focus-visible { outline: 2px solid var(--brown-soft); outline-offset: 2px; }
 .share-status { margin: 0; color: var(--muted); font-size: 0.66rem; line-height: 1.25; }
 .share-status:empty { display: none; }
 
