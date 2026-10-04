@@ -73,11 +73,17 @@ Abaixo de 85% a conta de cima segue para a mesma alimentação, e o resultado mu
 
 ### Temperatura
 
-A temperatura da estimativa é a única variável livre depois do par. O seletor da calibração fica no Sobre. O campo da temperatura fica no modal do levain, e também no simulador, só quando há calibração ativa. Começa na temperatura do teste.
+A temperatura é uma faixa, inferior e superior, não um grau só e não uma média ponderada. Não há registro de quanto tempo cada grau prevaleceu. Uma câmera faria isso. O app não pede.
 
-`t(T) = t(T do teste) × 2 ^ ((T do teste − T) / 10)`
+Quem tem fermentadora também configura piso e teto, ainda que a distância seja 1 °C. Atalhos de 2 °C (20–22, 22–24, 24–26) preenchem os dois campos. O livre aceita 24–25.
 
-Entre 18 e 28 °C essa hora segue redonda como as outras. Fora desse intervalo a mesma conta aparece com o aviso de que a estimativa é larga. Acima de 30 °C o aviso diz que a levedura perde ritmo e o número é só um guia. Sem calibração não há campo de temperatura e não há esta conta. Não se esfria nem se esquenta a faixa geral.
+O registro do teste pede a faixa dos potes. Vazia, grava 24–26 °C. Com calibração ativa, o ativador e o simulador têm um ícone à direita, na mesma linha do peso do levain («g na massa» ou «g no total»). O ícone abre um modal com a faixa e os atalhos. A faixa começa na do teste. Sem calibração o ícone não aparece e a hora geral não se mexe.
+
+A hora do par, a 100% e depois do degrau firme, é o centro. O meio da faixa só serve de referência interna dessa conta. Não aparece na tela como se aquele grau tivesse prevalecido. A tela mostra o intervalo: o extremo quente encurta, o extremo frio alonga.
+
+`t(T) = t(centro) × 2 ^ ((meio da faixa do teste − T) / 10)`
+
+O quente da faixa pedida entra nessa fórmula e dá a hora curta. O frio dá a hora longa. As duas arredondam para meia hora. Faixa de 1 °C deixa o intervalo estreito. Faixa larga deixa a estimativa larga, que é o aviso. Acima de 30 °C no teto, a tela diz que a levedura perde ritmo e o número é só um guia. Não se esfria nem se esquenta a faixa geral.
 
 ### Onde fica na tela
 
@@ -90,22 +96,22 @@ O ícone ao lado do nome abre o Sobre, como hoje. Nesse modal, depois dos fatos 
 
 Nenhuma devolve as faixas gerais. Apagar a que estava em uso também. Quem usa sempre a mesma farinha escolhe uma vez.
 
-No modal do levain e no simulador, a hora mostra a origem: o nome da calibração, ou «Faixa geral». Não há seletor ali. Com calibração ativa, a hora é a estimativa em meia hora, não a faixa «16 a 24 h». Sem calibração, o texto da hora é o de `PEAK_TIMES`, igual ao de hoje.
+No modal do levain e no simulador, a hora mostra a origem: o nome da calibração, ou «Faixa geral». Não há seletor de calibração ali. Com calibração ativa, a hora é o intervalo da faixa de temperatura, não um grau médio e não o texto «16 a 24 h». Sem calibração, o texto da hora é o de `PEAK_TIMES`, igual ao de hoje.
 
 ### O que fica gravado
 
-Chave nova no `localStorage`, `percentual-padeiro-calibracoes-v1`, separada de `percentual-padeiro-v1` e de `percentual-padeiro-receitas-v1`. Cada item tem `id`, `name`, `savedAt`, `t1Hours`, `t5Hours`, `tempC` e os pesos anotados. A ativa é um `id` ou vazio. Abrir uma receita não troca a calibração. Limpar a receita da tela não apaga a lista. Outra farinha, ou a mesma daqui a semanas, é outro par, com outro nome. Não se edita a conta de um par já gravado: grava-se outro ou apaga-se.
+Chave nova no `localStorage`, `percentual-padeiro-calibracoes-v1`, separada de `percentual-padeiro-v1` e de `percentual-padeiro-receitas-v1`. Cada item tem `id`, `name`, `savedAt`, `t1Hours`, `t5Hours`, `tempLo`, `tempHi` e os pesos anotados. Faixa vazia no registro grava 24 e 26. A ativa é um `id` ou vazio. A faixa pedida no modal não vai para a receita. Fica na sessão, começando na faixa do teste. Abrir uma receita não troca a calibração. Limpar a receita da tela não apaga a lista. Outra farinha, ou a mesma daqui a semanas, é outro par, com outro nome. Não se edita a conta de um par já gravado: grava-se outro ou apaga-se.
 
-A hora calibrada não entra em `levainProfile`. Uma função ao lado recebe o perfil, a calibração ativa e a temperatura pedida. Sem calibração, o chamador usa `profile.time`.
+A hora calibrada não entra em `levainProfile`. Uma função ao lado recebe o perfil, a calibração ativa e a faixa pedida. Sem calibração, o chamador usa `profile.time`.
 
 ## Critérios de aceite
 
 - [ ] Sem calibração, os presets do apêndice A de `teorias do levain.md` mantêm hora, sabor e textura. O 1:25:25 segue «16 a 24 h» e «Bem láctico: suave e cremoso». O 2:4:5 segue «8 a 12 h» e «Pastosa, mais firme que iogurte»
-- [ ] Não há campo de temperatura nem seletor de calibração no modal do levain enquanto nenhuma estiver ativa
-- [ ] O teste só grava com nome, temperatura, hora de mistura e os dois picos, com o 1:5:5 mais lento que o 1:1:1
+- [ ] Sem calibração, o ativador e o simulador não mostram o ícone de temperatura nem seletor de calibração
+- [ ] O teste grava com nome, hora de mistura e os dois picos, com o 1:5:5 mais lento que o 1:1:1. Faixa vazia fica 24–26 °C
 - [ ] 10 g + 50 g + 50 g é aceito como 1:5:5. Um 1:2:2 não grava
 - [ ] O aviso sobre erro de pesagem está na tela de registro
-- [ ] Com `t1` = 4, `t5` = 10 e 22 °C, o 1:25:25 a 22 °C mostra 16 h e o nome da calibração. A 26 °C a hora é menor, pela potência de 2 acima, e o sabor não muda
+- [ ] Com `t1` = 4, `t5` = 10 e faixa de teste 22–23 °C, o 1:25:25 nessa mesma faixa mostra um intervalo estreito em volta de 16 h, com o nome da calibração. Uma faixa mais quente encurta as duas pontas. Uma mais fria alonga. Não aparece média ponderada. O sabor não muda
 - [ ] Abaixo de 85% a hora passa pelo degrau da faixa geral, no exemplo do 1:2:3
 - [ ] Escolher «Faixa geral», ou apagar a calibração em uso, devolve o texto antigo da hora
 - [ ] Limpar a receita da tela não remove as calibrações
@@ -116,8 +122,8 @@ A hora calibrada não entra em `levainProfile`. Uma função ao lado recebe o pe
 
 Na branch, `node` compara `levainProfile` dos presets com e sem o módulo de calibração carregado e nenhuma calibração ativa. Os tempos têm de ser os de hoje.
 
-No navegador, sem calibração, abrir o levain da receita e o simulador e ler a hora geral. Registrar o par do exemplo (4 h e 10 h a 22 °C), escolher o nome no Sobre e conferir a tabela desta tarefa no simulador, a 22 °C e a 26 °C. Confirmar um 1:2:3. Voltar para «Faixa geral» e ver a faixa antiga. Limpar a receita e ver que a calibração continua no Sobre. Repetir a 390 px e a 560 px.
+No navegador, sem calibração, abrir o levain da receita e o simulador e ler a hora geral. Registrar o par do exemplo (4 h e 10 h, faixa 22–23 °C), escolher o nome no Sobre e conferir o intervalo do 1:25:25. Abrir o ícone à direita do peso, mudar a faixa e ver as pontas andarem juntas. Confirmar que não há campo de média. Confirmar um 1:2:3. Voltar para «Faixa geral» e ver a faixa antiga. Limpar a receita e ver que a calibração continua no Sobre. Repetir a 390 px e a 560 px.
 
 ## Fora do escopo
 
-Não muda sabor, textura nem dicas. Não modela o momento de uso depois do pico. Não calibra com um pote só. Não coloca temperatura em cima da faixa geral. Não reescreve a dica «Fermentação longa e bem suave» quando a hora calibrada for curta. Não usa o 2:50:50 de 3 de outubro: a queda de estrutura não foi anotada. Não grava a calibração dentro da receita salva.
+Não muda sabor, textura nem dicas. Não modela o momento de uso depois do pico. Não calibra com um pote só. Não pede média ponderada nem quanto tempo cada grau prevaleceu. Não coloca temperatura em cima da faixa geral. Não reescreve a dica «Fermentação longa e bem suave» quando a hora calibrada for curta. Não usa o 2:50:50 de 3 de outubro: a queda de estrutura não foi anotada. Não grava a calibração dentro da receita salva.
