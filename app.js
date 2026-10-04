@@ -266,6 +266,8 @@ createApp({
     const aboutDialog = ref(null);
     const tempDialog = ref(null);
     const calDialog = ref(null);
+    const calGuideDialog = ref(null);
+    const calGuideOverForm = ref(false);
     const breadDialog = ref(null);
     const calStore = reactive(loadCalibrations());
     const startingCal = calStore.items.find((item) => item.id === calStore.activeId) || null;
@@ -2357,6 +2359,30 @@ createApp({
       if (event.target === calDialog.value) closeCalibration();
     }
 
+    function openCalGuide() {
+      calGuideOverForm.value = !!(calDialog.value && calDialog.value.open);
+      const dialog = calGuideDialog.value;
+      if (!dialog || dialog.open) return;
+      const article = dialog.querySelector("article");
+      if (article) article.scrollTop = 0;
+      dialog.showModal();
+      if (article) article.scrollTop = 0;
+    }
+
+    function closeCalGuide() {
+      const dialog = calGuideDialog.value;
+      if (dialog && dialog.open) dialog.close();
+    }
+
+    function onCalGuideClick(event) {
+      if (event.target === calGuideDialog.value) closeCalGuide();
+    }
+
+    function registerFromGuide() {
+      closeCalGuide();
+      if (!calDialog.value || !calDialog.value.open) openCalibration();
+    }
+
     function setCalTemp(lo, hi) {
       calForm.tempLo = String(lo);
       calForm.tempHi = String(hi);
@@ -2586,6 +2612,8 @@ createApp({
       aboutDialog,
       tempDialog,
       calDialog,
+      calGuideDialog,
+      calGuideOverForm,
       breadDialog,
       breadShown,
       breadRows,
@@ -2659,6 +2687,10 @@ createApp({
       openCalibration,
       closeCalibration,
       onCalClick,
+      openCalGuide,
+      closeCalGuide,
+      onCalGuideClick,
+      registerFromGuide,
       setCalTemp,
       calShortcutOn,
       saveCalibration,

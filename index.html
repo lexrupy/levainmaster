@@ -280,6 +280,7 @@
             </li>
           </ul>
           <button type="button" class="install about-cal-add" @click="openCalibration" data-cal-open>Registrar teste dos dois potes</button>
+          <button type="button" class="cal-guide-open" @click="openCalGuide" data-cal-guide>Como fazer o teste</button>
           <p class="hint">A escolha muda só a hora do pico. Sabor e textura ficam. Abrir ou limpar uma receita não mexe nesta lista.</p>
         </section>
         <button v-if="canInstall" type="button" class="install about-install" @click="install">Instalar o app</button>
@@ -337,6 +338,7 @@
         </header>
         <p class="temp-origin" data-temp-origin>{{ tempOrigin }}</p>
         <p class="hint" data-temp-note>{{ tempNote }}</p>
+        <button type="button" class="cal-guide-open" @click="openCalGuide" data-cal-guide-temp>Como fazer o teste dos dois potes</button>
         <div class="temp-shortcuts">
           <button v-for="band in tempShortcuts" :key="band.lo + '-' + band.hi" type="button" :class="{ on: sessionMatch(band) }" @click="setSessionBand(band.lo, band.hi)">{{ band.lo }}–{{ band.hi }}</button>
         </div>
@@ -357,12 +359,58 @@
       </article>
     </dialog>
 
+    <dialog ref="calGuideDialog" class="levain-dialog" @click="onCalGuideClick" aria-labelledby="cal-guide-title">
+      <article class="levain cal-guide" tabindex="-1" autofocus>
+        <header class="levain-head">
+          <h2 id="cal-guide-title">Como fazer o teste dos dois potes</h2>
+          <button type="button" class="del" @click="closeCalGuide" aria-label="Fechar">×</button>
+        </header>
+        <p>Este teste ensina ao app o relógio do seu levain: a farinha, a água, a isca e o lugar. Sem ele, a hora do pico é a faixa geral, escrita para 24–26 °C. O teste muda só essa hora. Sabor, textura e dicas continuam os de sempre.</p>
+        <p>São dois potes, começados no mesmo minuto, com a mesma isca, a mesma farinha e a mesma água, no mesmo lugar. Um pote só não calibra. Outra proporção não calibra.</p>
+        <div class="guide-jars">
+          <div>
+            <p class="kicker">Pote A · 1:1:1</p>
+            <p>20 g de isca, 20 g de água e 20 g de farinha.</p>
+          </div>
+          <div>
+            <p class="kicker">Pote B · 1:5:5</p>
+            <p>20 g de isca, 100 g de água e 100 g de farinha. Para gastar menos, 10 g + 50 g + 50 g também vale.</p>
+          </div>
+        </div>
+        <p class="hint">Outros pesos na mesma proporção são aceitos. Um erro de pesagem entra na conta: 20 g de isca deixa uma balança de 1 g menos decisiva. Com balança de 0,1 g, os pesos menores servem. O app aceita uma folga: no 1:1:1, farinha/isca e água/farinha entre 0,9 e 1,1; no 1:5:5, farinha/isca entre 4,5 e 5,5, com água e farinha quase iguais.</p>
+        <p class="kicker">O passo a passo</p>
+        <ol class="guide-steps">
+          <li>Separe a isca. Os dois potes saem do mesmo recipiente.</li>
+          <li>Pese e misture os dois no mesmo momento. Anote essa hora. Marque o nível inicial com um elástico ou um traço, para ver a subida.</li>
+          <li>Deixe os dois no mesmo lugar. Anote a faixa de temperatura de onde eles ficam, o piso e o teto, mesmo que a distância seja de 1 °C. Sem anotação, o app grava 24–26 °C.</li>
+          <li>O pico é quando o volume para de subir e a massa começa a perder estrutura: a superfície cede, o domo abaixa, ela deixa de estar tesa. O 1:1:1 chega primeiro. O 1:5:5 demora mais. Anote a hora de cada um nesse momento.</li>
+          <li>Se um pico passou batido, descarte o par e comece de novo. A hora não se chuta. O 1:5:5 precisa ter levado mais tempo que o 1:1:1. Não existe calibração pela metade.</li>
+          <li>No Sobre, abra Registrar teste dos dois potes. O nome é para reconhecer o teste, em geral o tipo da farinha, como Farinha Branca Tipo 1. Informe os pesos, a hora da mistura, os dois picos e a temperatura.</li>
+          <li>Gravar escolhe essa calibração. A hora no ativador e no simulador passa a usá-la. O ícone do termômetro, à direita do peso do levain, é a faixa de hoje. O teto encurta a hora e o piso alonga. Essa conta é uma estimativa.</li>
+        </ol>
+        <p class="kicker">Limites do teste</p>
+        <ul class="guide-steps">
+          <li>Sabor e textura ficam os da faixa geral.</li>
+          <li>A calibração usa só o par 1:1:1 e 1:5:5. Um 1:2:2, um 1:10:10 ou um 2:4:5 é estimativa, não um teste para gravar.</li>
+          <li>Abaixo de 85% de hidratação a hora ainda passa por um degrau da faixa geral, com menos certeza.</li>
+          <li>Outra farinha, ou a mesma daqui a algumas semanas, pede outro par. Um par gravado não se edita: grava-se outro ou apaga-se no Sobre.</li>
+          <li>A lista fica no Sobre. Abrir ou limpar uma receita a conserva. Faixa geral devolve a tabela do app.</li>
+        </ul>
+        <div class="sheet-foot">
+          <button v-if="calGuideOverForm" type="button" class="levain-done" @click="closeCalGuide" data-cal-guide-back>Voltar ao registro</button>
+          <button v-else type="button" class="levain-done" @click="registerFromGuide" data-cal-guide-go>Registrar o teste</button>
+        </div>
+      </article>
+    </dialog>
+
     <dialog ref="calDialog" class="levain-dialog" @click="onCalClick" aria-labelledby="cal-title">
       <article class="levain cal-form" tabindex="-1" autofocus>
         <header class="levain-head">
           <h2 id="cal-title">Teste dos dois potes</h2>
           <button type="button" class="del" @click="closeCalibration" aria-label="Fechar">×</button>
         </header>
+        <p class="hint">Os dois potes medem o relógio desta farinha, desta água e desta isca. As outras proporções saem daí.</p>
+        <button type="button" class="cal-guide-open" @click="openCalGuide" data-cal-guide-form>Como fazer o teste</button>
         <p class="hint" data-cal-weigh>Outros pesos na mesma proporção são aceitos, mas um erro de pesagem influencia o cálculo final.</p>
         <label class="kicker" for="cal-name">Nome</label>
         <input id="cal-name" class="name-input" v-model="calForm.name" maxlength="40" placeholder="Ex.: Farinha Branca Tipo 1" autocomplete="off" data-cal-name>
