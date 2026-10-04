@@ -499,6 +499,80 @@ async function scenarioCard(client, width) {
   check(`card ${width} compartilhar`, shared.file === "minha-receita.png" && /Imagem baixada|Receita compartilhada/.test(shared.status), JSON.stringify(shared));
 }
 
+async function scenarioCal(client, width) {
+  await fresh(client, width);
+  await client.evaluate(`document.querySelector('[aria-label="Sobre o Percentual do padeiro"]').click()`);
+  await sleep(80);
+  const about = await client.evaluate(`({
+    guide: !!document.querySelector("[data-cal-guide]"),
+    scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth
+  })`);
+  check(`cal ${width} sobre sem o link do teste`, about.guide === false, JSON.stringify(about));
+  check(`cal ${width} sobre sem rolagem`, about.scroll === 0, String(about.scroll));
+  await client.evaluate(`document.querySelector("[data-cal-open]").click()`);
+  await sleep(80);
+  await client.evaluate(setField("#cal-name", "Farinha Branca Tipo 1"));
+  await client.evaluate(setField("#cal-mix", "2026-10-01T10:00"));
+  await client.evaluate(setField("#cal-peak-111", "2026-10-01T14:00"));
+  await client.evaluate(setField("#cal-peak-155", "2026-10-01T20:00"));
+  await sleep(80);
+  const form = await client.evaluate(`({
+    guide: document.querySelector("[data-cal-guide-form]")?.textContent.trim() || "",
+    locked: document.querySelector("[data-cal-locked]")?.textContent || "",
+    saveDisabled: document.querySelector("[data-cal-save]").disabled
+  })`);
+  check(`cal ${width} o teste fica no registro`, form.guide === "Como fazer o teste" && form.locked.includes("não poderão ser editados") && form.saveDisabled === false, JSON.stringify(form));
+  await client.evaluate(`document.querySelector("[data-cal-save]").click()`);
+  await sleep(80);
+  const saved = await client.evaluate(`(() => {
+    const raw = JSON.parse(localStorage.getItem("percentual-padeiro-calibracoes-v1") || "null");
+    const item = raw && raw.items && raw.items[0];
+    return item ? { name: item.name, t1: item.t1Hours, t5: item.t5Hours, seed: item.seed111, flour: item.flour155, tempLo: item.tempLo, tempHi: item.tempHi } : null;
+  })()`);
+  check(`cal ${width} gravou o par`, saved && saved.name === "Farinha Branca Tipo 1" && saved.t1 === 4 && saved.t5 === 10 && saved.seed === 20 && saved.flour === 100 && saved.tempLo === 24 && saved.tempHi === 26, JSON.stringify(saved));
+  await client.evaluate(`document.querySelector("[data-cal-view]").click()`);
+  await sleep(80);
+  const viewed = await client.evaluate(`({
+    name: document.querySelector("#cal-view-name").value,
+    facts: document.querySelector("[data-cal-view-facts]").innerText,
+    inputs: document.querySelectorAll(".cal-view input").length,
+    scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth
+  })`);
+  check(
+    `cal ${width} ver mostra o par`,
+    viewed.name === "Farinha Branca Tipo 1" && viewed.inputs === 1 && viewed.facts.includes("20 g de isca") && viewed.facts.includes("100 g de farinha") && viewed.facts.includes("4 h") && viewed.facts.includes("10 h") && viewed.facts.includes("24") && viewed.facts.includes("26") && viewed.scroll === 0,
+    JSON.stringify(viewed)
+  );
+  await client.evaluate(setField("#cal-view-name", "   "));
+  await sleep(40);
+  const blank = await client.evaluate(`document.querySelector("[data-cal-rename]").disabled`);
+  check(`cal ${width} nome vazio não salva`, blank === true, String(blank));
+  await client.evaluate(setField("#cal-view-name", "nao grava"));
+  await client.evaluate(`document.querySelector(".cal-view [aria-label=Fechar]").click()`);
+  await sleep(40);
+  const kept = await client.evaluate(`document.querySelector("[data-cal-active]").textContent`);
+  check(`cal ${width} fechar não troca o nome`, kept === "Farinha Branca Tipo 1", kept);
+  await client.evaluate(`document.querySelector("[data-cal-view]").click()`);
+  await sleep(40);
+  await client.evaluate(setField("#cal-view-name", "Tipo 1 da padaria"));
+  await client.evaluate(`document.querySelector("[data-cal-rename]").click()`);
+  await sleep(40);
+  const renamed = await client.evaluate(`(() => {
+    const raw = JSON.parse(localStorage.getItem("percentual-padeiro-calibracoes-v1"));
+    const item = raw.items[0];
+    return {
+      active: document.querySelector("[data-cal-active]").textContent,
+      name: item.name,
+      t1: item.t1Hours,
+      t5: item.t5Hours,
+      seed: item.seed111,
+      flour: item.flour155,
+      tempLo: item.tempLo
+    };
+  })()`);
+  check(`cal ${width} só o nome muda`, renamed.active === "Tipo 1 da padaria" && renamed.name === "Tipo 1 da padaria" && renamed.t1 === 4 && renamed.t5 === 10 && renamed.seed === 20 && renamed.flour === 100 && renamed.tempLo === 24, JSON.stringify(renamed));
+}
+
 async function scenario0085(client) {
   await client.open(BASE + "?card", 390, 844);
   const ready = await client.evaluate(`new Promise((resolve) => {
@@ -567,6 +641,8 @@ try {
   await scenario0084(client, 560);
   await scenarioCard(client, 390);
   await scenarioCard(client, 560);
+  await scenarioCal(client, 390);
+  await scenarioCal(client, 560);
   await scenario0085(client);
   client.ws.close();
 } finally {

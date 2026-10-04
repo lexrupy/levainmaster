@@ -273,6 +273,9 @@ createApp({
     const aboutDialog = ref(null);
     const tempDialog = ref(null);
     const calDialog = ref(null);
+    const calViewDialog = ref(null);
+    const calViewId = ref("");
+    const calViewName = ref("");
     const calGuideDialog = ref(null);
     const calGuideOverForm = ref(false);
     const breadDialog = ref(null);
@@ -1589,6 +1592,48 @@ createApp({
       return { name, ok111, ok155, t1, t5, tempLo, tempHi, tempEmpty, errors, hoursText, valid: errors.length === 0 };
     });
 
+    const calViewItem = computed(() => calStore.items.find((item) => item.id === calViewId.value) || null);
+
+    const calViewFacts = computed(() => {
+      const item = calViewItem.value;
+      if (!item) return [];
+      const weights = (seed, water, flour) =>
+        formatTempNumber(seed) + " g de isca, " + formatTempNumber(water) + " g de água e " + formatTempNumber(flour) + " g de farinha";
+      const clock = (value) => formatDate(value) || "—";
+      return [
+        { label: "Temperatura dos potes", text: formatTempRange(item.tempLo, item.tempHi) },
+        { label: "Hora da mistura", text: clock(item.mixAt) },
+        { label: "Pote A · 1:1:1", text: weights(item.seed111, item.water111, item.flour111) },
+        { label: "Pico do 1:1:1", text: clock(item.peak111At) + " · " + formatHoursLoose(item.t1Hours) },
+        { label: "Pote B · 1:5:5", text: weights(item.seed155, item.water155, item.flour155) },
+        { label: "Pico do 1:5:5", text: clock(item.peak155At) + " · " + formatHoursLoose(item.t5Hours) },
+      ];
+    });
+
+    function openCalView(item) {
+      calViewId.value = item.id;
+      calViewName.value = item.name;
+      const dialog = calViewDialog.value;
+      if (dialog && !dialog.open) dialog.showModal();
+    }
+
+    function closeCalView() {
+      const dialog = calViewDialog.value;
+      if (dialog && dialog.open) dialog.close();
+    }
+
+    function onCalViewClick(event) {
+      if (event.target === calViewDialog.value) closeCalView();
+    }
+
+    function saveCalName() {
+      const item = calViewItem.value;
+      const name = String(calViewName.value || "").trim().slice(0, 40);
+      if (!item || !name) return;
+      item.name = name;
+      closeCalView();
+    }
+
     function saveCalibration() {
       const draft = calDraft.value;
       if (!draft.valid) return;
@@ -1777,6 +1822,10 @@ createApp({
       aboutDialog,
       tempDialog,
       calDialog,
+      calViewDialog,
+      calViewItem,
+      calViewName,
+      calViewFacts,
       calGuideDialog,
       calGuideOverForm,
       breadDialog,
@@ -1855,6 +1904,10 @@ createApp({
       setCalTemp,
       calShortcutOn,
       saveCalibration,
+      openCalView,
+      closeCalView,
+      onCalViewClick,
+      saveCalName,
       deleteCalibration,
       setSimPart,
       settleSimPart,

@@ -272,11 +272,13 @@
                 <input type="radio" name="cal-active" :value="item.id" v-model="calStore.activeId">
                 <span>{{ item.name }}</span>
               </label>
-              <button type="button" class="install recipe-del" @click="deleteCalibration(item)">Apagar</button>
+              <span class="cal-actions">
+                <button type="button" class="install" @click="openCalView(item)" :aria-label="'Ver ' + item.name" data-cal-view>Ver</button>
+                <button type="button" class="install recipe-del" @click="deleteCalibration(item)">Apagar</button>
+              </span>
             </li>
           </ul>
           <button type="button" class="install about-cal-add" @click="openCalibration" data-cal-open>Registrar teste dos dois potes</button>
-          <button type="button" class="cal-guide-open" @click="openCalGuide" data-cal-guide>Como fazer o teste</button>
           <p class="hint">A escolha muda só a hora do pico. Sabor e textura ficam. Abrir ou limpar uma receita não mexe nesta lista.</p>
         </section>
         <button v-if="canInstall" type="button" class="install about-install" @click="install">Instalar o app</button>
@@ -389,7 +391,7 @@
           <li>Sabor e textura ficam os da faixa geral.</li>
           <li>A calibração usa só o par 1:1:1 e 1:5:5. Um 1:2:2, um 1:10:10 ou um 2:4:5 é estimativa, não um teste para gravar.</li>
           <li>Abaixo de 85% de hidratação a hora ainda passa por um degrau da faixa geral, com menos certeza.</li>
-          <li>Outra farinha, ou a mesma daqui a algumas semanas, pede outro par. Um par gravado não se edita: grava-se outro ou apaga-se no Sobre.</li>
+          <li>Outra farinha, ou a mesma daqui a algumas semanas, pede outro par. Os pesos, as horas e a temperatura de um par gravado não se editam. Dá para mudar o nome, gravar outro ou apagar no Sobre.</li>
           <li>A lista fica no Sobre. Abrir ou limpar uma receita a conserva. Faixa geral devolve a tabela do app.</li>
         </ul>
         <div class="sheet-foot">
@@ -453,8 +455,31 @@
         <ul v-if="calDraft.errors.length" class="cal-errors" data-cal-errors>
           <li v-for="err in calDraft.errors" :key="err">{{ err }}</li>
         </ul>
+        <p class="hint" data-cal-locked>Depois de gravar, os pesos, as horas e a temperatura não poderão ser editados. O nome, sim.</p>
         <div class="sheet-foot">
           <button type="button" class="levain-done" :disabled="!calDraft.valid" @click="saveCalibration" data-cal-save>Gravar calibração</button>
+        </div>
+      </article>
+    </dialog>
+
+    <dialog ref="calViewDialog" class="levain-dialog" @click="onCalViewClick" aria-labelledby="cal-view-title">
+      <article v-if="calViewItem" class="levain cal-view" tabindex="-1" autofocus>
+        <header class="levain-head">
+          <h2 id="cal-view-title">Calibração gravada</h2>
+          <button type="button" class="del" @click="closeCalView" aria-label="Fechar">×</button>
+        </header>
+        <label class="kicker" for="cal-view-name">Nome</label>
+        <input id="cal-view-name" class="name-input" v-model="calViewName" maxlength="40" autocomplete="off" data-cal-view-name>
+        <p v-if="calViewItem.savedAt" class="hint">Gravada em {{ formatDate(calViewItem.savedAt) }}.</p>
+        <dl class="cal-view-facts" data-cal-view-facts>
+          <div v-for="fact in calViewFacts" :key="fact.label">
+            <dt>{{ fact.label }}</dt>
+            <dd>{{ fact.text }}</dd>
+          </div>
+        </dl>
+        <p class="hint">Os pesos, as horas e a temperatura não se editam.</p>
+        <div class="sheet-foot">
+          <button type="button" class="levain-done" :disabled="!calViewName.trim()" @click="saveCalName" data-cal-rename>Salvar nome</button>
         </div>
       </article>
     </dialog>
