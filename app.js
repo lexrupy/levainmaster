@@ -1282,13 +1282,13 @@ createApp({
       });
     }
 
-    function storeCard(blob, type) {
+    function storeCard(blob, type, generation) {
       const worker = navigator.serviceWorker && navigator.serviceWorker.controller;
       if (!worker) return Promise.resolve(false);
       return new Promise((resolve) => {
         const channel = new MessageChannel();
         channel.port1.onmessage = (event) => resolve(!!event.data?.ok);
-        worker.postMessage({ type, blob }, [channel.port2]);
+        worker.postMessage({ type, blob, generation }, [channel.port2]);
       });
     }
 
@@ -1299,7 +1299,7 @@ createApp({
         if (generation !== cardGeneration) return;
         const controlled = await whenControlled();
         if (generation !== cardGeneration) return;
-        const ok = controlled && (await storeCard(blob, "card"));
+        const ok = controlled && (await storeCard(blob, "card", generation));
         if (generation !== cardGeneration) return;
         if (!cardPreview) return;
         const file = "card.png?t=";

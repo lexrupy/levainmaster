@@ -1,6 +1,6 @@
 // Percentual do padeiro — © 2026 Alexandre da Silva
 // SPDX-License-Identifier: LGPL-3.0-or-later
-const CACHE = "padeiro-v93";
+const CACHE = "padeiro-v94";
 const FILES = [
   "./",
   "./index.html",
@@ -54,6 +54,7 @@ self.addEventListener("activate", (event) => {
 // /card (e card.png) não existe no servidor. A página manda o PNG e este worker
 // responde com a imagem, para o navegador mostrar em vez de baixar.
 const cardBlobs = { card: null };
+let cardSeq = 0;
 
 const CARD_HEADERS = {
   "Content-Type": "image/png",
@@ -133,12 +134,23 @@ self.addEventListener("message", (event) => {
     port.postMessage({ version: CACHE });
   } else if (event.data && event.data.blob && Object.prototype.hasOwnProperty.call(cardBlobs, event.data.type)) {
     const kind = event.data.type;
-    cardBlobs[kind] = event.data.blob;
+    const blob = event.data.blob;
+    const generation = Number(event.data.generation);
+    // Uma geração que começou antes não pode gravar por cima da que já chegou.
+    if (Number.isFinite(generation) && generation < cardSeq) {
+      port.postMessage({ ok: false });
+      return;
+    }
+    if (Number.isFinite(generation)) cardSeq = generation;
+    cardBlobs[kind] = blob;
     event.waitUntil(
       caches
         .open(CACHE)
-        .then((cache) => cache.put(cardRequest("./" + kind + ".png"), cardResponse(cardBlobs[kind])))
-        .then(() => port.postMessage({ ok: true }), () => port.postMessage({ ok: false }))
+        .then((cache) => {
+          if (cardBlobs[kind] !== blob) return false;
+          return cache.put(cardRequest("./" + kind + ".png"), cardResponse(blob)).then(() => true);
+        })
+        .then((wrote) => port.postMessage({ ok: wrote !== false }), () => port.postMessage({ ok: false }))
     );
   } else if (event.data === "refresh") {
     event.waitUntil(
