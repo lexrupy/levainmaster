@@ -14,7 +14,7 @@ Estudo de cozinha. As seções de experimento são o que eu vi no pote. A discus
 
 Mantenho um levain em casa e um app que estima, a partir da proporção isca : água : farinha, a textura, o tempo até o pico a 24–26 °C e uma posição entre láctico e acético. Este texto registra o que eu já fiz e o que a leitura da literatura me devolveu.
 
-Na madrugada de 1º de outubro de 2026 pesei 2 g de isca, 50 g de água e 50 g de farinha. Chamei de 1:20:20; a proporção real é 1:25:25. A cozinha estava na casa dos 20 °C. O volume chegou ao pico por volta de 12h30 e começou a baixar por volta de 13h30. O app, para uma alimentação acima de 10 vezes a isca, marca 16 a 24 h a 24–26 °C. O meu pico foi mais cedo, e numa cozinha mais fria. Por isso não coloquei temperatura em cima desse relógio: a regra prática de dobrar o tempo a cada 10 °C a menos alongaria ainda mais uma previsão que já passou do que eu vi.
+Na madrugada de 1º de outubro de 2026 pesei 2 g de isca, 50 g de água e 50 g de farinha Rosesol tipo 1. Chamei de 1:20:20; a proporção real é 1:25:25. A cozinha estava na casa dos 20 °C. O volume chegou ao pico por volta de 12h30 e começou a baixar por volta de 13h30. O app, para uma alimentação acima de 10 vezes a isca, marca 16 a 24 h a 24–26 °C. O meu pico foi mais cedo, e numa cozinha mais fria. Por isso não coloquei temperatura em cima desse relógio: a regra prática de dobrar o tempo a cada 10 °C a menos alongaria ainda mais uma previsão que já passou do que eu vi.
 
 No 100%, recém-misturado, o levain me parece mais firme que o iogurte comum daqui. Com o tempo ele se liquefaz, sobretudo depois da geladeira, e continua elástico. Acima de 100% eu ainda não fiz. No 2:4:5 (80% de água) ficou só um pouco mais pastoso: não se nivela sozinho, pede colher ou espátula, e quando fermenta sobe por igual, sem domo. O rótulo do app para essa faixa, “pastosa, mais firme que iogurte”, descreve o que eu vi. O domo, se aparecer, deve ser coisa de massa mais sólida, abaixo de uns 70%, que eu ainda não sovei na mão.
 
@@ -76,7 +76,7 @@ A tabela inteira dos presets, como a função responde hoje, está no apêndice.
 
 **O que eu pesei.** 2 g de isca, 50 g de água, 50 g de farinha. Na hora eu disse 1:20:20. A conta é 50 ÷ 2 = 25, então 1:25:25. Os 2 g + 50 g + 50 g fecham 102 g. Um total de 100 g nessa proporção seria 1,96 g + 49,02 g + 49,02 g, e o modal da receita, em inteiros, mostraria 2 g + 49 g + 49 g, o mesmo que mostra para o 1:20:20. Eu pesei o que a balança deixa ver, não o casamento com 100 g.
 
-**Condições.** Cozinha na casa dos 20 °C. Não deixei um termômetro registrando a noite inteira. Não anotei a marca da farinha nem quantas vezes o volume subiu. Anotei a hora em que o volume parou de subir e a hora em que começou a murchar.
+**Condições.** Cozinha na casa dos 20 °C. Não deixei um termômetro registrando a noite inteira. A farinha era Rosesol tipo 1. Na hora não anotei lote, fabricação nem validade; isso dá para completar depois, olhando a embalagem. Não anotei quantas vezes o volume subiu. Anotei a hora em que o volume parou de subir e a hora em que começou a murchar.
 
 **O que aconteceu.** Pico de volume por volta de 12h30. Começou a baixar por volta de 13h30. Cerca de 12 horas e meia até o pico, e mais ou menos uma hora no alto.
 
