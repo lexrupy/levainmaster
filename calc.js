@@ -251,7 +251,7 @@
     else if (hydration < 70) texture = "Firme, de sovar na mão";
     else if (stiff) texture = "Pastosa, mais firme que iogurte";
 
-    let speed = feed <= 0.5 ? 0 : feed <= 1 ? 1 : feed <= 2 ? 2 : feed <= 3 ? 3 : feed <= 5 ? 4 : feed <= 10 ? 5 : 6;
+    let speed = speedIndex(feed);
     if (stiff) speed = Math.min(PEAK_TIMES.length - 1, speed + 1);
 
     let score = hydration >= 95 ? 1 : hydration >= 75 ? 2 : hydration >= 60 ? 3 : 4;
@@ -277,6 +277,108 @@
       flavor: FLAVORS[score],
       tips,
     };
+  }
+
+  // Mesma escada de levainProfile, sem o degrau das massas abaixo de 85%.
+  function speedIndex(feed) {
+    return feed <= 0.5 ? 0 : feed <= 1 ? 1 : feed <= 2 ? 2 : feed <= 3 ? 3 : feed <= 5 ? 4 : feed <= 10 ? 5 : 6;
+  }
+
+  // Meio de cada texto de PEAK_TIMES, na mesma ordem. Serve só ao degrau firme.
+  const PEAK_MIDS = [2.5, 3.5, 5, 7, 10, 14, 20];
+
+  function roundHalfHour(hours) {
+    return Math.round(hours * 2) / 2;
+  }
+
+  function formatHalfHour(hours) {
+    const n = roundHalfHour(hours);
+    const abs = Math.abs(n);
+    const text = Number.isInteger(abs) ? String(abs) : String(abs).replace(".", ",");
+    return (n < 0 ? "-" : "") + text;
+  }
+
+  function formatHourSpan(shortH, longH) {
+    let a = roundHalfHour(shortH);
+    let b = roundHalfHour(longH);
+    if (a > b) {
+      const swap = a;
+      a = b;
+      b = swap;
+    }
+    if (a === b) return formatHalfHour(a) + " h";
+    return formatHalfHour(a) + " a " + formatHalfHour(b) + " h";
+  }
+
+  function parsePeakBand(text) {
+    const match = /^(\d+(?:,\d+)?)\s+a\s+(\d+(?:,\d+)?)\s+h$/.exec(String(text || "").trim());
+    if (!match) return null;
+    return { lo: Number(match[1].replace(",", ".")), hi: Number(match[2].replace(",", ".")) };
+  }
+
+  function orderedRange(lo, hi) {
+    const a = num(lo);
+    const b = num(hi);
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+    return a <= b ? { lo: a, hi: b } : { lo: b, hi: a };
+  }
+
+  // O pote do teste entra se a proporção está na faixa, não se o peso é o sugerido.
+  // 1:1:1: farinha/isca e água/farinha entre 0,9 e 1,1.
+  // 1:5:5: farinha/isca entre 4,5 e 5,5, e água/farinha entre 0,9 e 1,1.
+  function acceptJar(kind, seed, water, flour) {
+    const s = num(seed);
+    const w = num(water);
+    const f = num(flour);
+    if (!(s > 0) || !(w > 0) || !(f > 0)) return false;
+    const flourPerSeed = f / s;
+    const waterPerFlour = w / f;
+    const waterOk = waterPerFlour >= 0.9 && waterPerFlour <= 1.1;
+    if (kind === "111") return flourPerSeed >= 0.9 && flourPerSeed <= 1.1 && waterOk;
+    if (kind === "155") return flourPerSeed >= 4.5 && flourPerSeed <= 5.5 && waterOk;
+    return false;
+  }
+
+  // Hora até o pico. Não altera levainProfile.
+  // Sem calibração e em 24–26 °C devolve profile.time intacto.
+  // Sem calibração e noutra faixa, desliza as duas pontas do texto geral.
+  // Com calibração, o centro é t1 + (t5 − t1) × ln(alimentação) / ln(5);
+  // abaixo de 85% multiplica pela razão dos meios da faixa geral; a temperatura
+  // abre o intervalo entre o teto (mais curto) e o piso (mais longo).
+  function peakEstimate(profile, calibration, tempLo, tempHi) {
+    if (!profile || typeof profile.time !== "string" || !(num(profile.feed) > 0)) return null;
+    const requested = orderedRange(tempLo, tempHi);
+    if (!requested) return null;
+    const hot = requested.hi > 30;
+
+    if (!calibration) {
+      if (requested.lo === 24 && requested.hi === 26) {
+        return { time: profile.time, label: "Faixa geral", stiff: false, hot, general: true };
+      }
+      const band = parsePeakBand(profile.time);
+      if (!band) return { time: profile.time, label: "Faixa geral", stiff: false, hot, general: true };
+      const shortH = band.lo * Math.pow(2, (26 - requested.hi) / 10);
+      const longH = band.hi * Math.pow(2, (24 - requested.lo) / 10);
+      return { time: formatHourSpan(shortH, longH), label: "Faixa geral", stiff: false, hot, general: true };
+    }
+
+    const t1 = num(calibration.t1Hours);
+    const t5 = num(calibration.t5Hours);
+    const feed = num(profile.feed);
+    if (!(t1 > 0) || !(t5 > t1)) return null;
+    let center = t1 + (t5 - t1) * (Math.log(feed) / Math.log(5));
+    const stiff = num(profile.hydration) < 85;
+    if (stiff) {
+      const base = speedIndex(feed);
+      const firm = Math.min(PEAK_TIMES.length - 1, base + 1);
+      center *= PEAK_MIDS[firm] / PEAK_MIDS[base];
+    }
+    const test = orderedRange(calibration.tempLo, calibration.tempHi) || { lo: 24, hi: 26 };
+    const mid = (test.lo + test.hi) / 2;
+    const shortH = center * Math.pow(2, (mid - requested.hi) / 10);
+    const longH = center * Math.pow(2, (mid - requested.lo) / 10);
+    const name = String(calibration.name || "").trim() || "Calibração";
+    return { time: formatHourSpan(shortH, longH), label: name, stiff, hot, general: false };
   }
 
   // Fermento principal ("ferment") ou segundo fermento ("ferment2"): um biológico e um levain.
@@ -391,6 +493,8 @@
     splitLevain,
     ratioFromGrams,
     levainProfile,
+    acceptJar,
+    peakEstimate,
     isFerment,
     enrichedBread,
     gramsOf,

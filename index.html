@@ -261,6 +261,27 @@
           <div><dt>Dados protegidos</dt><dd data-about-persisted>{{ about.persisted ? 'Sim' : 'Não' }}</dd></div>
         </dl>
         <p class="hint" v-if="!about.persisted">Sem proteção, o navegador pode apagar o app e as receitas se faltar espaço. Instalar o app costuma liberar a proteção.</p>
+        <section class="about-cal" aria-labelledby="about-cal-title">
+          <h3 id="about-cal-title" class="kicker">Calibração do levain</h3>
+          <p class="about-cal-use">Em uso: <strong data-cal-active>{{ activeCalibration ? activeCalibration.name : 'Faixa geral' }}</strong></p>
+          <ul class="cal-list" data-cal-list>
+            <li>
+              <label>
+                <input type="radio" name="cal-active" value="" v-model="calStore.activeId">
+                Faixa geral
+              </label>
+            </li>
+            <li v-for="item in calStore.items" :key="item.id">
+              <label>
+                <input type="radio" name="cal-active" :value="item.id" v-model="calStore.activeId">
+                <span>{{ item.name }}</span>
+              </label>
+              <button type="button" class="install recipe-del" @click="deleteCalibration(item)">Apagar</button>
+            </li>
+          </ul>
+          <button type="button" class="install about-cal-add" @click="openCalibration" data-cal-open>Registrar teste dos dois potes</button>
+          <p class="hint">A escolha muda só a hora do pico. Sabor e textura ficam. Abrir ou limpar uma receita não mexe nesta lista.</p>
+        </section>
         <button v-if="canInstall" type="button" class="install about-install" @click="install">Instalar o app</button>
         <button type="button" class="levain-done" :disabled="about.checking" @click="checkUpdate">{{ about.checking ? 'Verificando…' : 'Verificar atualizações' }}</button>
         <p class="about-status" aria-live="polite" data-about-status>{{ about.status }}</p>
@@ -308,6 +329,92 @@
       </article>
     </dialog>
 
+    <dialog ref="tempDialog" class="levain-dialog" @click="onTempClick" aria-labelledby="temp-title">
+      <article class="levain temp-sheet" tabindex="-1" autofocus>
+        <header class="levain-head">
+          <h2 id="temp-title">Temperatura do pico</h2>
+          <button type="button" class="del" @click="closeTemp" aria-label="Fechar">×</button>
+        </header>
+        <p class="temp-origin" data-temp-origin>{{ tempOrigin }}</p>
+        <p class="hint" data-temp-note>{{ tempNote }}</p>
+        <div class="temp-shortcuts">
+          <button v-for="band in tempShortcuts" :key="band.lo + '-' + band.hi" type="button" :class="{ on: sessionMatch(band) }" @click="setSessionBand(band.lo, band.hi)">{{ band.lo }}–{{ band.hi }}</button>
+        </div>
+        <div class="temp-fields">
+          <label>Piso °C
+            <input type="number" inputmode="decimal" step="0.5" v-model="tempFields.lo" @input="applyTempFields" @blur="settleTempFields" data-temp-lo>
+          </label>
+          <label>Teto °C
+            <input type="number" inputmode="decimal" step="0.5" v-model="tempFields.hi" @input="applyTempFields" @blur="settleTempFields" data-temp-hi>
+          </label>
+        </div>
+        <p class="temp-result" data-temp-result>Nesta proporção: {{ peakView ? peakView.time : '—' }}</p>
+        <p v-if="peakView && peakView.stiff" class="hint">Abaixo de 85% a hora passa pelo degrau da faixa geral, com menos certeza.</p>
+        <p v-if="peakView && peakView.hot" class="hint" data-temp-hot>Acima de 30 °C a levedura perde ritmo. Este número é só um guia.</p>
+        <div class="sheet-foot">
+          <button type="button" class="levain-done" @click="closeTemp">Fechar</button>
+        </div>
+      </article>
+    </dialog>
+
+    <dialog ref="calDialog" class="levain-dialog" @click="onCalClick" aria-labelledby="cal-title">
+      <article class="levain cal-form" tabindex="-1" autofocus>
+        <header class="levain-head">
+          <h2 id="cal-title">Teste dos dois potes</h2>
+          <button type="button" class="del" @click="closeCalibration" aria-label="Fechar">×</button>
+        </header>
+        <p class="hint" data-cal-weigh>Outros pesos na mesma proporção são aceitos, mas um erro de pesagem influencia o cálculo final.</p>
+        <label class="kicker" for="cal-name">Nome</label>
+        <input id="cal-name" class="name-input" v-model="calForm.name" maxlength="40" placeholder="Ex.: Rosesol tipo 1" autocomplete="off" data-cal-name>
+        <p class="kicker">Temperatura dos potes</p>
+        <p class="hint">Vazia, grava 24–26 °C.</p>
+        <div class="temp-shortcuts">
+          <button v-for="band in tempShortcuts" :key="'cal-' + band.lo" type="button" :class="{ on: calShortcutOn(band) }" @click="setCalTemp(band.lo, band.hi)">{{ band.lo }}–{{ band.hi }}</button>
+        </div>
+        <div class="temp-fields">
+          <label>Piso °C
+            <input type="number" inputmode="decimal" step="0.5" v-model="calForm.tempLo" data-cal-temp-lo>
+          </label>
+          <label>Teto °C
+            <input type="number" inputmode="decimal" step="0.5" v-model="calForm.tempHi" data-cal-temp-hi>
+          </label>
+        </div>
+        <label class="kicker" for="cal-mix">Hora da mistura, a mesma nos dois</label>
+        <input id="cal-mix" type="datetime-local" v-model="calForm.mixAt" data-cal-mix>
+        <fieldset>
+          <legend>Pote A · 1:1:1</legend>
+          <p class="hint">Sugestão: 20 g de isca, 20 g de água e 20 g de farinha. O pico é quando o volume começa a perder estrutura.</p>
+          <div class="jar-weights">
+            <label>Isca<input type="number" min="0" step="0.1" inputmode="decimal" v-model="calForm.seed111" data-jar-seed-111></label>
+            <label>Água<input type="number" min="0" step="0.1" inputmode="decimal" v-model="calForm.water111" data-jar-water-111></label>
+            <label>Farinha<input type="number" min="0" step="0.1" inputmode="decimal" v-model="calForm.flour111" data-jar-flour-111></label>
+          </div>
+          <p class="hint" :class="{ bad: !calDraft.ok111 }" data-jar-111>{{ calDraft.ok111 ? 'Proporção aceita.' : 'Fora do 1:1:1. Farinha/isca e água/farinha precisam ficar entre 0,9 e 1,1.' }}</p>
+          <label class="kicker" for="cal-peak-111">Pico do 1:1:1</label>
+          <input id="cal-peak-111" type="datetime-local" v-model="calForm.peak111" data-cal-peak-111>
+        </fieldset>
+        <fieldset>
+          <legend>Pote B · 1:5:5</legend>
+          <p class="hint">Sugestão: 20 g de isca, 100 g de água e 100 g de farinha. 10 g + 50 g + 50 g também entra.</p>
+          <div class="jar-weights">
+            <label>Isca<input type="number" min="0" step="0.1" inputmode="decimal" v-model="calForm.seed155" data-jar-seed-155></label>
+            <label>Água<input type="number" min="0" step="0.1" inputmode="decimal" v-model="calForm.water155" data-jar-water-155></label>
+            <label>Farinha<input type="number" min="0" step="0.1" inputmode="decimal" v-model="calForm.flour155" data-jar-flour-155></label>
+          </div>
+          <p class="hint" :class="{ bad: !calDraft.ok155 }" data-jar-155>{{ calDraft.ok155 ? 'Proporção aceita.' : 'Fora do 1:5:5. Farinha/isca entre 4,5 e 5,5, e água/farinha entre 0,9 e 1,1.' }}</p>
+          <label class="kicker" for="cal-peak-155">Pico do 1:5:5</label>
+          <input id="cal-peak-155" type="datetime-local" v-model="calForm.peak155" data-cal-peak-155>
+        </fieldset>
+        <p v-if="calDraft.hoursText" class="hint" data-cal-hours>{{ calDraft.hoursText }}</p>
+        <ul v-if="calDraft.errors.length" class="cal-errors" data-cal-errors>
+          <li v-for="err in calDraft.errors" :key="err">{{ err }}</li>
+        </ul>
+        <div class="sheet-foot">
+          <button type="button" class="levain-done" :disabled="!calDraft.valid" @click="saveCalibration" data-cal-save>Gravar calibração</button>
+        </div>
+      </article>
+    </dialog>
+
     <dialog ref="levainDialog" class="levain-dialog" @click="onDialogClick" aria-labelledby="levain-title">
       <article v-if="levainSim || result.levainOn" class="levain" tabindex="-1" autofocus>
         <header class="levain-head">
@@ -315,12 +422,24 @@
           <button type="button" class="del" @click="closeLevain" aria-label="Fechar">×</button>
         </header>
         <p class="levain-grams" v-if="levainSim">
-          <input class="grams-input" type="number" min="0" step="0.01" inputmode="decimal" :value="sim.total" @input="setSimTotal($event.target.value)" @blur="settleSimTotal" @keydown.enter.prevent="$event.target.blur()" aria-label="Gramas totais do levain" data-sim-total>
-          <small> g no total</small>
+          <span class="levain-grams-main">
+            <input class="grams-input" type="number" min="0" step="0.01" inputmode="decimal" :value="sim.total" @input="setSimTotal($event.target.value)" @blur="settleSimTotal" @keydown.enter.prevent="$event.target.blur()" aria-label="Gramas totais do levain" data-sim-total>
+            <small> g no total</small>
+          </span>
+          <button type="button" class="temp-open" @click="openTemp" :aria-label="'Temperatura do pico, ' + tempLabel" data-temp-open>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
+            <span data-temp-label>{{ tempLabel }}</span>
+          </button>
         </p>
         <p class="levain-grams" v-else-if="levainItem">
-          <input v-if="isEditing(levainItem, 'levainGrams')" v-focus class="grams-input" type="number" min="0" step="1" inputmode="decimal" :value="editing.text" @input="onEdit(levainItem, 'levainGrams', $event.target.value)" @blur="endEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc.prevent.stop="cancelEdit(levainItem)" aria-label="Gramas de levain na massa">
-          <button v-else type="button" class="grams-value" :disabled="result.flour <= 0" @click="startEdit(levainItem, 'levainGrams')" aria-label="Editar gramas de levain na massa" data-levain-grams>{{ formatG(result.levainGrams) }}</button><small> g na massa · {{ formatPctFine(levainItem.pct) }}% da farinha</small>
+          <span class="levain-grams-main">
+            <input v-if="isEditing(levainItem, 'levainGrams')" v-focus class="grams-input" type="number" min="0" step="1" inputmode="decimal" :value="editing.text" @input="onEdit(levainItem, 'levainGrams', $event.target.value)" @blur="endEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc.prevent.stop="cancelEdit(levainItem)" aria-label="Gramas de levain na massa">
+            <button v-else type="button" class="grams-value" :disabled="result.flour <= 0" @click="startEdit(levainItem, 'levainGrams')" aria-label="Editar gramas de levain na massa" data-levain-grams>{{ formatG(result.levainGrams) }}</button><small> g na massa · {{ formatPctFine(levainItem.pct) }}% da farinha</small>
+          </span>
+          <button type="button" class="temp-open" @click="openTemp" :aria-label="'Temperatura do pico, ' + tempLabel" data-temp-open>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
+            <span data-temp-label>{{ tempLabel }}</span>
+          </button>
         </p>
         <div class="parts">
           <div class="part part-ratio">
@@ -368,7 +487,7 @@
         <section class="profile" v-if="shownProfile" aria-label="Como fica esta ativação">
           <dl class="profile-facts">
             <div><dt>Textura</dt><dd data-levain-texture>{{ shownProfile.texture }}</dd></div>
-            <div><dt>Pico</dt><dd data-levain-time>{{ shownProfile.time }} <small>a 24–26 °C</small></dd></div>
+            <div><dt>Pico</dt><dd data-levain-time>{{ peakView ? peakView.time : shownProfile.time }} <small data-levain-origin>{{ peakView ? peakView.caption : 'Faixa geral · 24–26 °C' }}</small></dd></div>
           </dl>
           <div class="flavor">
             <div class="flavor-scale" role="img" :aria-label="'Sabor: ' + shownProfile.flavor">
@@ -377,6 +496,8 @@
             <div class="flavor-ends"><span>Láctico · suave</span><span>Acético · azedo</span></div>
             <p class="flavor-name" data-levain-flavor>{{ shownProfile.flavor }}</p>
           </div>
+          <p v-if="peakView && peakView.stiff" class="hint" data-levain-stiff>Abaixo de 85% a hora passa pelo degrau da faixa geral, com menos certeza.</p>
+          <p v-if="peakView && peakView.hot" class="hint" data-levain-hot>Acima de 30 °C a levedura perde ritmo. Este número é só um guia.</p>
           <p v-for="tip in shownProfile.tips" :key="tip" class="hint profile-tip">{{ tip }}</p>
           <p class="hint">Mais quente (26–30 °C) puxa para o láctico; mais frio (abaixo de 22 °C), para o acético.</p>
         </section>

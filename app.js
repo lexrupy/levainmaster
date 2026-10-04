@@ -4,6 +4,15 @@ const { createApp, reactive, computed, watch, ref, onMounted, nextTick } = Vue;
 
 const STORAGE_KEY = "percentual-padeiro-v1";
 const RECIPES_KEY = "percentual-padeiro-receitas-v1";
+const CAL_KEY = "percentual-padeiro-calibracoes-v1";
+const TEMP_BANDS = [
+  { lo: 18, hi: 20 },
+  { lo: 20, hi: 22 },
+  { lo: 22, hi: 24 },
+  { lo: 24, hi: 26 },
+  { lo: 26, hi: 28 },
+  { lo: 28, hi: 30 },
+];
 
 // Pergunta algo ao service worker que controla a página e espera a resposta.
 function askWorker(message, timeout = 4000) {
@@ -161,6 +170,93 @@ function loadRecipes() {
   }
 }
 
+function emptyCalForm() {
+  return {
+    name: "",
+    tempLo: "",
+    tempHi: "",
+    mixAt: "",
+    peak111: "",
+    peak155: "",
+    seed111: 20,
+    water111: 20,
+    flour111: 20,
+    seed155: 20,
+    water155: 100,
+    flour155: 100,
+  };
+}
+
+function isTempText(value) {
+  return /^-?\d+(?:[.,]\d+)?$/.test(String(value).trim());
+}
+
+function formatTempNumber(value) {
+  const n = Padeiro.num(value);
+  const rounded = Math.round(n * 10) / 10;
+  return Number.isInteger(rounded) ? String(rounded) : String(rounded).replace(".", ",");
+}
+
+function formatTempRange(lo, hi) {
+  return formatTempNumber(lo) + "–" + formatTempNumber(hi) + " °C";
+}
+
+function formatHoursLoose(hours) {
+  const n = Math.round(hours * 10) / 10;
+  return (Number.isInteger(n) ? String(n) : String(n).replace(".", ",")) + " h";
+}
+
+function hoursBetween(start, end) {
+  const a = new Date(start).getTime();
+  const b = new Date(end).getTime();
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+  return (b - a) / 3600000;
+}
+
+function loadCalibrations() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(CAL_KEY) || "null");
+    const items = Array.isArray(raw && raw.items) ? raw.items : [];
+    const clean = [];
+    items.forEach((item) => {
+      if (!item || typeof item !== "object" || !item.id) return;
+      const name = String(item.name || "").trim().slice(0, 40);
+      const t1Hours = Padeiro.num(item.t1Hours);
+      const t5Hours = Padeiro.num(item.t5Hours);
+      if (!name || !(t1Hours > 0) || !(t5Hours > t1Hours)) return;
+      let tempLo = item.tempLo === undefined || item.tempLo === "" ? 24 : Padeiro.num(item.tempLo);
+      let tempHi = item.tempHi === undefined || item.tempHi === "" ? 26 : Padeiro.num(item.tempHi);
+      if (tempLo > tempHi) {
+        const swap = tempLo;
+        tempLo = tempHi;
+        tempHi = swap;
+      }
+      clean.push({
+        id: String(item.id),
+        name,
+        savedAt: typeof item.savedAt === "string" ? item.savedAt : "",
+        t1Hours,
+        t5Hours,
+        tempLo,
+        tempHi,
+        mixAt: typeof item.mixAt === "string" ? item.mixAt : "",
+        peak111At: typeof item.peak111At === "string" ? item.peak111At : "",
+        peak155At: typeof item.peak155At === "string" ? item.peak155At : "",
+        seed111: Padeiro.num(item.seed111),
+        water111: Padeiro.num(item.water111),
+        flour111: Padeiro.num(item.flour111),
+        seed155: Padeiro.num(item.seed155),
+        water155: Padeiro.num(item.water155),
+        flour155: Padeiro.num(item.flour155),
+      });
+    });
+    const activeId = clean.some((item) => item.id === (raw && raw.activeId)) ? String(raw.activeId) : "";
+    return { activeId, items: clean };
+  } catch (error) {
+    return { activeId: "", items: [] };
+  }
+}
+
 createApp({
   setup() {
     const state = reactive(loadState());
@@ -168,7 +264,20 @@ createApp({
     const levainDialog = ref(null);
     const recipesDialog = ref(null);
     const aboutDialog = ref(null);
+    const tempDialog = ref(null);
+    const calDialog = ref(null);
     const breadDialog = ref(null);
+    const calStore = reactive(loadCalibrations());
+    const startingCal = calStore.items.find((item) => item.id === calStore.activeId) || null;
+    const sessionTemp = reactive({
+      lo: startingCal ? startingCal.tempLo : 24,
+      hi: startingCal ? startingCal.tempHi : 26,
+    });
+    const tempFields = reactive({
+      lo: String(sessionTemp.lo),
+      hi: String(sessionTemp.hi),
+    });
+    const calForm = reactive(emptyCalForm());
     const breadShown = ref("");
     const about = reactive({ version: "", offline: false, persisted: false, checking: false, status: "", reload: false });
     const recipes = ref(loadRecipes());
@@ -619,7 +728,7 @@ createApp({
     async function clearRecipe() {
       const ok = await askConfirm({
         title: "Limpar a receita?",
-        message: "A tela volta à receita inicial: 500 g de farinha, 65% de água, 2% de sal e 1% de fermento seco, com o nome Minha Receita. As receitas salvas continuam na lista.",
+        message: "A tela volta à receita inicial: 500 g de farinha, 65% de água, 2% de sal e 1% de fermento seco, com o nome Minha Receita. As receitas salvas e as calibrações do levain continuam.",
         confirmLabel: "Limpar",
         danger: true,
       });
@@ -947,7 +1056,7 @@ createApp({
           : "Alimentação ainda não configurada";
         cardText(ctx, "Alimentação: " + feedParts, pad + 22, levainBlockY + 109, width - pad * 2 - 44, 22, 2);
         const texture = profile ? profile.texture : "—";
-        const peak = profile ? profile.time + " a 24–26 °C" : "—";
+        const peak = peakCaption(profile);
         ctx.fillText("Textura: " + texture + " · Pico: " + peak, pad + 22, levainBlockY + 151);
         const acidity = profile ? profile.flavor + " · nível " + (profile.score + 1) + "/5" : "—";
         ctx.fillText("Perfil de acidez: " + acidity, pad + 22, levainBlockY + 184);
@@ -1202,7 +1311,7 @@ createApp({
           : "Alimentação ainda não configurada";
         cardText(ctx, "Alimentação: " + feedParts, textX, bodyY + 60, textW, 22, 2);
         const texture = profile ? profile.texture : "—";
-        const peak = profile ? profile.time + " a 24–26 °C" : "—";
+        const peak = peakCaption(profile);
         ctx.fillText("Textura: " + texture + " · Pico: " + peak, textX, bodyY + 92);
 
         // A escala do modal: cinco trechos, do láctico ao acético, um marcado.
@@ -1662,7 +1771,7 @@ createApp({
           : "Alimentação ainda não configurada";
         cardText(ctx, "Alimentação: " + feedParts, pad + 22, levainBlockY + 109, width - pad * 2 - 44, 22, 2);
         const texture = profile ? profile.texture : "—";
-        const peak = profile ? profile.time + " a 24–26 °C" : "—";
+        const peak = peakCaption(profile);
         ctx.fillText("Textura: " + texture + " · Pico: " + peak, pad + 22, levainBlockY + 151);
         const acidity = profile ? profile.flavor + " · nível " + (profile.score + 1) + "/5" : "—";
         ctx.fillText("Perfil de acidez: " + acidity, pad + 22, levainBlockY + 184);
@@ -1926,7 +2035,7 @@ createApp({
           : "Alimentação ainda não configurada";
         cardText(ctx, "Alimentação: " + feedParts, pad + 22, levainBlockY + 109, width - pad * 2 - 44, 22, 2);
         const texture = profile ? profile.texture : "—";
-        const peak = profile ? profile.time + " a 24–26 °C" : "—";
+        const peak = peakCaption(profile);
         ctx.fillText("Textura: " + texture + " · Pico: " + peak, pad + 22, levainBlockY + 151);
         const acidity = profile ? profile.flavor + " · nível " + (profile.score + 1) + "/5" : "—";
         ctx.fillText("Perfil de acidez: " + acidity, pad + 22, levainBlockY + 184);
@@ -2149,6 +2258,188 @@ createApp({
 
     const simRatioId = computed(() => Padeiro.matchRatio(sim.L, sim.A, sim.F));
     const shownProfile = computed(() => (levainSim.value ? simProfile.value : levainProfile.value));
+    const activeCalibration = computed(() => calStore.items.find((item) => item.id === calStore.activeId) || null);
+
+    function peakCaption(profile) {
+      if (!profile) return "—";
+      const view = Padeiro.peakEstimate(profile, activeCalibration.value, sessionTemp.lo, sessionTemp.hi);
+      if (!view || (view.general && sessionTemp.lo === 24 && sessionTemp.hi === 26)) return profile.time + " a 24–26 °C";
+      return view.time + " · " + view.label + " · " + formatTempRange(sessionTemp.lo, sessionTemp.hi);
+    }
+
+    const peakView = computed(() => {
+      const profile = shownProfile.value;
+      if (!profile) return null;
+      const view = Padeiro.peakEstimate(profile, activeCalibration.value, sessionTemp.lo, sessionTemp.hi);
+      if (!view) return null;
+      return { ...view, caption: view.label + " · " + formatTempRange(sessionTemp.lo, sessionTemp.hi) };
+    });
+
+    const tempLabel = computed(() => formatTempNumber(sessionTemp.lo) + "–" + formatTempNumber(sessionTemp.hi));
+
+    const tempOrigin = computed(() => (activeCalibration.value ? activeCalibration.value.name : "Faixa geral"));
+
+    const tempNote = computed(() => {
+      if (!calStore.items.length) {
+        return "A estimativa usa os dados gerais do app, escritos para 24–26 °C. Informar outra faixa só desloca essa tabela: não aprende a farinha, a água nem a isca. Para maior precisão, registre no Sobre o teste dos dois potes, 1:1:1 e 1:5:5, começados juntos, da mesma isca, farinha, água e lugar.";
+      }
+      if (!activeCalibration.value) {
+        return "Faixa geral. A hora é a tabela do app deslocada por esta temperatura. O teste dos dois potes dá maior precisão.";
+      }
+      return "A hora usa «" + activeCalibration.value.name + "». O teto encurta o tempo e o piso alonga. Trocar de calibração fica no Sobre.";
+    });
+
+    function sessionMatch(band) {
+      return sessionTemp.lo === band.lo && sessionTemp.hi === band.hi;
+    }
+
+    function setSessionBand(lo, hi) {
+      sessionTemp.lo = lo;
+      sessionTemp.hi = hi;
+      tempFields.lo = String(lo);
+      tempFields.hi = String(hi);
+    }
+
+    function applyTempFields() {
+      if (!isTempText(tempFields.lo) || !isTempText(tempFields.hi)) return;
+      const lo = Padeiro.num(tempFields.lo);
+      const hi = Padeiro.num(tempFields.hi);
+      if (lo < -10 || hi < -10 || lo > 60 || hi > 60) return;
+      sessionTemp.lo = Math.min(lo, hi);
+      sessionTemp.hi = Math.max(lo, hi);
+    }
+
+    function settleTempFields() {
+      applyTempFields();
+      tempFields.lo = formatTempNumber(sessionTemp.lo);
+      tempFields.hi = formatTempNumber(sessionTemp.hi);
+    }
+
+    function openTemp() {
+      tempFields.lo = formatTempNumber(sessionTemp.lo);
+      tempFields.hi = formatTempNumber(sessionTemp.hi);
+      const dialog = tempDialog.value;
+      if (dialog && !dialog.open) dialog.showModal();
+    }
+
+    function closeTemp() {
+      settleTempFields();
+      const dialog = tempDialog.value;
+      if (dialog && dialog.open) dialog.close();
+    }
+
+    function onTempClick(event) {
+      if (event.target === tempDialog.value) closeTemp();
+    }
+
+    function persistCalibrations() {
+      try {
+        localStorage.setItem(CAL_KEY, JSON.stringify({ activeId: calStore.activeId, items: calStore.items }));
+      } catch (error) {}
+    }
+
+    function resetCalForm() {
+      Object.assign(calForm, emptyCalForm());
+    }
+
+    function openCalibration() {
+      resetCalForm();
+      const dialog = calDialog.value;
+      if (dialog && !dialog.open) dialog.showModal();
+    }
+
+    function closeCalibration() {
+      const dialog = calDialog.value;
+      if (dialog && dialog.open) dialog.close();
+    }
+
+    function onCalClick(event) {
+      if (event.target === calDialog.value) closeCalibration();
+    }
+
+    function setCalTemp(lo, hi) {
+      calForm.tempLo = String(lo);
+      calForm.tempHi = String(hi);
+    }
+
+    function calShortcutOn(band) {
+      return String(calForm.tempLo) === String(band.lo) && String(calForm.tempHi) === String(band.hi);
+    }
+
+    const calDraft = computed(() => {
+      const name = String(calForm.name || "").trim().slice(0, 40);
+      const ok111 = Padeiro.acceptJar("111", calForm.seed111, calForm.water111, calForm.flour111);
+      const ok155 = Padeiro.acceptJar("155", calForm.seed155, calForm.water155, calForm.flour155);
+      const t1 = hoursBetween(calForm.mixAt, calForm.peak111);
+      const t5 = hoursBetween(calForm.mixAt, calForm.peak155);
+      const tempEmpty = String(calForm.tempLo).trim() === "" && String(calForm.tempHi).trim() === "";
+      let tempLo = 24;
+      let tempHi = 26;
+      let tempError = "";
+      if (!tempEmpty) {
+        const loText = String(calForm.tempLo).trim();
+        const hiText = String(calForm.tempHi).trim();
+        if (!isTempText(loText) || !isTempText(hiText)) tempError = "Informe o piso e o teto, ou deixe os dois vazios.";
+        else {
+          const lo = Padeiro.num(loText);
+          const hi = Padeiro.num(hiText);
+          if (lo < -10 || hi < -10 || lo > 60 || hi > 60) tempError = "Use uma temperatura entre -10 e 60 °C.";
+          else {
+            tempLo = Math.min(lo, hi);
+            tempHi = Math.max(lo, hi);
+          }
+        }
+      }
+      const errors = [];
+      if (!name) errors.push("Dê um nome, em geral o da farinha.");
+      if (!ok111) errors.push("O pote 1:1:1 está fora da proporção aceita.");
+      if (!ok155) errors.push("O pote 1:5:5 está fora da proporção aceita.");
+      if (!calForm.mixAt || !calForm.peak111 || !calForm.peak155) errors.push("Faltam a hora da mistura e os dois picos.");
+      else if (!(t1 > 0) || !(t5 > 0)) errors.push("Os dois picos precisam ser depois da mistura.");
+      else if (!(t5 > t1)) errors.push("O 1:5:5 precisa ter levado mais tempo que o 1:1:1.");
+      if (tempError) errors.push(tempError);
+      const hoursText = t1 > 0 && t5 > 0 ? "1:1:1 levou " + formatHoursLoose(t1) + " · 1:5:5 levou " + formatHoursLoose(t5) + "." : "";
+      return { name, ok111, ok155, t1, t5, tempLo, tempHi, tempEmpty, errors, hoursText, valid: errors.length === 0 };
+    });
+
+    function saveCalibration() {
+      const draft = calDraft.value;
+      if (!draft.valid) return;
+      const item = {
+        id: "c-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        name: draft.name,
+        savedAt: new Date().toISOString(),
+        t1Hours: draft.t1,
+        t5Hours: draft.t5,
+        tempLo: draft.tempLo,
+        tempHi: draft.tempHi,
+        mixAt: calForm.mixAt,
+        peak111At: calForm.peak111,
+        peak155At: calForm.peak155,
+        seed111: Padeiro.num(calForm.seed111),
+        water111: Padeiro.num(calForm.water111),
+        flour111: Padeiro.num(calForm.flour111),
+        seed155: Padeiro.num(calForm.seed155),
+        water155: Padeiro.num(calForm.water155),
+        flour155: Padeiro.num(calForm.flour155),
+      };
+      calStore.items.unshift(item);
+      calStore.activeId = item.id;
+      closeCalibration();
+    }
+
+    async function deleteCalibration(item) {
+      const ok = await askConfirm({
+        title: "Apagar esta calibração?",
+        message: "«" + item.name + "» sai da lista. Se ela estava em uso, a hora volta à faixa geral na temperatura já informada.",
+        confirmLabel: "Apagar",
+        danger: true,
+      });
+      if (!ok) return;
+      const index = calStore.items.findIndex((entry) => entry.id === item.id);
+      if (index >= 0) calStore.items.splice(index, 1);
+      if (calStore.activeId === item.id) calStore.activeId = "";
+    }
 
     function setPart(key, value) {
       state.levain[key] = value === "" ? "" : Math.max(0, Padeiro.num(value));
@@ -2243,6 +2534,28 @@ createApp({
       cardPreviewTimer = setTimeout(refreshCardPreview, 180);
     }, { deep: true });
 
+    watch(
+      () => [sessionTemp.lo, sessionTemp.hi, calStore.activeId, calStore.items.length],
+      () => {
+        clearTimeout(cardPreviewTimer);
+        cardPreviewTimer = setTimeout(refreshCardPreview, 180);
+      }
+    );
+
+    watch(
+      () => calStore.activeId,
+      (id) => {
+        const item = calStore.items.find((entry) => entry.id === id);
+        if (!item) return;
+        sessionTemp.lo = item.tempLo;
+        sessionTemp.hi = item.tempHi;
+        tempFields.lo = formatTempNumber(item.tempLo);
+        tempFields.hi = formatTempNumber(item.tempHi);
+      }
+    );
+
+    watch(calStore, persistCalibrations, { deep: true });
+
     onMounted(() => {
       refreshCardPreview();
       window.addEventListener("beforeinstallprompt", (event) => {
@@ -2271,6 +2584,8 @@ createApp({
       levainDialog,
       recipesDialog,
       aboutDialog,
+      tempDialog,
+      calDialog,
       breadDialog,
       breadShown,
       breadRows,
@@ -2324,6 +2639,30 @@ createApp({
       simProfile,
       simRatioId,
       shownProfile,
+      peakView,
+      tempLabel,
+      tempOrigin,
+      tempNote,
+      tempFields,
+      tempShortcuts: TEMP_BANDS,
+      sessionMatch,
+      setSessionBand,
+      applyTempFields,
+      settleTempFields,
+      openTemp,
+      closeTemp,
+      onTempClick,
+      calStore,
+      activeCalibration,
+      calForm,
+      calDraft,
+      openCalibration,
+      closeCalibration,
+      onCalClick,
+      setCalTemp,
+      calShortcutOn,
+      saveCalibration,
+      deleteCalibration,
       setSimPart,
       settleSimPart,
       setSimTotal,

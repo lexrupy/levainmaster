@@ -603,7 +603,29 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 }
 
 .levain-grams small { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
-.levain-grams { display: flex; align-items: baseline; gap: 2px; }
+.levain-grams { display: flex; align-items: center; gap: 8px; }
+.levain-grams-main { display: flex; align-items: baseline; gap: 2px; min-width: 0; flex: 1 1 auto; }
+.levain-grams-main small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.temp-open {
+  margin: 0 0 0 auto;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: auto;
+  height: 34px;
+  padding: 0 8px 0 7px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--brown);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1;
+  cursor: pointer;
+}
+.temp-open svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .levain-grams .grams-input {
   width: 5.2ch;
   padding: 0 6px !important;
@@ -981,7 +1003,7 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 
 .profile-facts dt { margin: 0; color: var(--muted); font-size: 0.72rem; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; }
 .profile-facts dd { margin: 2px 0 0; font-size: 0.92rem; font-weight: 620; line-height: 1.25; }
-.profile-facts dd small { display: block; color: var(--muted); font-size: 0.72rem; font-weight: 500; }
+.profile-facts dd small { display: block; color: var(--muted); font-size: 0.72rem; font-weight: 500; overflow-wrap: anywhere; max-width: 11rem; }
 
 .flavor-scale {
   display: grid;
@@ -1063,7 +1085,69 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 .about-facts dt { margin: 0; color: var(--muted); font-size: 0.66rem; letter-spacing: 0.06em; text-transform: uppercase; }
 .about-facts dd { margin: 1px 0 0; font-weight: 650; }
 .about .levain-done:disabled { opacity: 0.6; cursor: default; }
+.about-cal { margin: 12px 0 8px; padding-top: 10px; border-top: 1px solid var(--line); }
+.about-cal h3 { margin: 0 0 6px; }
+.about-cal-use { margin: 0 0 8px; font-size: 0.92rem; }
+.cal-list { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; }
+.cal-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 8px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.cal-list label { display: flex; align-items: center; gap: 8px; min-width: 0; margin: 0; font-weight: 620; }
+.cal-list label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-list .install { padding: 4px 10px; box-shadow: none; }
+.about-cal-add { box-shadow: none; }
 .about-status { margin: 10px 0 0; min-height: 1.3em; font-size: 0.88rem; line-height: 1.35; }
+.temp-origin { margin: 8px 0 4px; font-weight: 700; }
+.temp-shortcuts { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.temp-shortcuts button {
+  width: auto;
+  margin: 0;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.temp-shortcuts button.on { background: var(--brown); color: #fff; border-color: var(--brown); }
+.temp-fields, .jar-weights { display: grid; gap: 8px; margin: 8px 0; }
+.temp-fields { grid-template-columns: 1fr 1fr; }
+.jar-weights { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.temp-fields label, .jar-weights label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.temp-sheet input, .cal-form input { margin-bottom: 0; }
+.temp-result { margin: 8px 0 0; font-weight: 700; }
+.cal-form fieldset {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  margin: 12px 0;
+  padding: 8px 10px 10px;
+  background: #fff;
+}
+.cal-form legend { font-weight: 700; padding: 0 4px; }
+.cal-form .kicker { display: block; margin-top: 8px; }
+.hint.bad { color: var(--wet); }
+.cal-errors { margin: 8px 0 0; padding-left: 1.1rem; color: var(--muted); font-size: 0.85rem; }
+.cal-form .sheet-foot { position: static; }
+.cal-form .levain-done:disabled { opacity: 0.45; cursor: default; }
 .about-reload { margin-top: 8px; }
 
 /* Modais: cabeçalho e rodapé fixos enquanto o conteúdo rola.
