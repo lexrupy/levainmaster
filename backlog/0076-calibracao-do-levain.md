@@ -77,7 +77,11 @@ A temperatura é uma faixa, inferior e superior, não um grau só e não uma mé
 
 Quem tem fermentadora também configura piso e teto, ainda que a distância seja 1 °C. Atalhos de 2 °C (20–22, 22–24, 24–26) preenchem os dois campos. O livre aceita 24–25.
 
-O registro do teste pede a faixa dos potes. Vazia, grava 24–26 °C. Com calibração ativa, o ativador e o simulador têm um ícone à direita, na mesma linha do peso do levain («g na massa» ou «g no total»). O ícone abre um modal com a faixa e os atalhos. A faixa começa na do teste. Sem calibração o ícone não aparece e a hora geral não se mexe.
+O registro do teste pede a faixa dos potes. Vazia, grava 24–26 °C. No ativador e no simulador o ícone fica sempre à direita, na mesma linha do peso do levain («g na massa» ou «g no total»).
+
+Sem nenhum teste gravado, o toque abre uma telinha explicando que a faixa só entra na conta depois do teste dos dois potes, 1:1:1 e 1:5:5, da mesma isca, farinha, água e lugar. A hora geral não muda.
+
+Com pelo menos um teste, o toque abre o modal da faixa e dos atalhos, e mostra o nome gravado do experimento usado na estimativa. A faixa começa na desse experimento. Se no Sobre estiver «Faixa geral», o modal diz isso e a hora não se mexe até um nome ser escolhido.
 
 A hora do par, a 100% e depois do degrau firme, é o centro. O meio da faixa só serve de referência interna dessa conta. Não aparece na tela como se aquele grau tivesse prevalecido. A tela mostra o intervalo: o extremo quente encurta, o extremo frio alonga.
 
@@ -96,7 +100,7 @@ O ícone ao lado do nome abre o Sobre, como hoje. Nesse modal, depois dos fatos 
 
 Nenhuma devolve as faixas gerais. Apagar a que estava em uso também. Quem usa sempre a mesma farinha escolhe uma vez.
 
-No modal do levain e no simulador, a hora mostra a origem: o nome da calibração, ou «Faixa geral». Não há seletor de calibração ali. Com calibração ativa, a hora é o intervalo da faixa de temperatura, não um grau médio e não o texto «16 a 24 h». Sem calibração, o texto da hora é o de `PEAK_TIMES`, igual ao de hoje.
+No modal do levain e no simulador, a hora mostra a origem: o nome da calibração, ou «Faixa geral». Trocar de nome continua no Sobre. Com um experimento em uso, a hora é o intervalo da faixa de temperatura, não um grau médio e não o texto «16 a 24 h». Sem experimento em uso, o texto da hora é o de `PEAK_TIMES`, igual ao de hoje.
 
 ### O que fica gravado
 
@@ -107,7 +111,7 @@ A hora calibrada não entra em `levainProfile`. Uma função ao lado recebe o pe
 ## Critérios de aceite
 
 - [ ] Sem calibração, os presets do apêndice A de `teorias do levain.md` mantêm hora, sabor e textura. O 1:25:25 segue «16 a 24 h» e «Bem láctico: suave e cremoso». O 2:4:5 segue «8 a 12 h» e «Pastosa, mais firme que iogurte»
-- [ ] Sem calibração, o ativador e o simulador não mostram o ícone de temperatura nem seletor de calibração
+- [ ] O ícone de temperatura aparece no ativador e no simulador mesmo sem teste. O toque, nesse caso, explica o teste dos dois potes e não muda a hora
 - [ ] O teste grava com nome, hora de mistura e os dois picos, com o 1:5:5 mais lento que o 1:1:1. Faixa vazia fica 24–26 °C
 - [ ] 10 g + 50 g + 50 g é aceito como 1:5:5. Um 1:2:2 não grava
 - [ ] O aviso sobre erro de pesagem está na tela de registro
@@ -122,7 +126,7 @@ A hora calibrada não entra em `levainProfile`. Uma função ao lado recebe o pe
 
 Na branch, `node` compara `levainProfile` dos presets com e sem o módulo de calibração carregado e nenhuma calibração ativa. Os tempos têm de ser os de hoje.
 
-No navegador, sem calibração, abrir o levain da receita e o simulador e ler a hora geral. Registrar o par do exemplo (4 h e 10 h, faixa 22–23 °C), escolher o nome no Sobre e conferir o intervalo do 1:25:25. Abrir o ícone à direita do peso, mudar a faixa e ver as pontas andarem juntas. Confirmar que não há campo de média. Confirmar um 1:2:3. Voltar para «Faixa geral» e ver a faixa antiga. Limpar a receita e ver que a calibração continua no Sobre. Repetir a 390 px e a 560 px.
+No navegador, sem calibração, abrir o levain da receita e o simulador, tocar o ícone à direita do peso e ler a explicação dos dois potes. A hora geral fica igual. Registrar o par do exemplo (4 h e 10 h, faixa 22–23 °C), escolher o nome no Sobre e conferir o intervalo do 1:25:25. Abrir de novo o ícone, ver o nome gravado, mudar a faixa e ver as pontas andarem juntas. Confirmar que não há campo de média. Confirmar um 1:2:3. Voltar para «Faixa geral» e ver a faixa antiga. Limpar a receita e ver que a calibração continua no Sobre. Repetir a 390 px e a 560 px.
 
 ## Fora do escopo
 
