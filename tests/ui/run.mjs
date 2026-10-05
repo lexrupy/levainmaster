@@ -1,4 +1,4 @@
-// Percentual do padeiro — © 2026 Alexandre da Silva
+// Levain Master — © 2026 Alexandre da Silva
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Cenários de tela. Sobe o Chrome instalado e fala com a página em 127.0.0.1:8769.
 import { setTimeout as sleep } from "node:timers/promises";
@@ -265,7 +265,7 @@ async function scenario0082(client, width) {
     names: [...document.querySelectorAll(".recipe-name")].map((node) => node.textContent),
     errors: 0
   })`);
-  check(`0082 ${width} monta`, mounted.brand === "Percentual do padeiro", mounted.brand);
+  check(`0082 ${width} monta`, mounted.brand === "Levain Master", mounted.brand);
   check(
     `0082 ${width} lista as três`,
     mounted.names.includes("Receita boa") && mounted.names.includes("Receita ruim") && mounted.names.includes("Receita vazia"),
@@ -465,7 +465,7 @@ async function scenarioCard(client, width) {
   check(`card ${width} prévia`, preview.width >= 1000, JSON.stringify(preview));
   check(`card ${width} sem links antigos`, preview.links.join(" ") === "card ./", JSON.stringify(preview.links));
   check(`card ${width} sem rolagem`, preview.scroll === 0, String(preview.scroll));
-  check(`card ${width} título`, preview.title === "Percentual do padeiro");
+  check(`card ${width} título`, preview.title === "Levain Master");
   const files = await client.evaluate(`(async () => {
     async function kind(path) {
       const res = await fetch(path, { cache: "no-store" });
@@ -501,7 +501,7 @@ async function scenarioCard(client, width) {
 
 async function scenarioCal(client, width) {
   await fresh(client, width);
-  await client.evaluate(`document.querySelector('[aria-label="Sobre o Percentual do padeiro"]').click()`);
+  await client.evaluate(`document.querySelector('[aria-label="Sobre o Levain Master"]').click()`);
   await sleep(80);
   const about = await client.evaluate(`({
     guide: !!document.querySelector("[data-cal-guide]"),
@@ -668,7 +668,7 @@ async function scenarioPersistencia(client) {
       return nativeSetItem.call(this, key, value);
     };
   })()`);
-  await client.evaluate(`document.querySelector('[aria-label="Sobre o Percentual do padeiro"]').click()`);
+  await client.evaluate(`document.querySelector('[aria-label="Sobre o Levain Master"]').click()`);
   await sleep(60);
   await client.evaluate(`window.__blockedStorageKeys.add("percentual-padeiro-calibracoes-v1")`);
   await client.evaluate(`document.querySelector('input[name="cal-active"][value="fixture"]').click()`);

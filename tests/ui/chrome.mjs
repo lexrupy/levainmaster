@@ -1,4 +1,4 @@
-// Percentual do padeiro — © 2026 Alexandre da Silva
+// Levain Master — © 2026 Alexandre da Silva
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Abre o Chrome já instalado pelo protocolo de depuração. Sem dependência de fora.
 import { spawn } from "node:child_process";

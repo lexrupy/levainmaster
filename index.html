@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Percentual do padeiro — © 2026 Alexandre da Silva — SPDX-License-Identifier: LGPL-3.0-or-later -->
+<!-- Levain Master — © 2026 Alexandre da Silva — SPDX-License-Identifier: LGPL-3.0-or-later -->
 <html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="utf-8">
@@ -7,8 +7,8 @@
   <meta name="theme-color" content="#f3efe6">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Padeiro">
-  <title>Percentual do padeiro</title>
+  <meta name="apple-mobile-web-app-title" content="Levain Master">
+  <title>Levain Master</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -18,9 +18,9 @@
 <body>
   <div id="app" class="app">
     <header class="top">
-      <button type="button" class="brand" @click="openAbout" aria-label="Sobre o Percentual do padeiro">
+      <button type="button" class="brand" @click="openAbout" aria-label="Sobre o Levain Master">
         <img src="icons/glifo.jpg" alt="" width="34" height="34">
-        <span>Percentual do padeiro</span>
+        <span>Levain Master</span>
       </button>
       <div class="top-actions">
         <button type="button" class="install" @click="openLevainSim">Levain</button>
@@ -247,7 +247,7 @@
           <div class="about-id">
             <img src="icons/glifo.jpg" alt="" width="128" height="128">
             <div>
-              <h2 id="about-title">Percentual do padeiro</h2>
+              <h2 id="about-title">Levain Master</h2>
               <p class="about-version" data-version>{{ about.version ? 'Versão ' + about.version : 'Versão —' }}</p>
             </div>
           </div>
@@ -290,7 +290,7 @@
         <button v-if="about.reload" type="button" class="install about-reload" @click="reloadApp">Recarregar agora</button>
         <footer class="about-credits">
           <p>© 2026 Alexandre da Silva</p>
-          <p>Software livre sob a licença <a href="https://www.gnu.org/licenses/lgpl-3.0.html" target="_blank" rel="noopener">GNU LGPL 3.0 ou posterior</a>. <a href="https://github.com/lexrupy/percentualpadeiro" target="_blank" rel="noopener">Código-fonte</a>.</p>
+          <p>Software livre sob a licença <a href="https://www.gnu.org/licenses/lgpl-3.0.html" target="_blank" rel="noopener">GNU LGPL 3.0 ou posterior</a>. <a href="https://github.com/lexrupy/levainmaster" target="_blank" rel="noopener">Código-fonte</a>.</p>
           <p>Usa <a href="https://vuejs.org" target="_blank" rel="noopener">Vue</a> e <a href="https://picocss.com" target="_blank" rel="noopener">Pico CSS</a> (licença MIT) e a fonte <a href="https://github.com/Outfitio/Outfit-Fonts" target="_blank" rel="noopener">Outfit</a> (SIL Open Font License 1.1).</p>
         </footer>
       </article>

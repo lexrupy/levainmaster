@@ -1,4 +1,4 @@
-// Percentual do padeiro — © 2026 Alexandre da Silva
+// Levain Master — © 2026 Alexandre da Silva
 // SPDX-License-Identifier: LGPL-3.0-or-later
 const { createApp, reactive, computed, watch, ref, onMounted, nextTick } = Vue;
 
@@ -1068,7 +1068,7 @@ createApp({
       const titleSize = 42;
       ctx.fillStyle = "#7d6244";
       ctx.font = "700 " + titleSize + "px Outfit, sans-serif";
-      ctx.fillText("PERCENTUAL DO PADEIRO", titleX, iconY + iconSize / 2 + titleSize * 0.32);
+      ctx.fillText("LEVAIN MASTER", titleX, iconY + iconSize / 2 + titleSize * 0.32);
       ctx.fillStyle = "#2c241c";
       ctx.font = "700 48px Outfit, sans-serif";
       cardText(ctx, state.recipeName.trim() || "Minha Receita", pad, iconY + iconSize + 52, width - pad * 2, 54, 1);
@@ -1286,7 +1286,7 @@ createApp({
       ctx.fillStyle = "#8d7f70";
       ctx.font = "500 16px Outfit, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("Feito com Percentual do padeiro", width / 2, height - 62);
+      ctx.fillText("Feito com Levain Master", width / 2, height - 62);
       ctx.textAlign = "left";
 
       return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Não foi possível gerar a imagem")), "image/png"));
@@ -1359,7 +1359,7 @@ createApp({
         const file = typeof File !== "undefined" ? new File([blob], fileName, { type: "image/png" }) : null;
         if (file && navigator.share && navigator.canShare?.({ files: [file] })) {
           try {
-            await navigator.share({ files: [file], title: "Minha receita de pão", text: "Receita feita no Percentual do padeiro" });
+            await navigator.share({ files: [file], title: "Minha receita de pão", text: "Receita feita no Levain Master" });
             shareStatus.value = "Receita compartilhada.";
           } catch (error) {
             if (error?.name === "AbortError") {

@@ -1,7 +1,7 @@
 {
-  "name": "Percentual do Padeiro",
-  "short_name": "Padeiro",
-  "description": "Porcentagem de padeiro, hidratação e levain.",
+  "name": "Levain Master",
+  "short_name": "Levain Master",
+  "description": "Percentuais, hidratação e levain para fazer pão.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

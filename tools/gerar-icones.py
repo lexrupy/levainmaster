@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Percentual do padeiro — © 2026 Alexandre da Silva
+# Levain Master — © 2026 Alexandre da Silva
 # SPDX-License-Identifier: LGPL-3.0-or-later
 """Gera os ícones do app (icons/*.png) a partir de icons/fonte-icone.png.
 
