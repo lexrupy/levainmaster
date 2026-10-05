@@ -8,10 +8,10 @@ function close(actual, expected, label) {
   assert.ok(Math.abs(actual - expected) < 1e-9, (label || "valor") + ": " + actual + " ≠ " + expected);
 }
 
-function recipe(changes) {
+function recipe(changes, config) {
   const state = Padeiro.defaultState();
   if (changes) changes(state);
-  return Padeiro.compute(state);
+  return Padeiro.compute(state, config);
 }
 
 function row(result, role) {
@@ -60,14 +60,15 @@ test("hidratação soma água direta, teor do ingrediente e água da alimentaç�
     state.ingredients[2].pct = 20;
     state.levain = { L: 1, A: 2, F: 2 };
   });
-  close(levain.hydration, 73, "levain");
+  close(levain.hydration, (325 + 40) / (500 + 40) * 100, "levain");
   close(levain.flour, 500, "farinha da receita");
+  close(levain.totalFlour, 540, "farinha total");
   assert.equal(levain.levain.water, 40);
   assert.equal(levain.levain.flour, 40);
   assert.equal(levain.levain.seed, 20);
 });
 
-test("farinha da alimentação e água da isca ficam fora da conta", () => {
+test("farinha da alimentação entra na conta e isca é configurável", () => {
   const result = recipe((state) => {
     state.ingredients[2].ferment = "levain";
     state.ingredients[2].pct = 20;
@@ -77,7 +78,25 @@ test("farinha da alimentação e água da isca ficam fora da conta", () => {
   close(result.directWater, 325);
   close(row(result, "ferment").water, result.levain.water);
   assert.ok(result.levain.seed > 0);
-  close(result.hydration, (325 + result.levain.water) / 500 * 100);
+  close(result.totalFlour, 500 + result.levain.flour);
+  close(result.hydration, (325 + result.levain.water) / (500 + result.levain.flour) * 100);
+
+  const withSeed = recipe((state) => {
+    state.ingredients[2].ferment = "levain";
+    state.ingredients[2].pct = 20;
+    state.levain = { L: 1, A: 1, F: 1 };
+  }, { includeSeed: true });
+  const seedHalf = withSeed.levain.seed / 2;
+  close(withSeed.totalFlour, 500 + withSeed.levain.flour + seedHalf);
+  close(withSeed.totalWater, 325 + withSeed.levain.water + seedHalf);
+  close(withSeed.hydration, (325 + withSeed.levain.water + seedHalf) / (500 + withSeed.levain.flour + seedHalf) * 100);
+
+  const zeroLevain = recipe((state) => {
+    state.ingredients[2].ferment = "levain";
+    state.ingredients[2].pct = 0;
+  });
+  close(zeroLevain.hydration, 65);
+  close(zeroLevain.totalFlour, 500);
 });
 
 test("pós e farinhas extras não somam água", () => {
@@ -216,7 +235,8 @@ test("levain como segundo fermento soma a água de alimentação", () => {
   const state = Padeiro.defaultState();
   state.ingredients.push({ id: "levain2", name: "Levain", pct: 20, water: 0, role: "ferment2", ferment: "levain" });
   const result = Padeiro.compute(state);
-  close(result.hydration, 73);
+  close(result.hydration, (325 + 40) / (500 + 40) * 100);
+  close(result.totalFlour, 540);
   close(result.levain.water, 40);
   assert.equal(result.levainOn, true);
 });

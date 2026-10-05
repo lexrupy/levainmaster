@@ -504,11 +504,19 @@ async function scenarioCal(client, width) {
   await client.evaluate(`document.querySelector('[aria-label="Sobre o Levain Master"]').click()`);
   await sleep(80);
   const about = await client.evaluate(`({
-    guide: !!document.querySelector("[data-cal-guide]"),
+    guideInAbout: !!document.querySelector(".about .cal-guide-open"),
+    configBtn: !!document.querySelector("[data-config-open]"),
     scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth
   })`);
-  check(`cal ${width} sobre sem o link do teste`, about.guide === false, JSON.stringify(about));
+  check(`cal ${width} sobre limpo com botao config`, about.guideInAbout === false && about.configBtn === true, JSON.stringify(about));
   check(`cal ${width} sobre sem rolagem`, about.scroll === 0, String(about.scroll));
+  await client.evaluate(`document.querySelector("[data-config-open]").click()`);
+  await sleep(80);
+  const inConfig = await client.evaluate(`({
+    guideInConfig: !!document.querySelector(".config .cal-guide-open"),
+    calOpen: !!document.querySelector("[data-cal-open]")
+  })`);
+  check(`cal ${width} config com link do teste e botao cal`, inConfig.guideInConfig === true && inConfig.calOpen === true, JSON.stringify(inConfig));
   await client.evaluate(`document.querySelector("[data-cal-open]").click()`);
   await sleep(80);
   await client.evaluate(setField("#cal-name", "Farinha Branca Tipo 1"));
@@ -571,6 +579,55 @@ async function scenarioCal(client, width) {
     };
   })()`);
   check(`cal ${width} só o nome muda`, renamed.active === "Tipo 1 da padaria" && renamed.name === "Tipo 1 da padaria" && renamed.t1 === 4 && renamed.t5 === 10 && renamed.seed === 20 && renamed.flour === 100 && renamed.tempLo === 24, JSON.stringify(renamed));
+}
+
+async function scenarioSeedConfig(client, width) {
+  await fresh(client, width);
+  await client.evaluate(`(() => {
+    const sel = document.querySelector('select');
+    if (sel) {
+      sel.value = "levain";
+      sel.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  })()`);
+  await sleep(100);
+  await client.evaluate(`document.querySelector('.levain-dialog button.del')?.click()`);
+  await sleep(80);
+
+  const initialHydration = await client.evaluate(`document.querySelector('.side-hyd')?.textContent.trim()`);
+
+  await client.evaluate(`document.querySelector('[aria-label="Sobre o Levain Master"]').click()`);
+  await sleep(100);
+  await client.evaluate(`document.querySelector('[data-config-open]').click()`);
+  await sleep(100);
+
+  const checkbox = await client.evaluate(`(() => {
+    const cb = document.querySelector('.config input[type="checkbox"]');
+    if (!cb) return null;
+    cb.click();
+    return cb.checked;
+  })()`);
+  check(`seed ${width} checkbox marcado`, checkbox === true, String(checkbox));
+  await sleep(100);
+
+  await client.evaluate(`document.querySelector('.config .del').click()`);
+  await sleep(100);
+  await client.evaluate(`document.querySelector('.about .del').click()`);
+  await sleep(100);
+
+  const newHydration = await client.evaluate(`document.querySelector('.side-hyd')?.textContent.trim()`);
+  check(`seed ${width} hidratação recalculada`, initialHydration !== newHydration, `${initialHydration} -> ${newHydration}`);
+
+  const loaded = client.waitLoad();
+  await client.send("Page.reload", { ignoreCache: true });
+  await loaded;
+  await sleep(150);
+
+  const persisted = await client.evaluate(`(() => {
+    const cfg = JSON.parse(localStorage.getItem("percentual-padeiro-config-v1") || "{}");
+    return cfg.includeSeed;
+  })()`);
+  check(`seed ${width} configuração persistida`, persisted === true, String(persisted));
 }
 
 async function scenarioPersistencia(client) {
@@ -670,6 +727,8 @@ async function scenarioPersistencia(client) {
   })()`);
   await client.evaluate(`document.querySelector('[aria-label="Sobre o Levain Master"]').click()`);
   await sleep(60);
+  await client.evaluate(`document.querySelector('[data-config-open]').click()`);
+  await sleep(60);
   await client.evaluate(`window.__blockedStorageKeys.add("percentual-padeiro-calibracoes-v1")`);
   await client.evaluate(`document.querySelector('input[name="cal-active"][value="fixture"]').click()`);
   await sleep(100);
@@ -755,6 +814,8 @@ try {
   await scenarioCard(client, 560);
   await scenarioCal(client, 390);
   await scenarioCal(client, 560);
+  await scenarioSeedConfig(client, 390);
+  await scenarioSeedConfig(client, 560);
   await scenarioPersistencia(client);
   await scenario0085(client);
   client.ws.close();

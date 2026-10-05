@@ -439,10 +439,13 @@
     };
   }
 
-  // Hidratação final = toda a água contada ÷ farinha da receita.
+  // Hidratação final = toda a água contada ÷ toda a farinha contada.
   // Entra a água da receita, a água da alimentação do levain e o teor de água de cada ingrediente.
-  function compute(state) {
+  // A farinha da alimentação do levain entra na farinha total.
+  // Com includeSeed ligado, 50% da isca conta como água e 50% como farinha.
+  function compute(state, config) {
     const flour = Math.max(0, num(state.flour));
+    const includeSeed = !!((config && config.includeSeed) || (state && state.includeSeed));
     const ingredients = (Array.isArray(state.ingredients) ? state.ingredients : []).filter(
       (item) => item && typeof item === "object"
     );
@@ -456,8 +459,19 @@
     const rows = ingredients.map((item) => {
       const grams = gramsOf(flour, item.pct);
       let water = grams * (Math.max(0, num(item.water)) / 100);
+      let addedFlour = 0;
       if (isFerment(item) && item.ferment === "levain") {
-        water = levain && levain.valid ? levain.water : 0;
+        if (levain && levain.valid) {
+          water = levain.water;
+          addedFlour = levain.flour;
+          if (includeSeed) {
+            const seedHalf = levain.seed / 2;
+            water += seedHalf;
+            addedFlour += seedHalf;
+          }
+        } else {
+          water = 0;
+        }
       }
       return {
         id: item.id,
@@ -469,6 +483,7 @@
         custom: !!item.custom,
         grams,
         water,
+        addedFlour,
       };
     });
 
@@ -477,18 +492,20 @@
       row.shown = shown[index + 1];
     });
 
+    const totalFlour = flour + rows.reduce((sum, row) => sum + (row.addedFlour || 0), 0);
     const totalWater = rows.reduce((sum, row) => sum + row.water, 0);
     const totalWeight = flour + rows.reduce((sum, row) => sum + row.grams, 0);
-    const hydration = flour > 0 ? (totalWater / flour) * 100 : 0;
+    const hydration = totalFlour > 0 ? (totalWater / totalFlour) * 100 : 0;
     const band = BANDS.find((item) => hydration <= item.max) || BANDS[BANDS.length - 1];
     const enriched = enrichedBread(ingredients);
-    const flourShare = totalWeight > 0 ? (flour / totalWeight) * 100 : 0;
+    const flourShare = totalWeight > 0 ? (totalFlour / totalWeight) * 100 : 0;
     const waterShare = totalWeight > 0 ? (totalWater / totalWeight) * 100 : 0;
     const otherShare = Math.max(0, 100 - flourShare - waterShare);
     const directWater = rows.find((row) => row.role === "water");
 
     return {
       flour,
+      totalFlour,
       rows,
       levainOn,
       levain,

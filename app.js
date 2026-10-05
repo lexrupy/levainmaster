@@ -5,6 +5,7 @@ const { createApp, reactive, computed, watch, ref, onMounted, nextTick } = Vue;
 const STORAGE_KEY = "percentual-padeiro-v1";
 const RECIPES_KEY = "percentual-padeiro-receitas-v1";
 const CAL_KEY = "percentual-padeiro-calibracoes-v1";
+const CONFIG_KEY = "percentual-padeiro-config-v1";
 const TEMP_BANDS = [
   { lo: 18, hi: 20 },
   { lo: 20, hi: 22 },
@@ -170,6 +171,17 @@ function loadRecipes() {
   }
 }
 
+function loadConfig() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(CONFIG_KEY) || "null");
+    return {
+      includeSeed: !!(raw && raw.includeSeed),
+    };
+  } catch (error) {
+    return { includeSeed: false };
+  }
+}
+
 function emptyCalForm() {
   return {
     name: "",
@@ -271,6 +283,7 @@ createApp({
     const levainDialog = ref(null);
     const recipesDialog = ref(null);
     const aboutDialog = ref(null);
+    const configDialog = ref(null);
     const tempDialog = ref(null);
     const calDialog = ref(null);
     const calViewDialog = ref(null);
@@ -280,6 +293,7 @@ createApp({
     const calGuideOverForm = ref(false);
     const breadDialog = ref(null);
     const calStore = reactive(loadCalibrations());
+    const configStore = reactive(loadConfig());
     const startingCal = calStore.items.find((item) => item.id === calStore.activeId) || null;
     const sessionTemp = reactive({
       lo: startingCal ? startingCal.tempLo : 24,
@@ -292,12 +306,13 @@ createApp({
     const calForm = reactive(emptyCalForm());
     const breadShown = ref("");
     const about = reactive({ version: "", offline: false, persisted: false, checking: false, status: "", reload: false });
-    const persistenceErrors = reactive({ state: false, recipes: false, calibrations: false });
+    const persistenceErrors = reactive({ state: false, recipes: false, calibrations: false, config: false });
     const persistenceWarning = computed(() => {
       const labels = [];
       if (persistenceErrors.state) labels.push("a receita atual");
       if (persistenceErrors.recipes) labels.push("as receitas salvas");
       if (persistenceErrors.calibrations) labels.push("as calibrações");
+      if (persistenceErrors.config) labels.push("as configurações");
       return labels.length
         ? "Não foi possível salvar " + labels.join(", ") + " neste dispositivo. As alterações afetadas podem se perder ao fechar o app."
         : "";
@@ -344,7 +359,7 @@ createApp({
     // Enquanto o campo está aberto, o texto digitado fica aqui para o Vue não reescrevê-lo.
     const editing = reactive({ key: null, text: "", undo: 0 });
 
-    const result = computed(() => Padeiro.compute(state));
+    const result = computed(() => Padeiro.compute(state, configStore));
     const ratioId = computed(() => Padeiro.matchRatio(state.levain.L, state.levain.A, state.levain.F));
     const levainItem = computed(() => state.ingredients.find((item) => Padeiro.isFerment(item) && item.ferment === "levain") || null);
     const levainProfile = computed(() => Padeiro.levainProfile(state.levain.L, state.levain.A, state.levain.F));
@@ -663,6 +678,20 @@ createApp({
       if (event.target === aboutDialog.value) closeAbout();
     }
 
+    function openConfig() {
+      const dialog = configDialog.value;
+      if (dialog && !dialog.open) dialog.showModal();
+    }
+
+    function closeConfig() {
+      const dialog = configDialog.value;
+      if (dialog && dialog.open) dialog.close();
+    }
+
+    function onConfigClick(event) {
+      if (event.target === configDialog.value) closeConfig();
+    }
+
     async function checkUpdate() {
       if (about.checking) return;
       const current = about.version ? "a versão " + about.version : "a versão atual";
@@ -886,7 +915,7 @@ createApp({
 
     function summaryOf(saved) {
       const source = saved && typeof saved === "object" ? saved : {};
-      const res = Padeiro.compute(source);
+      const res = Padeiro.compute(source, configStore);
       const lv = source.levain || {};
       const text = (Array.isArray(source.ingredients) ? source.ingredients : [])
         .filter((item) => Padeiro.isFerment(item))
@@ -1473,12 +1502,12 @@ createApp({
 
     const tempNote = computed(() => {
       if (!calStore.items.length) {
-        return "A estimativa usa os dados gerais do app, escritos para 24–26 °C. Informar outra faixa só desloca essa tabela: não aprende a farinha, a água nem a isca. Para maior precisão, registre no Sobre o teste dos dois potes, 1:1:1 e 1:5:5, começados juntos, da mesma isca, farinha, água e lugar.";
+        return "A estimativa usa os dados gerais do app, escritos para 24–26 °C. Informar outra faixa só desloca essa tabela: não aprende a farinha, a água nem a isca. Para maior precisão, acesse Configurações no Sobre e registre o teste dos dois potes, 1:1:1 e 1:5:5, começados juntos, da mesma isca, farinha, água e lugar.";
       }
       if (!activeCalibration.value) {
         return "Faixa geral. A hora é a tabela do app deslocada por esta temperatura. O teste dos dois potes dá maior precisão.";
       }
-      return "A hora usa «" + activeCalibration.value.name + "». O teto encurta o tempo e o piso alonga. Trocar de calibração fica no Sobre.";
+      return "A hora usa «" + activeCalibration.value.name + "». O teto encurta o tempo e o piso alonga. Trocar de calibração fica em Configurações.";
     });
 
     function sessionMatch(band) {
@@ -1529,6 +1558,14 @@ createApp({
         writeStorage(CAL_KEY, JSON.stringify({ activeId: calStore.activeId, items: calStore.items }), "calibrations");
       } catch (error) {
         persistenceErrors.calibrations = true;
+      }
+    }
+
+    function persistConfig() {
+      try {
+        writeStorage(CONFIG_KEY, JSON.stringify({ includeSeed: configStore.includeSeed }), "config");
+      } catch (error) {
+        persistenceErrors.config = true;
       }
     }
 
@@ -1818,6 +1855,16 @@ createApp({
 
     watch(calStore, persistCalibrations, { deep: true });
 
+    watch(
+      configStore,
+      () => {
+        persistConfig();
+        clearTimeout(cardPreviewTimer);
+        cardPreviewTimer = setTimeout(refreshCardPreview, 180);
+      },
+      { deep: true }
+    );
+
     onMounted(() => {
       settleSlider();
       refreshCardPreview();
@@ -1871,6 +1918,10 @@ createApp({
       openAbout,
       closeAbout,
       onAboutClick,
+      configDialog,
+      openConfig,
+      closeConfig,
+      onConfigClick,
       checkUpdate,
       reloadApp,
       recipes,
@@ -1923,6 +1974,7 @@ createApp({
       closeTemp,
       onTempClick,
       calStore,
+      configStore,
       activeCalibration,
       calForm,
       calDraft,

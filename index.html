@@ -259,8 +259,42 @@
           <div><dt>Dados protegidos</dt><dd data-about-persisted>{{ about.persisted ? 'Sim' : 'Não' }}</dd></div>
         </dl>
         <p class="hint" v-if="!about.persisted">Sem proteção, o navegador pode apagar o app e as receitas se faltar espaço. Instalar o app costuma liberar a proteção.</p>
-        <section class="about-cal" aria-labelledby="about-cal-title">
-          <h3 id="about-cal-title" class="kicker">Calibração do levain</h3>
+        <div class="about-config-box">
+          <button type="button" class="install about-config-btn" @click="openConfig" data-config-open>Configurações</button>
+        </div>
+        <button v-if="canInstall" type="button" class="install about-install" @click="install">Instalar o app</button>
+        <button type="button" class="levain-done" :disabled="about.checking" @click="checkUpdate">{{ about.checking ? 'Verificando…' : 'Verificar atualizações' }}</button>
+        <p class="about-status" aria-live="polite" data-about-status>{{ about.status }}</p>
+        <button v-if="about.reload" type="button" class="install about-reload" @click="reloadApp">Recarregar agora</button>
+        <footer class="about-credits">
+          <p>© 2026 Alexandre da Silva</p>
+          <p>Software livre sob a licença <a href="https://www.gnu.org/licenses/lgpl-3.0.html" target="_blank" rel="noopener">GNU LGPL 3.0 ou posterior</a>. <a href="https://github.com/lexrupy/levainmaster" target="_blank" rel="noopener">Código-fonte</a>.</p>
+          <p>Usa <a href="https://vuejs.org" target="_blank" rel="noopener">Vue</a> e <a href="https://picocss.com" target="_blank" rel="noopener">Pico CSS</a> (licença MIT) e a fonte <a href="https://github.com/Outfitio/Outfit-Fonts" target="_blank" rel="noopener">Outfit</a> (SIL Open Font License 1.1).</p>
+        </footer>
+      </article>
+    </dialog>
+
+    <dialog ref="configDialog" class="levain-dialog" @click="onConfigClick" aria-labelledby="config-title">
+      <article class="levain config" tabindex="-1" autofocus>
+        <header class="levain-head">
+          <h2 id="config-title">Configurações</h2>
+          <button type="button" class="del" @click="closeConfig" aria-label="Fechar">×</button>
+        </header>
+        <section class="about-cal" aria-labelledby="config-seed-title">
+          <h3 id="config-seed-title" class="kicker">Cálculo do levain</h3>
+          <ul class="cal-list">
+            <li>
+              <label>
+                <input type="checkbox" v-model="configStore.includeSeed">
+                Considerar água e farinha da isca nos cálculos
+              </label>
+            </li>
+          </ul>
+          <p class="hint">A isca será considerada como 50% de água e 50% de farinha (hidratação 100%).</p>
+          <p v-if="persistenceErrors.config" class="storage-inline" role="alert">Falha ao salvar as configurações. As alterações continuam disponíveis nesta sessão, mas podem se perder ao fechar o app.</p>
+        </section>
+        <section class="about-cal" aria-labelledby="config-cal-title">
+          <h3 id="config-cal-title" class="kicker">Calibração do levain</h3>
           <p class="about-cal-use">Em uso: <strong data-cal-active>{{ activeCalibration ? activeCalibration.name : 'Faixa geral' }}</strong></p>
           <ul class="cal-list" data-cal-list>
             <li>
@@ -280,19 +314,15 @@
               </span>
             </li>
           </ul>
+          <p class="hint">Mede o ritmo real da sua farinha e fermento para prever a hora do pico com precisão.</p>
           <button type="button" class="install about-cal-add" @click="openCalibration" data-cal-open>Registrar teste dos dois potes</button>
+          <button type="button" class="cal-guide-open" @click="openCalGuide">O que é e como fazer o teste</button>
           <p v-if="persistenceErrors.calibrations" class="storage-inline" role="alert">Falha ao salvar as calibrações. As alterações continuam disponíveis nesta sessão, mas podem se perder ao fechar o app.</p>
           <p class="hint">A escolha muda só a hora do pico. Sabor e textura ficam. Abrir ou limpar uma receita não mexe nesta lista.</p>
         </section>
-        <button v-if="canInstall" type="button" class="install about-install" @click="install">Instalar o app</button>
-        <button type="button" class="levain-done" :disabled="about.checking" @click="checkUpdate">{{ about.checking ? 'Verificando…' : 'Verificar atualizações' }}</button>
-        <p class="about-status" aria-live="polite" data-about-status>{{ about.status }}</p>
-        <button v-if="about.reload" type="button" class="install about-reload" @click="reloadApp">Recarregar agora</button>
-        <footer class="about-credits">
-          <p>© 2026 Alexandre da Silva</p>
-          <p>Software livre sob a licença <a href="https://www.gnu.org/licenses/lgpl-3.0.html" target="_blank" rel="noopener">GNU LGPL 3.0 ou posterior</a>. <a href="https://github.com/lexrupy/levainmaster" target="_blank" rel="noopener">Código-fonte</a>.</p>
-          <p>Usa <a href="https://vuejs.org" target="_blank" rel="noopener">Vue</a> e <a href="https://picocss.com" target="_blank" rel="noopener">Pico CSS</a> (licença MIT) e a fonte <a href="https://github.com/Outfitio/Outfit-Fonts" target="_blank" rel="noopener">Outfit</a> (SIL Open Font License 1.1).</p>
-        </footer>
+        <div class="sheet-foot">
+          <button type="button" class="levain-done" @click="closeConfig">Concluir</button>
+        </div>
       </article>
     </dialog>
 
@@ -388,7 +418,7 @@
           <li>Deixe os dois no mesmo lugar. Anote a faixa de temperatura de onde eles ficam, o piso e o teto, mesmo que a distância seja de 1 °C. Sem anotação, o app grava 24–26 °C.</li>
           <li>O pico é quando o volume para de subir e a massa começa a perder estrutura: a superfície cede, o domo abaixa, ela deixa de estar tesa. O 1:1:1 chega primeiro. O 1:5:5 demora mais. Anote a hora de cada um nesse momento.</li>
           <li>Se um pico passou batido, descarte o par e comece de novo. A hora não se chuta. O 1:5:5 precisa ter levado mais tempo que o 1:1:1. Não existe calibração pela metade.</li>
-          <li>No Sobre, abra Registrar teste dos dois potes. O nome é para reconhecer o teste, em geral o tipo da farinha, como Farinha Branca Tipo 1. Informe os pesos, a hora da mistura, os dois picos e a temperatura.</li>
+          <li>No Sobre, abra Configurações e toque em Registrar teste dos dois potes. O nome é para reconhecer o teste, em geral o tipo da farinha, como Farinha Branca Tipo 1. Informe os pesos, a hora da mistura, os dois picos e a temperatura.</li>
           <li>Gravar escolhe essa calibração. A hora no ativador e no simulador passa a usá-la. O ícone do termômetro, à direita do peso do levain, é a faixa de hoje. O teto encurta a hora e o piso alonga. Essa conta é uma estimativa.</li>
         </ol>
         <p class="kicker">Limites do teste</p>
@@ -396,8 +426,8 @@
           <li>Sabor e textura ficam os da faixa geral.</li>
           <li>A calibração usa só o par 1:1:1 e 1:5:5. Um 1:2:2, um 1:10:10 ou um 2:4:5 é estimativa, não um teste para gravar.</li>
           <li>Abaixo de 85% de hidratação a hora ainda passa por um degrau da faixa geral, com menos certeza.</li>
-          <li>Outra farinha, ou a mesma daqui a algumas semanas, pede outro par. Os pesos, as horas e a temperatura de um par gravado não se editam. Dá para mudar o nome, gravar outro ou apagar no Sobre.</li>
-          <li>A lista fica no Sobre. Abrir ou limpar uma receita a conserva. Faixa geral devolve a tabela do app.</li>
+          <li>Outra farinha, ou a mesma daqui a algumas semanas, pede outro par. Os pesos, as horas e a temperatura de um par gravado não se editam. Dá para mudar o nome, gravar outro ou apagar em Configurações.</li>
+          <li>A lista fica em Configurações. Abrir ou limpar uma receita a conserva. Faixa geral devolve a tabela do app.</li>
         </ul>
         <div class="sheet-foot">
           <button v-if="calGuideOverForm" type="button" class="levain-done" @click="closeCalGuide" data-cal-guide-back>Voltar ao registro</button>
@@ -577,7 +607,7 @@
         </section>
         <p class="hint">A hidratação é a água dividida pela farinha desta alimentação. A água da isca não entra.</p>
         <p class="hint" v-if="levainSim">Estas gramas não entram na receita. Mudar isca, água ou farinha recalcula a proporção.</p>
-        <p class="hint" v-else-if="result.levain && result.levain.valid">{{ formatG(result.levain.water) }} g dessa água entram na hidratação total da massa.</p>
+        <p class="hint" v-else-if="result.levain && result.levain.valid">{{ formatG(result.levain.water + (configStore.includeSeed ? result.levain.seed / 2 : 0)) }} g de água e {{ formatG(result.levain.flour + (configStore.includeSeed ? result.levain.seed / 2 : 0)) }} g de farinha entram na hidratação total da massa.</p>
         <div class="sheet-foot">
           <button type="button" class="levain-done" @click="closeLevain">{{ levainSim ? 'Fechar' : 'Concluir' }}</button>
         </div>

@@ -1318,6 +1318,8 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 .levain-done.danger { background: var(--wet); }
 .confirm-dialog > .levain.compact { height: auto; }
 
+.about-config-box { margin: 12px 0 8px; padding-top: 10px; border-top: 1px solid var(--line); }
+.about-config-btn { width: 100%; margin: 0 0 8px; padding: 12px; box-shadow: none; font-size: 0.95rem; }
 .about-install { width: 100%; margin: 0 0 8px; padding: 12px; box-shadow: none; font-size: 0.95rem; }
 
 /* Pão típico: nome clicável no card e modal com as faixas */
