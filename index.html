@@ -28,6 +28,8 @@
       </div>
     </header>
 
+    <p v-if="persistenceWarning" class="storage-warning" role="status">{{ persistenceWarning }}</p>
+
     <section v-if="cardPreview" class="sheet card-preview">
       <p class="kicker">Prévia do card</p>
       <p class="hint">A imagem é servida pelo app em <a href="card">card</a>. Ao mudar a receita, ela atualiza. Nada é baixado.</p>
@@ -279,6 +281,7 @@
             </li>
           </ul>
           <button type="button" class="install about-cal-add" @click="openCalibration" data-cal-open>Registrar teste dos dois potes</button>
+          <p v-if="persistenceErrors.calibrations" class="storage-inline" role="alert">Falha ao salvar as calibrações. As alterações continuam disponíveis nesta sessão, mas podem se perder ao fechar o app.</p>
           <p class="hint">A escolha muda só a hora do pico. Sabor e textura ficam. Abrir ou limpar uma receita não mexe nesta lista.</p>
         </section>
         <button v-if="canInstall" type="button" class="install about-install" @click="install">Instalar o app</button>
@@ -306,6 +309,8 @@
             <input id="recipe-name" class="name-input" v-model="recipeName" maxlength="80" placeholder="Ex.: pão de domingo, forno a lenha" autocomplete="off">
             <button type="submit" class="levain-done recipe-save-btn" :disabled="!recipeName.trim()">Salvar</button>
           </div>
+          <p v-if="persistenceErrors.recipes" class="storage-inline" role="alert">Falha ao salvar as receitas. A lista continua disponível nesta sessão, mas pode se perder ao fechar o app.</p>
+          <p v-if="persistenceErrors.state" class="storage-inline" role="alert">Falha ao salvar a receita atual. As alterações continuam nesta sessão, mas podem se perder ao fechar o app.</p>
         </form>
         <template v-if="!quickSave">
         <p class="kicker recipes-label">Salvas</p>

@@ -292,6 +292,26 @@ createApp({
     const calForm = reactive(emptyCalForm());
     const breadShown = ref("");
     const about = reactive({ version: "", offline: false, persisted: false, checking: false, status: "", reload: false });
+    const persistenceErrors = reactive({ state: false, recipes: false, calibrations: false });
+    const persistenceWarning = computed(() => {
+      const labels = [];
+      if (persistenceErrors.state) labels.push("a receita atual");
+      if (persistenceErrors.recipes) labels.push("as receitas salvas");
+      if (persistenceErrors.calibrations) labels.push("as calibrações");
+      return labels.length
+        ? "Não foi possível salvar " + labels.join(", ") + " neste dispositivo. As alterações afetadas podem se perder ao fechar o app."
+        : "";
+    });
+    function writeStorage(key, value, category) {
+      try {
+        localStorage.setItem(key, value);
+        persistenceErrors[category] = false;
+        return true;
+      } catch (error) {
+        persistenceErrors[category] = true;
+        return false;
+      }
+    }
     const recipes = ref(loadRecipes());
     const recipeName = ref("");
     const recipeNameEditing = ref(false);
@@ -699,10 +719,13 @@ createApp({
     }
 
     // Receitas salvas: descrição, data e hora e uma cópia do estado inteiro (com o L:A:F).
-    function persistRecipes() {
+    function persistRecipes(nextRecipes) {
       try {
-        localStorage.setItem(RECIPES_KEY, JSON.stringify(recipes.value));
-      } catch (error) {}
+        return writeStorage(RECIPES_KEY, JSON.stringify(nextRecipes), "recipes");
+      } catch (error) {
+        persistenceErrors.recipes = true;
+        return false;
+      }
     }
 
     // O nome da tela vira o padrão no modal e pode ser ajustado antes de salvar.
@@ -743,9 +766,11 @@ createApp({
         savedAt: new Date().toISOString(),
         state: JSON.parse(JSON.stringify(state)),
       };
-      if (replaceIndex >= 0) recipes.value.splice(replaceIndex, 1);
-      recipes.value.unshift(updated);
-      persistRecipes();
+      const nextRecipes = recipes.value.slice();
+      if (replaceIndex >= 0) nextRecipes.splice(replaceIndex, 1);
+      nextRecipes.unshift(updated);
+      if (!persistRecipes(nextRecipes)) return;
+      recipes.value = nextRecipes;
       recipeName.value = "";
       if (quickSave.value) {
         closeRecipes();
@@ -849,8 +874,9 @@ createApp({
         danger: true,
       });
       if (!ok) return;
-      recipes.value = recipes.value.filter((item) => item.id !== recipe.id);
-      persistRecipes();
+      const nextRecipes = recipes.value.filter((item) => item.id !== recipe.id);
+      if (!persistRecipes(nextRecipes)) return;
+      recipes.value = nextRecipes;
     }
 
     function formatDate(iso) {
@@ -1500,8 +1526,10 @@ createApp({
 
     function persistCalibrations() {
       try {
-        localStorage.setItem(CAL_KEY, JSON.stringify({ activeId: calStore.activeId, items: calStore.items }));
-      } catch (error) {}
+        writeStorage(CAL_KEY, JSON.stringify({ activeId: calStore.activeId, items: calStore.items }), "calibrations");
+      } catch (error) {
+        persistenceErrors.calibrations = true;
+      }
     }
 
     function resetCalForm() {
@@ -1755,8 +1783,10 @@ createApp({
       state,
       () => {
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        } catch (error) {}
+          writeStorage(STORAGE_KEY, JSON.stringify(state), "state");
+        } catch (error) {
+          persistenceErrors.state = true;
+        }
       },
       { deep: true }
     );
@@ -1803,6 +1833,8 @@ createApp({
 
     return {
       state,
+      persistenceWarning,
+      persistenceErrors,
       result,
       waterPct,
       waterMarks,

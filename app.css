@@ -115,6 +115,23 @@ input[type="number"] {
 .brand span { text-align: left; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .top-actions { flex: none; }
 .top-actions .install { margin: 0; padding: 7px 14px; }
+
+.storage-warning {
+  margin: 4px 0 10px;
+  padding: 9px 12px;
+  border: 1px solid #dfb7a8;
+  border-radius: 12px;
+  background: var(--wet-bg);
+  color: var(--wet);
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+.storage-inline {
+  margin: 8px 0 0;
+  color: var(--wet);
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
 .brand:hover { background: #f6f1e8; }
 .brand:focus-visible { outline: 2px solid var(--brown-soft); outline-offset: 2px; }
 
