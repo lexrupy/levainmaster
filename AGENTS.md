@@ -19,6 +19,7 @@ Não há bundler nem CDN. Tudo que a página carrega está no repositório.
 - `ServiceWorker.js` — cache da PWA. O nome do arquivo é esse
 - `manifest.webmanifest`, `icons/`, `img/`, `vendor/`
 - `teorias do levain.md` — estudo em primeira pessoa: observações de cozinha, a literatura que as confronta e o que ficou de fora de `levainProfile`. Consultar antes de mudar textura, tempo de pico ou a escala de acidez. Dá para gerar um PDF com o pandoc, como o apêndice do próprio arquivo descreve. Não entra no cache da PWA.
+- `README.md` — apresentação do repositório, com o link do GitHub Pages para abrir o app. Não entra no cache da PWA.
 
 Os ícones em `icons/` são gerados por `python3 tools/gerar-icones.py` a partir de `icons/fonte-icone.png`, a arte original, que não deve ser apagada. São sangrados (fundo bege até as bordas, sem a moldura da arte), e no `icon-maskable-512.png` a ilustração cabe no círculo central de 80%, a área que o Android garante ao recortar. O topo e o Sobre usam `icons/glifo.jpg`: a arte recortada por dentro da moldura dupla, sem a borda, gerada pelo mesmo script. Cada geração copia antes os ícones atuais para `icons/backup/`, no `.gitignore`.
 
