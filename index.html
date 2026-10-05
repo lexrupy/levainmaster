@@ -290,7 +290,7 @@
               </label>
             </li>
           </ul>
-          <p class="hint">A isca será considerada como 50% de água e 50% de farinha (hidratação 100%).</p>
+          <p class="hint">A água e a farinha da alimentação já entram na hidratação total. Com esta opção, a isca entra também: 50% de água e 50% de farinha.</p>
           <p v-if="persistenceErrors.config" class="storage-inline" role="alert">Falha ao salvar as configurações. As alterações continuam disponíveis nesta sessão, mas podem se perder ao fechar o app.</p>
         </section>
         <section class="about-cal" aria-labelledby="config-cal-title">
@@ -605,9 +605,9 @@
           <p v-for="tip in shownProfile.tips" :key="tip" class="hint profile-tip">{{ tip }}</p>
           <p class="hint">Mais quente (26–30 °C) puxa para o láctico; mais frio (abaixo de 22 °C), para o acético.</p>
         </section>
-        <p class="hint">A hidratação é a água dividida pela farinha desta alimentação. A água da isca não entra.</p>
+        <p class="hint">A hidratação do levain é a água dividida pela farinha desta alimentação. A isca não entra nessa conta.</p>
         <p class="hint" v-if="levainSim">Estas gramas não entram na receita. Mudar isca, água ou farinha recalcula a proporção.</p>
-        <p class="hint" v-else-if="result.levain && result.levain.valid">{{ formatG(result.levain.water + (configStore.includeSeed ? result.levain.seed / 2 : 0)) }} g de água e {{ formatG(result.levain.flour + (configStore.includeSeed ? result.levain.seed / 2 : 0)) }} g de farinha entram na hidratação total da massa.</p>
+        <p class="hint" v-else-if="result.levain && result.levain.valid">{{ formatG(result.levain.water + (configStore.includeSeed ? result.levain.seed / 2 : 0)) }} g de água e {{ formatG(result.levain.flour + (configStore.includeSeed ? result.levain.seed / 2 : 0)) }} g de farinha entram na hidratação total da massa. A alimentação entra sempre; a isca, só com a opção ligada em Configurações.</p>
         <div class="sheet-foot">
           <button type="button" class="levain-done" @click="closeLevain">{{ levainSim ? 'Fechar' : 'Concluir' }}</button>
         </div>

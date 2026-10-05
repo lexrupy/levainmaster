@@ -374,7 +374,7 @@ createApp({
           { kind: "fresco", name: "Fermento fresco", note: "reforço, sem água" },
         ];
       }
-      return [{ kind: "levain", name: "Levain", note: "soma a água da alimentação" }];
+      return [{ kind: "levain", name: "Levain", note: "soma água e farinha da alimentação" }];
     });
 
     const menuGroups = computed(() => {

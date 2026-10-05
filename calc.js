@@ -165,7 +165,7 @@
   }
 
   // L:A:F = levain (isca) : água : farinha.
-  // A hidratação do levain é só a alimentação (água ÷ farinha). A isca não entra.
+  // Hidratação do levain: água da alimentação ÷ farinha da alimentação. A isca não entra nessa conta.
   function splitLevain(totalGrams, L, A, F) {
     const total = Math.max(0, num(totalGrams));
     const l = Math.max(0, num(L));
@@ -439,9 +439,8 @@
     };
   }
 
-  // Hidratação final = toda a água contada ÷ toda a farinha contada.
-  // Entra a água da receita, a água da alimentação do levain e o teor de água de cada ingrediente.
-  // A farinha da alimentação do levain entra na farinha total.
+  // Hidratação total = toda a água contada ÷ toda a farinha contada.
+  // Entram a água da receita, a água e a farinha da alimentação do levain e o teor de água de cada ingrediente.
   // Com includeSeed ligado, 50% da isca conta como água e 50% como farinha.
   function compute(state, config) {
     const flour = Math.max(0, num(state.flour));

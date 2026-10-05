@@ -26,7 +26,7 @@ Ficou de fora, de propósito: o momento em que eu uso o levain depois do pico, u
 
 ## 1. Introdução
 
-O app trata a farinha da receita como 100% e o levain como uma alimentação à parte. A ordem que eu uso é a brasileira, L:A:F, isca, água e farinha. A hidratação do levain é só a água da alimentação dividida pela farinha da alimentação. A água que já estava dentro da isca não entra. A umidade de laboratório da farinha, aqueles cerca de 12%, também não entra.
+O app trata a farinha da receita como 100% e o levain como uma alimentação à parte. A ordem que eu uso é a brasileira, L:A:F, isca, água e farinha. A hidratação do levain é a água da alimentação dividida pela farinha da alimentação. A isca não entra nessa conta do levain. Na hidratação total da massa, a água e a farinha da alimentação entram; a água e a farinha da isca entram se eu ligar a opção em Configurações, metade e metade. A umidade de laboratório da farinha, aqueles cerca de 12%, também não entra.
 
 Eu quis saber se essa leitura de acidez estava de cabeça para baixo. Um vídeo que eu estava vendo parecia dizer que mais farinha deixa o fermento mais leve, mais láctico, e mais água deixa mais acético. Fui olhar o vídeo minuto a minuto e, em paralelo, a literatura que se costuma citar para essa alavanca. Este papel guarda os dois lados: o pote e o papel impresso.
 

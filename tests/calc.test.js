@@ -48,7 +48,7 @@ test("os inteiros da lista fecham o peso da massa", () => {
   assert.equal(row(result, "ferment").shown, 2);
 });
 
-test("hidratação soma água direta, teor do ingrediente e água da alimentação", () => {
+test("hidratação soma água direta, teor do ingrediente e água e farinha da alimentação", () => {
   const eggs = recipe((state) => {
     state.ingredients.push({ id: "ovos", name: "Ovos", pct: 10, water: 75, role: "extra" });
   });
@@ -231,7 +231,7 @@ test("pão enriquecido respeita limiar e escolhe categoria", () => {
   assert.equal(Padeiro.enrichedBread([{ role: "extra", name: "Ovos", pct: 30, custom: true }]), null);
 });
 
-test("levain como segundo fermento soma a água de alimentação", () => {
+test("levain como segundo fermento soma água e farinha da alimentação", () => {
   const state = Padeiro.defaultState();
   state.ingredients.push({ id: "levain2", name: "Levain", pct: 20, water: 0, role: "ferment2", ferment: "levain" });
   const result = Padeiro.compute(state);
