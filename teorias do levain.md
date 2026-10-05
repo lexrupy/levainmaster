@@ -26,7 +26,7 @@ Ficou de fora, de propósito: o momento em que eu uso o levain depois do pico, u
 
 ## 1. Introdução
 
-O app trata a farinha da receita como 100% e o levain como uma alimentação à parte. A ordem que eu uso é a brasileira, L:A:F, isca, água e farinha. A hidratação do levain é a água da alimentação dividida pela farinha da alimentação. A isca não entra nessa conta do levain. Na hidratação total da massa, a água e a farinha da alimentação entram; a água e a farinha da isca entram se eu ligar a opção em Configurações, metade e metade. A umidade de laboratório da farinha, aqueles cerca de 12%, também não entra.
+O app trata a farinha da receita como 100% e o levain como uma alimentação à parte. A ordem que eu uso é a brasileira, L:A:F, isca, água e farinha. A hidratação do levain é a água da alimentação dividida pela farinha da alimentação. A isca não entra nessa conta do levain. Na hidratação total da massa, a água e a farinha da alimentação entram; a água e a farinha da isca entram se eu ligar a opção em Configurações. Ligada, a opção parte a isca ao meio, o que só descreve uma cultura em partes iguais. A seção 8 registra de onde vem isso. A umidade de laboratório da farinha, aqueles cerca de 12%, também não entra.
 
 Eu quis saber se essa leitura de acidez estava de cabeça para baixo. Um vídeo que eu estava vendo parecia dizer que mais farinha deixa o fermento mais leve, mais láctico, e mais água deixa mais acético. Fui olhar o vídeo minuto a minuto e, em paralelo, a literatura que se costuma citar para essa alavanca. Este papel guarda os dois lados: o pote e o papel impresso.
 
@@ -223,6 +223,14 @@ Confirma o sentido da acidez. Mais água puxa o láctico. Alimentação grande d
 
 Derruba a pressa de colocar temperatura ou de punir o sabor pela hora longa. O pico que eu fechei, 12h30 a cerca de 20 °C num 1:25:25, é mais rápido que a faixa quente do app. O segundo pote da mesma proporção, olhado às 15 h, ainda espera a hora em que perder a estrutura.
 
+## 8. A isca na hidratação total
+
+A hidratação do levain, a do modal, continua sendo só a alimentação: água nova dividida pela farinha nova. A isca não muda esse número. O que a opção mexe é a hidratação total da massa.
+
+A água e a farinha da alimentação entram sempre nessa conta, porque estão na bacia. A isca é outra decisão. Maurizio Leo, no The Perfect Loaf, escreve que uma fórmula só fica completa se a farinha e a água que já estão no fermento entrarem na conta. Nas receitas que ele publica, ele mesmo deixa essa isca de fora: o peso costuma ser pequeno, e um pouco de centeio dentro dela bagunça o percentual dos outros ingredientes. Nas planilhas dele a inclusão é uma opção. O app segue esse caminho. A opção em Configurações é o interruptor.
+
+Ligada, a opção parte a isca ao meio, 50% água e 50% farinha. Isso é a conta de uma cultura mantida a 100% de hidratação, partes iguais de farinha e água. Não é o que vale para toda isca. A King Arthur define o poolish como partes iguais e descreve o levain numa faixa de 50% a 125%. O 1:5:4 do app, o levain líquido ligado ao Hamelman, é 125%: mais água do que farinha. O lievito madre de 1:1:2 e 1:5:10 é 50%: mais farinha do que água. Metade e metade, nesses dois, não é a composição da isca. A opção serve para quem guarda a cultura em partes iguais. Não há um campo para dizer que a isca está a 50% ou a 125%.
+
 ## Referências
 
 Gänzle, M. G., Ehmann, M., & Hammes, W. P. (1998). Modeling of growth of *Lactobacillus sanfranciscensis* and *Candida milleri* in response to process parameters of sourdough fermentation. *Applied and Environmental Microbiology*, 64(7), 2616–2623. <https://doi.org/10.1128/AEM.64.7.2616-2623.1998>
@@ -230,6 +238,10 @@ Gänzle, M. G., Ehmann, M., & Hammes, W. P. (1998). Modeling of growth of *Lacto
 Helena, perfil helena.fermentonatural. Reel sobre proporções do fermento natural. <https://www.instagram.com/p/Dd99uncIrwm/>
 
 Janjigian, A. (2023, 12 de julho). Stiffed: on stiff vs. liquid levains. *Wordloaf*. <https://newsletter.wordloaf.org/stiffed/>
+
+King Arthur Baking. Preferment. <https://www.kingarthurbaking.com/pro/reference/preferment>
+
+Leo, M. (2024, 11 de setembro). Introduction to baker’s percentages. *The Perfect Loaf*. <https://www.theperfectloaf.com/reference/introduction-to-bakers-percentages/>
 
 Martínez-Anaya, M. A., Benedito de Barber, C., & Collar Esteve, C. (1994). Effect of processing conditions on acidification properties of wheat sour doughs. *International Journal of Food Microbiology*, 22(4), 249–255. <https://doi.org/10.1016/0168-1605(94)90176-7>
 
