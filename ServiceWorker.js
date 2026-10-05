@@ -1,6 +1,6 @@
 // Percentual do padeiro — © 2026 Alexandre da Silva
 // SPDX-License-Identifier: LGPL-3.0-or-later
-const CACHE = "padeiro-v95";
+const CACHE = "padeiro-v96";
 const FILES = [
   "./",
   "./index.html",
@@ -45,7 +45,7 @@ self.addEventListener("install", (event) => {
 // Só apaga as versões antigas depois que a nova está completa.
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))).then(() => self.clients.claim())
+    caches.keys().then((keys) => Promise.all(keys.filter((key) => /^padeiro-v\d+$/.test(key) && key !== CACHE).map((key) => caches.delete(key)))).then(() => self.clients.claim())
   );
 });
 
