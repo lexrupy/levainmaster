@@ -170,6 +170,68 @@ test("matchRatio reconhece preset e personalizado", () => {
   assert.equal(Padeiro.matchRatio("1", "2", "2"), "1:2:2");
 });
 
+test("splitLevain e ratioFromGrams cobrem proporções inválidas, zeradas e extensas", () => {
+  assert.deepEqual(Padeiro.splitLevain(0, 1, 2, 2), { seed: 0, water: 0, flour: 0, hydration: null, valid: false });
+  assert.deepEqual(Padeiro.splitLevain(10, 0, 0, 0), { seed: 0, water: 0, flour: 0, hydration: null, valid: false });
+  const noFlour = Padeiro.splitLevain(10, 1, 1, 0);
+  assert.equal(noFlour.hydration, null);
+  assert.equal(noFlour.valid, true);
+
+  assert.deepEqual(Padeiro.ratioFromGrams(0, 0, 0), { L: 0, A: 0, F: 0 });
+  assert.deepEqual(Padeiro.ratioFromGrams(0, 2, 3), { L: 0, A: 2, F: 3 });
+  assert.deepEqual(Padeiro.ratioFromGrams(2, 50, 50), { L: 1, A: 25, F: 25 });
+  assert.deepEqual(Padeiro.ratioFromGrams(1, 100.01, 100), { L: 1, A: 100.01, F: 100 });
+});
+
+test("perfil do levain cobre inválidos, texturas e dicas por alimentação", () => {
+  assert.equal(Padeiro.levainProfile(0, 1, 1), null);
+  assert.equal(Padeiro.levainProfile(1, 1, 0), null);
+
+  const firm = Padeiro.levainProfile(1, 1, 2);
+  assert.equal(firm.texture, "Firme, de sovar na mão");
+  assert.equal(firm.time, "6 a 8 h");
+  assert.ok(firm.tips.some((tip) => tip.includes("Levain firme")));
+
+  const liquid = Padeiro.levainProfile(1, 6, 5);
+  assert.equal(liquid.texture, "Líquida, escorre da colher");
+  assert.ok(liquid.tips.some((tip) => tip.includes("Muito líquido")));
+
+  const smallFeed = Padeiro.levainProfile(2, 1, 1);
+  assert.ok(smallFeed.tips[0].includes("reanimar"));
+});
+
+test("pão enriquecido respeita limiar e escolhe categoria", () => {
+  assert.equal(Padeiro.enrichedBread([{ role: "extra", name: "Ovos", pct: 4.99 }]), null);
+  assert.equal(Padeiro.enrichedBread([{ role: "extra", name: "Ovos", pct: 5 }]), "Pão enriquecido com ovos");
+  assert.equal(Padeiro.enrichedBread([
+    { role: "extra", name: "Ovos", pct: 1 },
+    { role: "extra", name: "Manteiga", pct: 15 },
+  ]), "Brioche");
+  assert.equal(Padeiro.enrichedBread([{ role: "extra", name: "Batata inglesa cozida", pct: 10 }]), "Pão de batata");
+  assert.equal(Padeiro.enrichedBread([{ role: "extra", name: "Leite em pó integral", pct: 5 }]), "Pão de leite");
+  assert.equal(Padeiro.enrichedBread([{ role: "extra", name: "Ovos", pct: 30, custom: true }]), null);
+});
+
+test("levain como segundo fermento soma a água de alimentação", () => {
+  const state = Padeiro.defaultState();
+  state.ingredients.push({ id: "levain2", name: "Levain", pct: 20, water: 0, role: "ferment2", ferment: "levain" });
+  const result = Padeiro.compute(state);
+  close(result.hydration, 73);
+  close(result.levain.water, 40);
+  assert.equal(result.levainOn, true);
+});
+
+test("peso inteiro do levain compensa sobra na água quando a farinha fica abaixo", () => {
+  const split = Padeiro.splitLevain(2.4, 1, 4.2, 1.4);
+  const state = Padeiro.defaultState();
+  state.ingredients[2].ferment = "levain";
+  state.ingredients[2].pct = (2.4 / state.flour) * 100;
+  state.levain = { L: 1, A: 4.2, F: 1.4 };
+  const shown = Padeiro.compute(state).levain;
+  assert.equal(shown.seed + shown.water + shown.flour, 2);
+  assert.ok(shown.water < Math.round(split.water));
+});
+
 test("ingrediente nulo não derruba a conta", () => {
   const result = recipe((state) => {
     state.ingredients.splice(1, 0, null);
@@ -216,4 +278,40 @@ test("pote aceita a mesma proporção com outro peso", () => {
   assert.equal(Padeiro.acceptJar("155", 20, 100, 100), true);
   assert.equal(Padeiro.acceptJar("155", 10, 40, 50), false);
   assert.equal(Padeiro.acceptJar("111", 20, 20, 30), false);
+  assert.equal(Padeiro.acceptJar("outro", 20, 20, 20), false);
+  assert.equal(Padeiro.acceptJar("111", 0, 20, 20), false);
+  assert.equal(Padeiro.acceptJar("111", 20, 0, 20), false);
+  assert.equal(Padeiro.acceptJar("111", 20, 20, 0), false);
+  assert.equal(Padeiro.acceptJar("111", 20, 18, 20), true);
+  assert.equal(Padeiro.acceptJar("155", 20, 90, 90), true);
+});
+
+test("peakEstimate trata perfil ou calibração inválidos e faixas invertidas", () => {
+  assert.equal(Padeiro.peakEstimate(null, null, 24, 26), null);
+  assert.equal(Padeiro.peakEstimate({ time: 4, feed: 1 }, null, 24, 26), null);
+  const profile = { time: "tempo livre", feed: 1, hydration: 100 };
+  const general = Padeiro.peakEstimate(profile, null, 25, 24);
+  assert.equal(general.time, "tempo livre");
+  assert.equal(general.general, true);
+  assert.equal(general.hot, false);
+  assert.equal(Padeiro.peakEstimate({ time: "2 a 3 h", feed: 1 }, { t1Hours: 0, t5Hours: 10 }, 24, 26), null);
+
+  const hot = Padeiro.peakEstimate(
+    { time: "4 a 6 h", feed: 1, hydration: 100 },
+    { name: "teste", t1Hours: 4, t5Hours: 10, tempLo: 24, tempHi: 26 },
+    32,
+    34
+  );
+  assert.equal(hot.hot, true);
+  assert.equal(hot.general, false);
+
+  const firmProfile = Padeiro.levainProfile(1, 1, 2);
+  const firmEstimate = Padeiro.peakEstimate(
+    firmProfile,
+    { name: "teste", t1Hours: 4, t5Hours: 10, tempLo: 24, tempHi: 26 },
+    24,
+    26
+  );
+  assert.equal(firmEstimate.stiff, true);
+  assert.equal(firmEstimate.time, "8,5 a 10 h");
 });

@@ -573,6 +573,118 @@ async function scenarioCal(client, width) {
   check(`cal ${width} só o nome muda`, renamed.active === "Tipo 1 da padaria" && renamed.name === "Tipo 1 da padaria" && renamed.t1 === 4 && renamed.t5 === 10 && renamed.seed === 20 && renamed.flour === 100 && renamed.tempLo === 24, JSON.stringify(renamed));
 }
 
+async function scenarioPersistencia(client) {
+  await fresh(client, 390);
+  await client.evaluate(`(() => {
+    const nativeSetItem = Storage.prototype.setItem;
+    window.__nativeSetItem = nativeSetItem;
+    window.__blockedStorageKeys = new Set();
+    Storage.prototype.setItem = function (key, value) {
+      if (window.__blockedStorageKeys.has(key)) throw new DOMException("armazenamento cheio", "QuotaExceededError");
+      return nativeSetItem.call(this, key, value);
+    };
+  })()`);
+
+  await client.evaluate(`window.__blockedStorageKeys.add("percentual-padeiro-v1")`);
+  await client.evaluate(setField("#flour", 600));
+  await sleep(80);
+  let state = await client.evaluate(`document.querySelector(".storage-warning")?.textContent || ""`);
+  check("persist estado avisa falha", state.includes("receita atual") && state.includes("podem se perder"), state);
+  await client.evaluate(`window.__blockedStorageKeys.delete("percentual-padeiro-v1")`);
+  await client.evaluate(setField("#flour", 601));
+  await sleep(80);
+  state = await client.evaluate(`!!document.querySelector(".storage-warning")`);
+  check("persist estado limpa aviso após gravar", state === false, String(state));
+
+  await client.evaluate(`document.querySelector(".save-quick").click()`);
+  await sleep(60);
+  await client.evaluate(`(() => {
+    const input = document.querySelector("#recipe-name");
+    input.value = "Receita com armazenamento cheio";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    window.__blockedStorageKeys.add("percentual-padeiro-receitas-v1");
+    document.querySelector(".recipe-save").requestSubmit();
+  })()`);
+  await sleep(100);
+  let saveFailure = await client.evaluate(`({
+    open: document.querySelector("dialog[aria-labelledby=recipes-title]").open,
+    alert: document.querySelector(".recipe-save .storage-inline")?.textContent || "",
+    flash: document.querySelector(".save-quick").classList.contains("done"),
+    list: localStorage.getItem("percentual-padeiro-receitas-v1")
+  })`);
+  check("persist salvar falha sem confirmar nem fechar", saveFailure.open && saveFailure.alert.includes("Falha") && !saveFailure.flash && saveFailure.list === null, JSON.stringify(saveFailure));
+
+  await client.evaluate(`window.__blockedStorageKeys.delete("percentual-padeiro-receitas-v1")`);
+  await client.evaluate(`document.querySelector(".recipe-save").requestSubmit()`);
+  await sleep(100);
+  let saved = await client.evaluate(`({
+    open: document.querySelector("dialog[aria-labelledby=recipes-title]").open,
+    flash: document.querySelector(".save-quick").classList.contains("done"),
+    warning: !!document.querySelector(".recipe-save .storage-inline"),
+    count: JSON.parse(localStorage.getItem("percentual-padeiro-receitas-v1") || "[]").length
+  })`);
+  check("persist salvar limpa erro e confirma depois de gravar", !saved.open && saved.flash && !saved.warning && saved.count === 1, JSON.stringify(saved));
+
+  await client.evaluate(`document.querySelector(".top-actions button:last-child").click()`);
+  await sleep(80);
+  await client.evaluate(`window.__blockedStorageKeys.add("percentual-padeiro-receitas-v1")`);
+  await client.evaluate(`document.querySelector(".recipe-item .recipe-del").click()`);
+  await sleep(40);
+  await client.evaluate(`document.querySelector(".confirm-dialog .confirm-actions .levain-done").click()`);
+  await sleep(100);
+  const deleteFailure = await client.evaluate(`({
+    count: document.querySelectorAll(".recipe-item").length,
+    stored: JSON.parse(localStorage.getItem("percentual-padeiro-receitas-v1") || "[]").length,
+    alert: document.querySelector(".recipe-save .storage-inline")?.textContent || ""
+  })`);
+  check("persist apagar falha preserva lista", deleteFailure.count === 1 && deleteFailure.stored === 1 && deleteFailure.alert.includes("Falha"), JSON.stringify(deleteFailure));
+  await client.evaluate(`window.__blockedStorageKeys.delete("percentual-padeiro-receitas-v1")`);
+  await client.evaluate(`document.querySelector(".recipe-item .recipe-del").click()`);
+  await sleep(40);
+  await client.evaluate(`document.querySelector(".confirm-dialog .confirm-actions .levain-done").click()`);
+  await sleep(100);
+  const deleted = await client.evaluate(`({ count: document.querySelectorAll(".recipe-item").length, warning: !!document.querySelector(".recipe-save .storage-inline") })`);
+  check("persist apagar conclui após gravar", deleted.count === 0 && !deleted.warning, JSON.stringify(deleted));
+
+  await client.evaluate(`localStorage.setItem("percentual-padeiro-calibracoes-v1", JSON.stringify({ activeId: "", items: [{
+    id: "fixture", name: "Calibração de teste", t1Hours: 4, t5Hours: 10, tempLo: 24, tempHi: 26,
+    mixAt: "2026-10-01T10:00", peak111At: "2026-10-01T14:00", peak155At: "2026-10-01T20:00",
+    seed111: 20, water111: 20, flour111: 20, seed155: 20, water155: 100, flour155: 100
+  }] }))`);
+  const loaded = client.waitLoad();
+  await client.send("Page.reload", { ignoreCache: true });
+  await loaded;
+  await client.evaluate(`new Promise((resolve) => {
+    const timer = setInterval(() => {
+      if (document.querySelector(".brand")) { clearInterval(timer); resolve(true); }
+    }, 40);
+  })`);
+  await client.evaluate(`(() => {
+    const nativeSetItem = Storage.prototype.setItem;
+    window.__nativeSetItem = nativeSetItem;
+    window.__blockedStorageKeys = new Set();
+    Storage.prototype.setItem = function (key, value) {
+      if (window.__blockedStorageKeys.has(key)) throw new DOMException("armazenamento cheio", "QuotaExceededError");
+      return nativeSetItem.call(this, key, value);
+    };
+  })()`);
+  await client.evaluate(`document.querySelector('[aria-label="Sobre o Percentual do padeiro"]').click()`);
+  await sleep(60);
+  await client.evaluate(`window.__blockedStorageKeys.add("percentual-padeiro-calibracoes-v1")`);
+  await client.evaluate(`document.querySelector('input[name="cal-active"][value="fixture"]').click()`);
+  await sleep(100);
+  let calAlert = await client.evaluate(`document.querySelector(".about-cal .storage-inline")?.textContent || ""`);
+  check("persist calibração avisa falha", calAlert.includes("Falha") && calAlert.includes("podem se perder"), calAlert);
+  await client.evaluate(`window.__blockedStorageKeys.delete("percentual-padeiro-calibracoes-v1")`);
+  await client.evaluate(`document.querySelector('input[name="cal-active"][value=""]').click()`);
+  await sleep(100);
+  calAlert = await client.evaluate(`!!document.querySelector(".about-cal .storage-inline")`);
+  check("persist calibração limpa aviso após gravar", calAlert === false, String(calAlert));
+
+  await client.evaluate(`Storage.prototype.setItem = window.__nativeSetItem`);
+  await client.evaluate(`localStorage.removeItem("percentual-padeiro-v1")`);
+}
+
 async function scenario0085(client) {
   await client.open(BASE + "?card", 390, 844);
   const ready = await client.evaluate(`new Promise((resolve) => {
@@ -643,6 +755,7 @@ try {
   await scenarioCard(client, 560);
   await scenarioCal(client, 390);
   await scenarioCal(client, 560);
+  await scenarioPersistencia(client);
   await scenario0085(client);
   client.ws.close();
 } finally {
