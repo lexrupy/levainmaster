@@ -175,10 +175,11 @@ function loadConfig() {
   try {
     const raw = JSON.parse(localStorage.getItem(CONFIG_KEY) || "null");
     return {
+      includeLevain: raw && raw.includeLevain !== undefined ? !!raw.includeLevain : true,
       includeSeed: !!(raw && raw.includeSeed),
     };
   } catch (error) {
-    return { includeSeed: false };
+    return { includeLevain: true, includeSeed: false };
   }
 }
 
@@ -1563,7 +1564,14 @@ createApp({
 
     function persistConfig() {
       try {
-        writeStorage(CONFIG_KEY, JSON.stringify({ includeSeed: configStore.includeSeed }), "config");
+        writeStorage(
+          CONFIG_KEY,
+          JSON.stringify({
+            includeLevain: configStore.includeLevain,
+            includeSeed: configStore.includeSeed,
+          }),
+          "config"
+        );
       } catch (error) {
         persistenceErrors.config = true;
       }

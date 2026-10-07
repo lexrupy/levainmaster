@@ -601,13 +601,13 @@ async function scenarioSeedConfig(client, width) {
   await client.evaluate(`document.querySelector('[data-config-open]').click()`);
   await sleep(100);
 
-  const checkbox = await client.evaluate(`(() => {
-    const cb = document.querySelector('.config input[type="checkbox"]');
+  const seedChecked = await client.evaluate(`(() => {
+    const cb = document.querySelector('[data-config-seed]');
     if (!cb) return null;
     cb.click();
     return cb.checked;
   })()`);
-  check(`seed ${width} checkbox marcado`, checkbox === true, String(checkbox));
+  check(`seed ${width} checkbox isca marcado`, seedChecked === true, String(seedChecked));
   await sleep(100);
 
   await client.evaluate(`document.querySelector('.config .del').click()`);
@@ -615,8 +615,31 @@ async function scenarioSeedConfig(client, width) {
   await client.evaluate(`document.querySelector('.about .del').click()`);
   await sleep(100);
 
-  const newHydration = await client.evaluate(`document.querySelector('.side-hyd')?.textContent.trim()`);
-  check(`seed ${width} hidratação recalculada`, initialHydration !== newHydration, `${initialHydration} -> ${newHydration}`);
+  const withSeedHydration = await client.evaluate(`document.querySelector('.side-hyd')?.textContent.trim()`);
+  check(`seed ${width} hidratação com isca recalculada`, initialHydration !== withSeedHydration, `${initialHydration} -> ${withSeedHydration}`);
+
+  // Agora desmarca a inclusão do levain na hidratação
+  await client.evaluate(`document.querySelector('[aria-label="Sobre o Levain Master"]').click()`);
+  await sleep(100);
+  await client.evaluate(`document.querySelector('[data-config-open]').click()`);
+  await sleep(100);
+
+  const levainChecked = await client.evaluate(`(() => {
+    const cb = document.querySelector('[data-config-levain]');
+    if (!cb) return null;
+    cb.click();
+    return cb.checked;
+  })()`);
+  check(`seed ${width} levain na hidratação desmarcado`, levainChecked === false, String(levainChecked));
+  await sleep(100);
+
+  await client.evaluate(`document.querySelector('.config .del').click()`);
+  await sleep(100);
+  await client.evaluate(`document.querySelector('.about .del').click()`);
+  await sleep(100);
+
+  const noLevainHydration = await client.evaluate(`document.querySelector('.side-hyd')?.textContent.trim()`);
+  check(`seed ${width} hidratação sem levain volta para água direta`, noLevainHydration.startsWith("65"), noLevainHydration);
 
   const loaded = client.waitLoad();
   await client.send("Page.reload", { ignoreCache: true });
@@ -625,9 +648,9 @@ async function scenarioSeedConfig(client, width) {
 
   const persisted = await client.evaluate(`(() => {
     const cfg = JSON.parse(localStorage.getItem("percentual-padeiro-config-v1") || "{}");
-    return cfg.includeSeed;
+    return { includeLevain: cfg.includeLevain, includeSeed: cfg.includeSeed };
   })()`);
-  check(`seed ${width} configuração persistida`, persisted === true, String(persisted));
+  check(`seed ${width} configuração persistida`, persisted.includeLevain === false && persisted.includeSeed === true, JSON.stringify(persisted));
 }
 
 async function scenarioPersistencia(client) {

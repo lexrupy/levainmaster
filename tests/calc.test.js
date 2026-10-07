@@ -97,6 +97,20 @@ test("farinha da alimentação entra na conta e isca é configurável", () => {
   });
   close(zeroLevain.hydration, 65);
   close(zeroLevain.totalFlour, 500);
+
+  const withoutLevainHyd = recipe((state) => {
+    state.ingredients[2].ferment = "levain";
+    state.ingredients[2].pct = 20;
+    state.levain = { L: 1, A: 1, F: 1 };
+  }, { includeLevain: false });
+  close(withoutLevainHyd.flour, 500);
+  close(withoutLevainHyd.totalFlour, 500);
+  close(withoutLevainHyd.directWater, 325);
+  close(withoutLevainHyd.totalWater, 325);
+  close(withoutLevainHyd.hydration, 65);
+  close(withoutLevainHyd.totalWeight, 500 + 325 + 10 + 100);
+  assert.equal(row(withoutLevainHyd, "ferment").water, 0);
+  assert.equal(withoutLevainHyd.includeLevain, false);
 });
 
 test("pós e farinhas extras não somam água", () => {

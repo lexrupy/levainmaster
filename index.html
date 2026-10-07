@@ -285,12 +285,20 @@
           <ul class="cal-list">
             <li>
               <label>
-                <input type="checkbox" v-model="configStore.includeSeed">
+                <input type="checkbox" v-model="configStore.includeLevain" data-config-levain>
+                Considerar levain na hidratação da massa
+              </label>
+            </li>
+            <li v-if="configStore.includeLevain">
+              <label>
+                <input type="checkbox" v-model="configStore.includeSeed" data-config-seed>
                 Considerar água e farinha da isca nos cálculos
               </label>
             </li>
           </ul>
-          <p class="hint">A água e a farinha da alimentação já entram na hidratação total. Com esta opção, a isca entra também, partida ao meio. A divisão ao meio vale para uma cultura guardada em partes iguais de farinha e água.</p>
+          <p class="hint" v-if="!configStore.includeLevain">O levain entra no peso total da massa, mas nem a água nem a farinha dele alteram a hidratação calculada.</p>
+          <p class="hint" v-else-if="!configStore.includeSeed">A água e a farinha da alimentação entram na hidratação total. A isca fica de fora.</p>
+          <p class="hint" v-else>A água e a farinha da alimentação entram na hidratação, e a isca é considerada como 50% de água e 50% de farinha (100% de hidratação).</p>
           <p v-if="persistenceErrors.config" class="storage-inline" role="alert">Falha ao salvar as configurações. As alterações continuam disponíveis nesta sessão, mas podem se perder ao fechar o app.</p>
         </section>
         <section class="about-cal" aria-labelledby="config-cal-title">
@@ -607,7 +615,10 @@
         </section>
         <p class="hint">A hidratação do levain é a água dividida pela farinha desta alimentação. A isca não entra nessa conta.</p>
         <p class="hint" v-if="levainSim">Estas gramas não entram na receita. Mudar isca, água ou farinha recalcula a proporção.</p>
-        <p class="hint" v-else-if="result.levain && result.levain.valid">{{ formatG(result.levain.water + (configStore.includeSeed ? result.levain.seed / 2 : 0)) }} g de água e {{ formatG(result.levain.flour + (configStore.includeSeed ? result.levain.seed / 2 : 0)) }} g de farinha entram na hidratação total da massa. A alimentação entra sempre; a isca, só com a opção ligada em Configurações.</p>
+        <p class="hint" v-else-if="result.levain && result.levain.valid">
+          <template v-if="!configStore.includeLevain">O levain está configurado para não entrar no cálculo da hidratação total da massa (ajustável em Configurações).</template>
+          <template v-else>{{ formatG(result.levain.water + (configStore.includeSeed ? result.levain.seed / 2 : 0)) }} g de água e {{ formatG(result.levain.flour + (configStore.includeSeed ? result.levain.seed / 2 : 0)) }} g de farinha entram na hidratação total da massa.</template>
+        </p>
         <div class="sheet-foot">
           <button type="button" class="levain-done" @click="closeLevain">{{ levainSim ? 'Fechar' : 'Concluir' }}</button>
         </div>

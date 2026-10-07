@@ -440,11 +440,18 @@
   }
 
   // Hidratação total = toda a água contada ÷ toda a farinha contada.
-  // Entram a água da receita, a água e a farinha da alimentação do levain e o teor de água de cada ingrediente.
-  // Com includeSeed ligado, 50% da isca conta como água e 50% como farinha.
+  // Por padrão (includeLevain = true), entram a água e a farinha da alimentação do levain.
+  // Se includeLevain for falso, nem a água nem a farinha do levain entram na hidratação total.
+  // Com includeSeed ligado (e includeLevain verdadeiro), 50% da isca conta como água e 50% como farinha.
   function compute(state, config) {
     const flour = Math.max(0, num(state.flour));
-    const includeSeed = !!((config && config.includeSeed) || (state && state.includeSeed));
+    const includeLevain =
+      config && config.includeLevain !== undefined
+        ? !!config.includeLevain
+        : state && state.includeLevain !== undefined
+        ? !!state.includeLevain
+        : true;
+    const includeSeed = includeLevain && !!((config && config.includeSeed) || (state && state.includeSeed));
     const ingredients = (Array.isArray(state.ingredients) ? state.ingredients : []).filter(
       (item) => item && typeof item === "object"
     );
@@ -460,7 +467,7 @@
       let water = grams * (Math.max(0, num(item.water)) / 100);
       let addedFlour = 0;
       if (isFerment(item) && item.ferment === "levain") {
-        if (levain && levain.valid) {
+        if (includeLevain && levain && levain.valid) {
           water = levain.water;
           addedFlour = levain.flour;
           if (includeSeed) {
@@ -509,6 +516,7 @@
       levainOn,
       levain,
       levainGrams,
+      includeLevain,
       totalWater,
       directWater: directWater ? directWater.water : 0,
       totalWeight,
