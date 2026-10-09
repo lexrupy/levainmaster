@@ -114,7 +114,15 @@ test("farinha da alimentação entra na conta e isca é configurável", () => {
 });
 
 test("pós e farinhas extras não somam água", () => {
-  for (const name of ["Farinha integral", "Amido de milho", "Leite em pó integral", "Cacau em pó"]) {
+  for (const name of [
+    "Farinha integral",
+    "Amido de milho",
+    "Leite em pó integral",
+    "Cacau em pó",
+    "Açúcar",
+    "Açúcar mascavo",
+    "Adoçante culinário",
+  ]) {
     const result = recipe((state) => {
       state.ingredients.push({ id: name, name, pct: 20, water: 0, role: "extra" });
     });
@@ -242,7 +250,29 @@ test("pão enriquecido respeita limiar e escolhe categoria", () => {
   ]), "Brioche");
   assert.equal(Padeiro.enrichedBread([{ role: "extra", name: "Batata inglesa cozida", pct: 10 }]), "Pão de batata");
   assert.equal(Padeiro.enrichedBread([{ role: "extra", name: "Leite em pó integral", pct: 5 }]), "Pão de leite");
+  assert.equal(Padeiro.enrichedBread([{ role: "extra", name: "Açúcar", pct: 5 }]), "Pão adoçado");
+  assert.equal(Padeiro.enrichedBread([{ role: "extra", name: "Açúcar mascavo", pct: 5 }]), "Pão adoçado");
+  assert.equal(Padeiro.enrichedBread([{ role: "extra", name: "Adoçante culinário", pct: 5 }]), "Pão adoçado");
   assert.equal(Padeiro.enrichedBread([{ role: "extra", name: "Ovos", pct: 30, custom: true }]), null);
+});
+
+test("líquido principal com leite integral calcula hidratação e enriquece o pão", () => {
+  const result = recipe((state) => {
+    state.ingredients[0] = { id: "agua", name: "Leite integral", pct: 65, water: 87, role: "water" };
+  });
+  close(result.directWater, 325 * 0.87);
+  close(result.hydration, (325 * 0.87 / 500) * 100);
+  assert.equal(result.enriched, true);
+  assert.equal(result.bread, "Pão de leite");
+});
+
+test("receita sem sal calcula peso e hidratação corretamente", () => {
+  const result = recipe((state) => {
+    state.ingredients = state.ingredients.filter((item) => item.role !== "salt");
+  });
+  assert.equal(result.rows.some((item) => item.role === "salt"), false);
+  close(result.totalWeight, 500 + 325 + 5);
+  close(result.hydration, 65);
 });
 
 test("levain como segundo fermento soma água e farinha da alimentação", () => {

@@ -213,6 +213,43 @@ async function scenarioTelas(client, width) {
   const withoutEggs = await client.evaluate(`document.querySelector("[data-final-hyd]").getAttribute("data-final-hyd")`);
   check(`tela ${width} remover ovos tira a água`, withoutEggs === "65", withoutEggs);
 
+  // Troca líquido principal para Leite integral
+  await client.evaluate(`(() => {
+    const sel = document.querySelector('select[aria-label="Líquido principal"]');
+    if (sel) {
+      sel.value = "Leite integral";
+      sel.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  })()`);
+  await sleep(40);
+  const liquidLabel = await client.evaluate(`document.querySelector(".hyd-head label")?.textContent.trim()`);
+  check(`tela ${width} rótulo do líquido muda`, liquidLabel === "Leite integral", liquidLabel);
+  const withMilk = await client.evaluate(`document.querySelector("[data-final-hyd]")?.getAttribute("data-final-hyd")`);
+  check(`tela ${width} leite calcula hidratação menor`, withMilk && withMilk.startsWith("56.5"), withMilk);
+
+  // Troca de volta para Água
+  await client.evaluate(`(() => {
+    const sel = document.querySelector('select[aria-label="Líquido principal"]');
+    if (sel) {
+      sel.value = "Água";
+      sel.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  })()`);
+  await sleep(40);
+
+  // Remove Sal e re-adiciona pelo menu
+  await client.evaluate(`document.querySelector('[aria-label="Remover Sal"]')?.click()`);
+  await sleep(40);
+  const hasSalt = await client.evaluate(`!!document.querySelector('[aria-label="Remover Sal"]')`);
+  check(`tela ${width} sal removido`, hasSalt === false, String(hasSalt));
+
+  await client.evaluate(`document.querySelector(".add-btn").click()`);
+  await sleep(40);
+  await client.evaluate(`[...document.querySelectorAll(".menu button")].find((button) => button.textContent.trim().startsWith("Sal"))?.click()`);
+  await sleep(40);
+  const restoredSalt = await client.evaluate(`!!document.querySelector('[aria-label="Remover Sal"]')`);
+  check(`tela ${width} sal restaurado`, restoredSalt === true, String(restoredSalt));
+
   await fresh(client, width);
   await client.evaluate(setField("#flour", 700));
   await sleep(80);
@@ -584,7 +621,7 @@ async function scenarioCal(client, width) {
 async function scenarioSeedConfig(client, width) {
   await fresh(client, width);
   await client.evaluate(`(() => {
-    const sel = document.querySelector('select');
+    const sel = document.querySelector('select[aria-label="Tipo de fermento"]');
     if (sel) {
       sel.value = "levain";
       sel.dispatchEvent(new Event("change", { bubbles: true }));

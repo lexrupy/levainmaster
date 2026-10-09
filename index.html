@@ -97,13 +97,13 @@
       </div>
 
       <div class="field-head hyd-head">
-        <label class="kicker" for="agua">Água</label>
+        <label class="kicker" for="agua">{{ primaryLiquidName }}</label>
         <div class="hyd-num"><span>{{ formatPct(waterPct) }}</span><small>%</small></div>
       </div>
       <div class="slider">
         <input id="agua" type="range" :min="sliderMin" :max="sliderMax" step="1" :value="waterPct" @input="onWaterSlide">
         <div class="slider-labels">
-          <button v-for="mark in waterMarks" :key="mark" type="button" :class="{ on: Math.round(waterPct) === mark }" :style="{ '--f': (mark - sliderMin) / (sliderMax - sliderMin) }" @click="waterPct = mark" :aria-label="'Água em ' + mark + '%'">{{ mark }}%</button>
+          <button v-for="mark in waterMarks" :key="mark" type="button" :class="{ on: Math.round(waterPct) === mark }" :style="{ '--f': (mark - sliderMin) / (sliderMax - sliderMin) }" @click="waterPct = mark" :aria-label="primaryLiquidName + ' em ' + mark + '%'">{{ mark }}%</button>
         </div>
       </div>
     </section>
@@ -138,9 +138,16 @@
                   </template>
                 </div>
               </template>
+              <template v-else-if="item.role === 'water'">
+                <div class="ferment-wrap">
+                  <select class="liquid-select" :value="item.name" @change="setPrimaryLiquid($event.target.value)" aria-label="Líquido principal">
+                    <option v-for="liq in primaryLiquidChoices" :key="liq.name" :value="liq.name">{{ liq.name }}</option>
+                  </select>
+                </div>
+              </template>
               <input v-else-if="item.custom" class="name-input" v-model="item.name" placeholder="Ingrediente" aria-label="Nome do ingrediente">
               <div v-else class="ing-name">{{ item.name }}</div>
-              <button v-if="item.role === 'extra' || item.role === 'ferment2'" type="button" class="del" @click="removeIngredient(item.id)" :aria-label="'Remover ' + (item.name || 'ingrediente')">×</button>
+              <button v-if="item.role === 'extra' || item.role === 'ferment2' || item.role === 'salt'" type="button" class="del" @click="removeIngredient(item.id)" :aria-label="'Remover ' + (item.name || 'ingrediente')">×</button>
             </div>
             <div class="pct">
               <input v-if="isEditing(item, 'pct')" v-focus type="number" min="0" step="0.5" inputmode="decimal" :value="editing.text" @input="onEdit(item, 'pct', $event.target.value)" @blur="endEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc="cancelEdit(item)" :aria-label="'Percentual de ' + (item.name || 'ingrediente')">

@@ -516,12 +516,12 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 
 .icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 
-.ing-name, .ferment-select, .name-input {
+.ing-name, .ferment-select, .liquid-select, .name-input {
   font-size: 0.98rem;
   font-weight: 620;
 }
 
-.ferment-select, .ratio-select, .pct input, .part input, .name-input, .water-edit input, .sim-gram {
+.ferment-select, .liquid-select, .ratio-select, .pct input, .part input, .name-input, .water-edit input, .sim-gram {
   border: 1px solid var(--line-strong) !important;
   background: #fff !important;
   box-shadow: none !important;
@@ -530,7 +530,7 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   color: var(--ink);
 }
 
-.ferment-select {
+.ferment-select, .liquid-select {
   width: auto;
   max-width: 100%;
   padding: 4px 28px 4px 8px !important;
@@ -874,7 +874,7 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   min-width: 0;
 }
 
-.ferment-wrap .ferment-select { min-width: 0; flex: 0 1 auto; }
+.ferment-wrap .ferment-select, .ferment-wrap .liquid-select { min-width: 0; flex: 0 1 auto; }
 .ferment-wrap .ferment-select.is-levain { width: 6.6em; }
 .ferment-wrap .levain-info { flex: none; }
 

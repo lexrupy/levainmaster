@@ -108,8 +108,20 @@
     { group: "Ovos, leite e gordura", name: "Manteiga", water: 16, enrich: "gordura" },
     { group: "Ovos, leite e gordura", name: "Margarina sem sal", water: 16, enrich: "gordura" },
     { group: "Ovos, leite e gordura", name: "Margarina com sal", water: 16, enrich: "gordura" },
+    { group: "Ovos, leite e gordura", name: "Açúcar", water: 0, enrich: "açúcar" },
+    { group: "Ovos, leite e gordura", name: "Açúcar mascavo", water: 0, enrich: "açúcar" },
+    { group: "Ovos, leite e gordura", name: "Adoçante culinário", water: 0, enrich: "açúcar" },
     { group: "Ovos, leite e gordura", name: "Mel", water: 17, enrich: "açúcar" },
     { group: "Ovos, leite e gordura", name: "Melado", water: 22, enrich: "açúcar" },
+  ];
+
+  const MAIN_LIQUIDS = [
+    { name: "Água", water: 100 },
+    { name: "Leite integral", water: 87, enrich: "leite" },
+    { name: "Leite desnatado", water: 91, enrich: "leite" },
+    { name: "Leitelho", water: 90, enrich: "leite" },
+    { name: "Iogurte", water: 85, enrich: "leite" },
+    { name: "Ovos", water: 75, enrich: "ovos" },
   ];
 
   // Pão enriquecido: quando ovos, leite, gordura, açúcar ou purês somam 5% ou mais,
@@ -133,7 +145,7 @@
     const totals = {};
     let sum = 0;
     ingredients.forEach((item) => {
-      if (!item || item.role !== "extra" || item.custom) return;
+      if (!item || item.custom || (item.role !== "extra" && item.role !== "water")) return;
       const spec = ADDABLE.find((entry) => entry.name === item.name);
       if (!spec || !spec.enrich) return;
       const pct = Math.max(0, num(item.pct));
@@ -539,6 +551,7 @@
     ENRICHED_INFO,
     BANDS,
     ADDABLE,
+    MAIN_LIQUIDS,
     num,
     matchRatio,
     splitLevain,

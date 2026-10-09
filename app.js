@@ -88,6 +88,9 @@ const ICON_BY_NAME = {
   Manteiga: ICONS.butter,
   "Margarina sem sal": ICONS.butter,
   "Margarina com sal": ICONS.butter,
+  Açúcar: ICONS.flour,
+  "Açúcar mascavo": ICONS.flour,
+  "Adoçante culinário": ICONS.flour,
   Mel: ICONS.honey,
   Melado: ICONS.honey,
   Fubá: ICONS.flour,
@@ -107,7 +110,7 @@ const ICON_BY_NAME = {
 };
 
 function iconFor(item) {
-  if (item.role === "water") return ICONS.water;
+  if (item.role === "water") return ICON_BY_NAME[item.name] || ICONS.water;
   if (item.role === "salt") return ICONS.salt;
   if (Padeiro.isFerment(item)) return item.ferment === "levain" ? ICONS.levain : ICONS.yeast;
   return ICON_BY_NAME[item.name] || ICONS.generic;
@@ -120,7 +123,7 @@ function normalizeState(raw) {
   // podem conter dados incompletos ou parcialmente corrompidos.
   raw.ingredients = raw.ingredients.filter((item) => item && typeof item === "object" && !Array.isArray(item));
   const roles = new Set(raw.ingredients.map((item) => item.role));
-  if (!roles.has("water") || !roles.has("salt") || !roles.has("ferment")) return null;
+  if (!roles.has("water") || !roles.has("ferment")) return null;
   // Segundo fermento: só um, e do tipo que falta (levain com biológico, ou o contrário).
   const main = raw.ingredients.find((item) => item.role === "ferment");
   const mainIsLevain = !!(main && main.ferment === "levain");
@@ -134,6 +137,15 @@ function normalizeState(raw) {
   raw.ingredients.forEach((item) => {
     item.pct = Math.max(0, Padeiro.num(item.pct));
     item.water = Math.max(0, Padeiro.num(item.water));
+    if (item.role === "water") {
+      const spec = Padeiro.MAIN_LIQUIDS.find((liq) => liq.name === item.name);
+      if (spec) {
+        item.water = spec.water;
+      } else {
+        item.name = "Água";
+        item.water = 100;
+      }
+    }
     if (item.role === "ferment" && item.ferment !== "levain" && item.ferment !== "fresco" && item.ferment !== "seco") {
       item.ferment = "seco";
       item.name = "Fermento seco";
@@ -378,11 +390,40 @@ createApp({
       return [{ kind: "levain", name: "Levain", note: "soma água e farinha da alimentação" }];
     });
 
+    const waterItem = computed(() => state.ingredients.find((item) => item.role === "water") || null);
+    const primaryLiquidName = computed(() => (waterItem.value ? waterItem.value.name : "Água"));
+    const primaryLiquidChoices = computed(() => {
+      const extraNames = new Set(
+        state.ingredients.filter((item) => item.role === "extra").map((item) => item.name)
+      );
+      const current = waterItem.value;
+      return Padeiro.MAIN_LIQUIDS.filter((liq) => !extraNames.has(liq.name) || (current && current.name === liq.name));
+    });
+
+    function setPrimaryLiquid(name) {
+      const water = state.ingredients.find((item) => item.role === "water");
+      const spec = Padeiro.MAIN_LIQUIDS.find((liq) => liq.name === name) || { name: "Água", water: 100 };
+      if (water) {
+        water.name = spec.name;
+        water.water = spec.water;
+      }
+    }
+
     const menuGroups = computed(() => {
       const present = new Set(state.ingredients.map((row) => row.name));
       const groups = [];
+      const addables = [];
+      if (!present.has("Água")) {
+        addables.push({ group: "Base da receita", name: "Água", water: 100 });
+      }
+      if (!present.has("Sal")) {
+        addables.push({ group: "Base da receita", name: "Sal", water: 0 });
+      }
       Padeiro.ADDABLE.forEach((spec) => {
         if (present.has(spec.name)) return;
+        addables.push(spec);
+      });
+      addables.forEach((spec) => {
         let group = groups.find((item) => item.name === spec.group);
         if (!group) {
           group = { name: spec.group, items: [] };
@@ -1755,6 +1796,20 @@ createApp({
     }
 
     function addIngredient(spec) {
+      if (spec.name === "Sal") {
+        const waterIndex = state.ingredients.findIndex((item) => item.role === "water");
+        const insertIndex = waterIndex >= 0 ? waterIndex + 1 : 0;
+        state.ingredients.splice(insertIndex, 0, {
+          id: "sal",
+          name: "Sal",
+          pct: 2,
+          water: 0,
+          role: "salt",
+          custom: false,
+        });
+        menuOpen.value = false;
+        return;
+      }
       state.ingredients.push({
         id: "extra-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
         name: spec.name,
@@ -1804,7 +1859,9 @@ createApp({
     }
 
     function removeIngredient(id) {
-      const index = state.ingredients.findIndex((item) => item.id === id && (item.role === "extra" || item.role === "ferment2"));
+      const index = state.ingredients.findIndex(
+        (item) => item.id === id && (item.role === "extra" || item.role === "ferment2" || item.role === "salt")
+      );
       if (index >= 0) state.ingredients.splice(index, 1);
     }
 
@@ -1897,6 +1954,9 @@ createApp({
       sliderMax,
       onWaterSlide,
       waterDiffers,
+      primaryLiquidName,
+      primaryLiquidChoices,
+      setPrimaryLiquid,
       ratioId,
       levainProfile,
       levainItem,
