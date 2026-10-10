@@ -72,10 +72,10 @@
             <span class="other">Outros<b>{{ formatPct(result.otherShare) }}%</b></span>
           </div>
           <p class="mass" :data-total="result.totalWeight">
-            <b>{{ formatG(result.totalWeight) }} g</b><span>de massa</span>
+            <b>{{ formatG(result.totalWeight) }} g</b>
             <input v-if="portionEditing" v-focus class="portion-input" type="number" min="1" max="99" step="1" inputmode="numeric" v-model="portionDraft" @blur="finishPortionEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc.prevent="cancelPortionEdit" aria-label="Quantidade de porções">
-            <button v-else type="button" class="portion-label" @click="editPortions" :aria-label="state.portions === 1 ? 'Uma porção. Selecionar quantidade de porções' : state.portions + ' porções de ' + formatPortionG(result.totalWeight / state.portions) + ' gramas. Alterar quantidade'">
-              {{ state.portions === 1 ? 'Uma porção' : state.portions + ' porções de ' + formatPortionG(result.totalWeight / state.portions) + ' g' }}
+            <button v-else type="button" class="portion-label" @click="editPortions" :aria-label="state.portions === 1 ? 'Uma porção de massa. Selecionar quantidade de porções' : state.portions + ' porções de ' + formatPortionG(result.totalWeight / state.portions) + ' gramas. Alterar quantidade'">
+              {{ state.portions === 1 ? 'Uma porção de massa' : state.portions + ' porções de ' + formatPortionG(result.totalWeight / state.portions) + ' g' }}
             </button>
           </p>
           <div class="recipe-card-actions">
