@@ -1,6 +1,6 @@
 // Levain Master — © 2026 Alexandre da Silva
 // SPDX-License-Identifier: LGPL-3.0-or-later
-const CACHE = "padeiro-v112";
+const CACHE = "padeiro-v113";
 const FILES = [
   "./",
   "./index.html",
@@ -66,6 +66,10 @@ function cardRequest(file) {
   return new Request(new URL(file, self.location).href);
 }
 
+function incomingRecipeRequest() {
+  return new Request(new URL("./__incoming-recipe.json", self.location).href);
+}
+
 function cardKind(url) {
   if (/\/card(\.png)?$/.test(url.pathname)) return "card";
   return "";
@@ -77,9 +81,42 @@ function cardResponse(blob) {
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
-  if (request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+
+  if (request.method === "POST" && url.pathname === new URL("./share-recipe", self.location).pathname) {
+    event.respondWith((async () => {
+      try {
+        const form = await request.formData();
+        const file = form.get("recipe");
+        if (!file || typeof file.name !== "string" || !file.name.toLowerCase().endsWith(".json") || file.size === 0) {
+          return Response.redirect(new URL("./?incomingRecipeError=1", self.location).href, 303);
+        }
+        const cache = await caches.open(CACHE);
+        await cache.put(incomingRecipeRequest(), new Response(file, {
+          headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+        }));
+        return Response.redirect(new URL("./?incomingRecipe=1", self.location).href, 303);
+      } catch (error) {
+        return Response.redirect(new URL("./?incomingRecipeError=1", self.location).href, 303);
+      }
+    })());
+    return;
+  }
+
+  if (request.method !== "GET") return;
+
+  if (url.pathname === new URL("./__incoming-recipe.json", self.location).pathname) {
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE);
+      const key = incomingRecipeRequest();
+      const incoming = await cache.match(key);
+      if (!incoming) return new Response("Nenhuma receita recebida.", { status: 404 });
+      await cache.delete(key);
+      return incoming;
+    })());
+    return;
+  }
 
   const kind = cardKind(url);
   if (kind) {

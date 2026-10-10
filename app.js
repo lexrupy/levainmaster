@@ -861,6 +861,27 @@ createApp({
       if (event.target === recipesDialog.value) closeRecipes();
     }
 
+    async function handleIncomingRecipe() {
+      const params = new URLSearchParams(location.search);
+      const incoming = params.has("incomingRecipe");
+      const failed = params.has("incomingRecipeError");
+      if (!incoming && !failed) return;
+      history.replaceState(history.state, "", location.pathname + location.hash);
+      if (failed) {
+        importStatus.value = "O arquivo compartilhado não parece ser uma receita JSON válida.";
+      } else {
+        try {
+          const response = await fetch("./__incoming-recipe.json", { cache: "no-store" });
+          if (!response.ok) throw new Error("O arquivo recebido não está mais disponível.");
+          const file = new File([await response.blob()], "receita.json", { type: "application/json" });
+          await importRecipeFile({ target: { files: [file], value: "" } });
+        } catch (error) {
+          importStatus.value = error.message || "Não foi possível abrir a receita compartilhada.";
+        }
+      }
+      openRecipes(false);
+    }
+
     function openShareCard() {
       shareStatus.value = "";
       sharePreviewLoading.value = true;
@@ -2109,6 +2130,7 @@ createApp({
     onMounted(() => {
       settleSlider();
       refreshCardPreview();
+      handleIncomingRecipe();
       window.addEventListener("beforeinstallprompt", (event) => {
         event.preventDefault();
         deferredPrompt = event;
