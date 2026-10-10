@@ -2,8 +2,8 @@
 
 - **Autor:** Alexandre da Silva
 - **Data:** 2026-10-05
-- **Status:** em andamento
-- **Arquivos:** `ServiceWorker.js`
+- **Status:** concluída
+- **Arquivos:** `ServiceWorker.js`, `tests/service-worker.test.js`, `AGENTS.md`
 
 ## Contexto
 
@@ -11,12 +11,12 @@ O GitHub Actions não conseguiu alocar um runner hospedado para publicar o commi
 
 ## O que foi feito
 
-Subida a versão do cache para `padeiro-v103`, disparando uma nova publicação e fazendo a instalação do app buscar a versão atualizada.
+Subida a versão do cache para `padeiro-v103`, disparando uma nova publicação. Depois do sucesso, o teste de ativação foi alinhado à versão nova e a referência atualizada no `AGENTS.md`.
 
 ## Critérios de aceite
 
 - [x] `CACHE` identifica a versão 103.
-- [ ] Commit enviado para `main` e nova execução do Pages iniciada.
+- [x] Commit enviado para `main` e publicação do Pages concluída com sucesso.
 
 ## Como verificar
 
