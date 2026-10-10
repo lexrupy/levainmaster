@@ -1265,7 +1265,7 @@ createApp({
       const notesPad = 18;
       const notesLineHeight = 30;
       const notesTextWidth = width - pad * 2 - 56;
-      ctx.font = "500 21px Outfit, sans-serif";
+      ctx.font = "500 21px monospace";
       const notesLines = cardNotes ? cardPreLines(ctx, cardNotes, notesTextWidth) : [];
       const notesBlockH = cardNotes ? 52 + notesPad * 2 + notesLines.length * notesLineHeight : 0;
       const height = top + ingBlockH + footerGap + footerH + (cardNotes ? 28 + notesBlockH : 0) + 102;
@@ -1518,7 +1518,7 @@ createApp({
         ctx.fillText("PRESCRIÇÕES DIVERSAS", pad + 20, notesY + 32);
         roundedRect(ctx, pad + 6, notesY + 44, width - pad * 2 - 12, notesBlockH - 50, 12, "#fffdfb");
         ctx.fillStyle = "#2c241c";
-        ctx.font = "500 21px Outfit, sans-serif";
+        ctx.font = "500 21px monospace";
         notesLines.forEach((line, index) => ctx.fillText(line, pad + 24, notesY + 44 + notesPad + 20 + index * notesLineHeight));
       }
       ctx.textAlign = "left";

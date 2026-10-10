@@ -9,7 +9,7 @@ const vm = require("node:vm");
 test("ativação remove versões antigas do app e preserva caches alheios", async () => {
   const source = await readFile(path.join(__dirname, "..", "ServiceWorker.js"), "utf8");
   const listeners = new Map();
-  const keys = ["padeiro-v105", "padeiro-v106", "padeiro-v107", "padeiro-v108", "padeiro-v109", "padeiro-v110", "padeiro-v111", "outro-app", "padeiro-aux-v1"];
+  const keys = ["padeiro-v105", "padeiro-v106", "padeiro-v107", "padeiro-v108", "padeiro-v109", "padeiro-v110", "padeiro-v111", "padeiro-v112", "outro-app", "padeiro-aux-v1"];
   const deleted = [];
   const self = {
     addEventListener: (name, handler) => listeners.set(name, handler),
@@ -29,8 +29,8 @@ test("ativação remove versões antigas do app e preserva caches alheios", asyn
   listeners.get("activate")({ waitUntil: (promise) => pending.push(promise) });
   await Promise.all(pending);
 
-  assert.deepEqual(deleted.sort(), ["padeiro-v105", "padeiro-v106", "padeiro-v107", "padeiro-v108", "padeiro-v109", "padeiro-v110"]);
+  assert.deepEqual(deleted.sort(), ["padeiro-v105", "padeiro-v106", "padeiro-v107", "padeiro-v108", "padeiro-v109", "padeiro-v110", "padeiro-v111"]);
   assert.ok(keys.includes("outro-app"));
   assert.ok(keys.includes("padeiro-aux-v1"));
-  assert.ok(keys.includes("padeiro-v111"));
+  assert.ok(keys.includes("padeiro-v112"));
 });
