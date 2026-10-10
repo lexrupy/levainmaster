@@ -111,7 +111,7 @@
     <section class="sheet">
       <h2 class="section-label">Detalhamento da receita</h2>
 
-      <div v-for="item in state.ingredients" :key="item.id" class="ing-block">
+      <div v-for="(item, index) in state.ingredients" :key="item.id" class="ing-block">
         <div class="ing">
           <div class="icon" v-html="iconFor(item)"></div>
           <div>
@@ -147,7 +147,15 @@
               </template>
               <input v-else-if="item.custom" class="name-input" v-model="item.name" placeholder="Ingrediente" aria-label="Nome do ingrediente">
               <div v-else class="ing-name">{{ item.name }}</div>
-              <button v-if="item.role === 'extra' || item.role === 'ferment2' || item.role === 'salt'" type="button" class="del" @click="removeIngredient(item.id)" :aria-label="'Remover ' + (item.name || 'ingrediente')">×</button>
+              <div class="ing-actions">
+                <button type="button" class="move-ing" :disabled="index === 0" @click="moveIngredient(item.id, -1)" :aria-label="'Mover ' + (item.name || 'ingrediente') + ' para cima'" :title="'Mover ' + (item.name || 'ingrediente') + ' para cima'">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 14 6-6 6 6"/></svg>
+                </button>
+                <button type="button" class="move-ing" :disabled="index === state.ingredients.length - 1" @click="moveIngredient(item.id, 1)" :aria-label="'Mover ' + (item.name || 'ingrediente') + ' para baixo'" :title="'Mover ' + (item.name || 'ingrediente') + ' para baixo'">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 10 6 6 6-6"/></svg>
+                </button>
+                <button v-if="item.role === 'extra' || item.role === 'ferment2' || item.role === 'salt'" type="button" class="del" @click="removeIngredient(item.id)" :aria-label="'Remover ' + (item.name || 'ingrediente')">×</button>
+              </div>
             </div>
             <div class="pct">
               <input v-if="isEditing(item, 'pct')" v-focus type="number" min="0" step="0.5" inputmode="decimal" :value="editing.text" @input="onEdit(item, 'pct', $event.target.value)" @blur="endEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc="cancelEdit(item)" :aria-label="'Percentual de ' + (item.name || 'ingrediente')">

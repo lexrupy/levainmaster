@@ -79,6 +79,18 @@ async function scenarioTelas(client, width) {
   check(`tela ${width} card não é sticky`, initial.stickyCard !== "sticky" && initial.stickyTop === "sticky", JSON.stringify(initial));
   check(`tela ${width} sem rolagem`, initial.scroll === 0, String(initial.scroll));
 
+  const moveBounds = await client.evaluate(`({
+    firstUpDisabled: document.querySelector('[aria-label="Mover Água para cima"]')?.disabled,
+    lastDownDisabled: document.querySelector('[aria-label="Mover Fermento seco para baixo"]')?.disabled
+  })`);
+  check(`tela ${width} limites dos botões de ordem`, moveBounds.firstUpDisabled === true && moveBounds.lastDownDisabled === true, JSON.stringify(moveBounds));
+  await client.evaluate(`document.querySelector('[aria-label="Mover Sal para baixo"]').click()`);
+  await sleep(80);
+  const movedOrder = await client.evaluate(`JSON.parse(localStorage.getItem("percentual-padeiro-v1")).ingredients.map((item) => item.role)`);
+  check(`tela ${width} move ingrediente e persiste ordem`, movedOrder.join(",") === "water,ferment,salt", JSON.stringify(movedOrder));
+  await client.evaluate(`document.querySelector('[aria-label="Mover Sal para cima"]').click()`);
+  await sleep(80);
+
   await client.evaluate(setField("#flour", 600));
   await sleep(40);
   const flour = await client.evaluate(`({

@@ -1865,6 +1865,14 @@ createApp({
       if (index >= 0) state.ingredients.splice(index, 1);
     }
 
+    function moveIngredient(id, direction) {
+      const index = state.ingredients.findIndex((item) => item.id === id);
+      const target = index + direction;
+      if (index < 0 || target < 0 || target >= state.ingredients.length) return;
+      const [item] = state.ingredients.splice(index, 1);
+      state.ingredients.splice(target, 0, item);
+    }
+
     function barWidth(pct) {
       return Math.max(0, Math.min(100, Padeiro.num(pct))) + "%";
     }
@@ -2097,6 +2105,7 @@ createApp({
       secondFerment,
       fermentChoices,
       removeIngredient,
+      moveIngredient,
       barWidth,
       rowOf,
       iconFor,

@@ -598,6 +598,32 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   line-height: 1;
 }
 
+.ing-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.move-ing {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 36px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.move-ing:hover:not(:disabled) { background: #f6f1e8; color: var(--brown); }
+.move-ing:disabled { cursor: default; opacity: 0.3; }
+.move-ing:focus-visible { outline: 2px solid var(--brown-soft); outline-offset: 1px; }
+.move-ing svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
 .levain {
   margin-top: 8px;
   padding: 14px;
