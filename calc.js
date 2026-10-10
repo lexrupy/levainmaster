@@ -443,6 +443,7 @@
       recipeName: "Minha Receita",
       flour: 500,
       portions: 1,
+      notes: "",
       ingredients: [
         { id: "agua", name: "Água", pct: 65, water: 100, role: "water" },
         { id: "sal", name: "Sal", pct: 2, water: 0, role: "salt" },

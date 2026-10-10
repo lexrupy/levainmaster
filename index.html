@@ -83,11 +83,10 @@
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
             </button>
             <button type="button" class="save-quick" :class="{ done: savedFlash }" @click="openRecipes(true)">{{ savedFlash ? 'Salva ✓' : 'Salvar receita' }}</button>
-            <button type="button" class="share-card" @click="shareRecipeCard" :disabled="sharingCard" aria-label="Compartilhar receita como imagem" title="Compartilhar receita">
+            <button type="button" class="share-card" @click="openShareCard" :disabled="sharingCard || sharePreviewLoading" aria-label="Compartilhar receita" title="Compartilhar receita">
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.6 6.6-4.2M8.7 13.4l6.6 4.2"/></svg>
             </button>
           </div>
-          <p class="share-status" aria-live="polite">{{ shareStatus }}</p>
         </div>
         <aside class="crumb-side">
           <div class="crumb-layout">
@@ -205,6 +204,13 @@
           </div>
           <button type="button" @click="addCustom">Personalizado <small>você define a água</small></button>
         </div>
+      </div>
+      <div class="notes-wrap">
+        <button type="button" class="add-btn notes-toggle" @click="toggleNotes" :aria-expanded="notesOpen">{{ notesOpen ? 'Fechar prescrições diversas' : 'Prescrições diversas' }}</button>
+        <label v-if="notesOpen" class="notes-editor" for="recipe-notes">
+          <span>Prescrições diversas</span>
+          <textarea id="recipe-notes" v-model="state.notes" rows="5" @keydown.tab.prevent="insertNotesTab" placeholder="Anote aqui. Quebras de linha, espaços e tabulações serão mantidos no card." aria-label="Prescrições diversas"></textarea>
+        </label>
       </div>
     </section>
 
@@ -387,8 +393,27 @@
             </div>
           </li>
         </ul>
+        <input ref="importInput" type="file" accept="application/json,.json" class="file-input-hidden" @change="importRecipeFile">
+        <button v-if="!quickSave" type="button" class="install import-recipe" @click="importInput?.click()">Importar receita JSON</button>
+        <p v-if="importStatus" class="import-status" role="status">{{ importStatus }}</p>
         <p v-if="recipes.length" class="hint">Abrir troca a receita da tela pela salva.</p>
         </template>
+      </article>
+    </dialog>
+
+    <dialog ref="shareDialog" class="levain-dialog share-dialog" @click="onShareClick" aria-labelledby="share-title">
+      <article class="levain" tabindex="-1" autofocus>
+        <header class="levain-head">
+          <h2 id="share-title">Compartilhar receita</h2>
+          <button type="button" class="del" @click="closeShareCard" aria-label="Fechar">×</button>
+        </header>
+        <p v-if="sharePreviewLoading" class="hint">Preparando o card…</p>
+        <img v-else-if="shareCardUrl" class="share-preview-image" :src="shareCardUrl" alt="Prévia do card compartilhável da receita">
+        <p class="share-status" aria-live="polite">{{ shareStatus }}</p>
+        <div class="share-actions">
+          <button type="button" class="levain-done" @click="shareRecipeCard" :disabled="sharingCard">Compartilhar receita</button>
+          <button type="button" class="install" @click="exportRecipe">Exportar receita JSON</button>
+        </div>
       </article>
     </dialog>
 

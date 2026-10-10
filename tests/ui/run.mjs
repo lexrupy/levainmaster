@@ -539,6 +539,7 @@ async function scenarioCard(client, width) {
       return orig.apply(this, arguments);
     };
     document.querySelector(".share-card").click();
+    document.querySelector(".share-actions button:first-child").click();
   })()`);
   const shared = await client.evaluate(`new Promise((resolve) => {
     const start = Date.now();
@@ -871,6 +872,7 @@ async function scenario0085(client) {
       return orig.apply(this, arguments);
     };
     document.querySelector(".share-card").click();
+    document.querySelector(".share-actions button:first-child").click();
     const start = Date.now();
     while (!window.__download && Date.now() - start < 8000) await new Promise((r) => setTimeout(r, 50));
     return { cards, file: window.__download || "" };

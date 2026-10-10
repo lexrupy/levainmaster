@@ -165,6 +165,7 @@ function normalizeState(raw) {
   raw.levain.A = Math.max(0, Padeiro.num(raw.levain.A));
   raw.levain.F = Math.max(0, Padeiro.num(raw.levain.F));
   raw.recipeName = typeof raw.recipeName === "string" ? raw.recipeName.slice(0, 80) : "Minha Receita";
+  raw.notes = typeof raw.notes === "string" ? raw.notes : "";
   return raw;
 }
 
@@ -297,6 +298,8 @@ createApp({
     const menuOpen = ref(false);
     const levainDialog = ref(null);
     const recipesDialog = ref(null);
+    const shareDialog = ref(null);
+    const importInput = ref(null);
     const aboutDialog = ref(null);
     const configDialog = ref(null);
     const tempDialog = ref(null);
@@ -358,6 +361,9 @@ createApp({
     let flashTimer = null;
     const sharingCard = ref(false);
     const shareStatus = ref("");
+    const sharePreviewLoading = ref(false);
+    const shareCardUrl = ref("");
+    const importStatus = ref("");
     const cardQuery = new URLSearchParams(location.search);
     const cardPreview = cardQuery.has("card");
     const cardPreviewUrl = ref("");
@@ -375,6 +381,7 @@ createApp({
     const editing = reactive({ key: null, text: "", undo: 0 });
     const portionEditing = ref(false);
     const portionDraft = ref("1");
+    const notesOpen = ref(!!state.notes);
 
     const result = computed(() => Padeiro.compute(state, configStore));
     const ratioId = computed(() => Padeiro.matchRatio(state.levain.L, state.levain.A, state.levain.F));
@@ -531,6 +538,18 @@ createApp({
     function cancelPortionEdit() {
       portionDraft.value = String(state.portions);
       portionEditing.value = false;
+    }
+
+    function toggleNotes() {
+      notesOpen.value = !notesOpen.value;
+    }
+
+    function insertNotesTab(event) {
+      const input = event.target;
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      state.notes = state.notes.slice(0, start) + "\t" + state.notes.slice(end);
+      nextTick(() => input.setSelectionRange(start + 1, start + 1));
     }
 
     function formatPct(value) {
@@ -842,6 +861,80 @@ createApp({
       if (event.target === recipesDialog.value) closeRecipes();
     }
 
+    function openShareCard() {
+      shareStatus.value = "";
+      sharePreviewLoading.value = true;
+      if (shareCardUrl.value) URL.revokeObjectURL(shareCardUrl.value);
+      shareCardUrl.value = "";
+      if (shareDialog.value && !shareDialog.value.open) shareDialog.value.showModal();
+      makeRecipeCard().then((blob) => {
+        shareCardUrl.value = URL.createObjectURL(blob);
+      }).catch(() => {
+        shareStatus.value = "Não foi possível preparar o card.";
+      }).finally(() => {
+        sharePreviewLoading.value = false;
+      });
+    }
+
+    function closeShareCard() {
+      if (shareDialog.value?.open) shareDialog.value.close();
+      if (shareCardUrl.value) URL.revokeObjectURL(shareCardUrl.value);
+      shareCardUrl.value = "";
+    }
+
+    function onShareClick(event) {
+      if (event.target === shareDialog.value) closeShareCard();
+    }
+
+    function exportRecipe() {
+      const name = String(state.recipeName || "Minha Receita").trim() || "Minha Receita";
+      const payload = {
+        format: "levainmaster-recipe",
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        recipe: { name, state: JSON.parse(JSON.stringify(state)) },
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = recipeFileName(name).replace(/\.png$/, ".json");
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      shareStatus.value = "Arquivo JSON da receita exportado.";
+    }
+
+    async function importRecipeFile(event) {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file) return;
+      try {
+        const payload = JSON.parse(await file.text());
+        if (payload?.format !== "levainmaster-recipe" || payload.version !== 1 || typeof payload.recipe?.name !== "string") {
+          throw new Error("Formato de receita inválido.");
+        }
+        const importedState = normalizeState(payload.recipe.state);
+        const name = payload.recipe.name.trim().slice(0, 80);
+        if (!importedState || !name) throw new Error("A receita não contém dados válidos.");
+        importedState.recipeName = name;
+        const imported = {
+          id: "r-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+          name,
+          savedAt: new Date().toISOString(),
+          state: importedState,
+        };
+        const nextRecipes = [imported, ...recipes.value];
+        if (!persistRecipes(nextRecipes)) {
+          importStatus.value = "Não foi possível salvar a receita importada neste dispositivo.";
+          return;
+        }
+        recipes.value = nextRecipes;
+        importStatus.value = "Receita importada: " + name + ".";
+      } catch (error) {
+        importStatus.value = error instanceof SyntaxError ? "O arquivo não contém JSON válido." : (error.message || "Não foi possível importar esta receita.");
+      }
+    }
+
     async function saveRecipe() {
       const name = recipeName.value.trim();
       if (!name) return;
@@ -895,7 +988,9 @@ createApp({
       state.ingredients = saved.ingredients;
       state.levain = saved.levain;
       state.portions = saved.portions;
+      state.notes = saved.notes;
       state.recipeName = typeof recipe.name === "string" ? recipe.name.slice(0, 80) : saved.recipeName;
+      notesOpen.value = !!state.notes;
       portionEditing.value = false;
       closeRecipes();
     }
@@ -918,7 +1013,9 @@ createApp({
       state.ingredients = fresh.ingredients;
       state.levain = fresh.levain;
       state.portions = fresh.portions;
+      state.notes = fresh.notes;
       state.recipeName = fresh.recipeName;
+      notesOpen.value = false;
       portionEditing.value = false;
     }
 
@@ -1047,6 +1144,28 @@ createApp({
       return lines.length;
     }
 
+    // Mantém espaços, tabulações e linhas vazias no texto livre do card.
+    function cardPreLines(ctx, text, maxWidth) {
+      const lines = [];
+      String(text).replace(/\t/g, "    ").split(/\r\n|\r|\n/).forEach((sourceLine) => {
+        if (!sourceLine) {
+          lines.push("");
+          return;
+        }
+        let line = "";
+        for (const char of sourceLine) {
+          if (line && ctx.measureText(line + char).width > maxWidth) {
+            lines.push(line);
+            line = char;
+          } else {
+            line += char;
+          }
+        }
+        lines.push(line);
+      });
+      return lines;
+    }
+
     // Ícone do ingrediente, o mesmo traço do app, num quadrado bege.
     function drawIngredientIcon(ctx, item, x, y, box) {
       roundedRect(ctx, x, y, box, box, Math.round(box * 0.3), "#f6f1e8");
@@ -1141,7 +1260,15 @@ createApp({
       const footerGap = 28;
       const footerH = 156;
       const ingBlockH = ingHead + ingTopPad + rowsHeight + ingBotPad + ingFrame;
-      const height = top + ingBlockH + footerGap + footerH + 102;
+      const cardNotes = String(state.notes || "");
+      const notesGap = cardNotes ? 28 : 0;
+      const notesPad = 18;
+      const notesLineHeight = 30;
+      const notesTextWidth = width - pad * 2 - 56;
+      ctx.font = "500 21px Outfit, sans-serif";
+      const notesLines = cardNotes ? cardPreLines(ctx, cardNotes, notesTextWidth) : [];
+      const notesBlockH = cardNotes ? 52 + notesPad * 2 + notesLines.length * notesLineHeight : 0;
+      const height = top + ingBlockH + footerGap + footerH + (cardNotes ? 28 + notesBlockH : 0) + 102;
       canvas.width = width;
       canvas.height = height;
 
@@ -1383,6 +1510,18 @@ createApp({
         ctx.fillText(formatPct(share) + "%", x, bodyY + 76);
       });
       ctx.textAlign = "left";
+      if (cardNotes) {
+        const notesY = footerY + footerH + notesGap;
+        roundedRect(ctx, pad, notesY, width - pad * 2, notesBlockH, 16, "#f7f2ea");
+        ctx.fillStyle = "#7d6244";
+        ctx.font = "650 18px Outfit, sans-serif";
+        ctx.fillText("PRESCRIÇÕES DIVERSAS", pad + 20, notesY + 32);
+        roundedRect(ctx, pad + 6, notesY + 44, width - pad * 2 - 12, notesBlockH - 50, 12, "#fffdfb");
+        ctx.fillStyle = "#2c241c";
+        ctx.font = "500 21px Outfit, sans-serif";
+        notesLines.forEach((line, index) => ctx.fillText(line, pad + 24, notesY + 44 + notesPad + 20 + index * notesLineHeight));
+      }
+      ctx.textAlign = "left";
       ctx.fillStyle = "#8d7f70";
       ctx.font = "500 16px Outfit, sans-serif";
       ctx.textAlign = "center";
@@ -1459,7 +1598,7 @@ createApp({
         const file = typeof File !== "undefined" ? new File([blob], fileName, { type: "image/png" }) : null;
         if (file && navigator.share && navigator.canShare?.({ files: [file] })) {
           try {
-            await navigator.share({ files: [file], title: "Minha receita de pão", text: "Receita feita no Levain Master" });
+            await navigator.share({ files: [file], title: state.recipeName || "Minha receita de pão", text: "Receita feita no Levain Master" });
             shareStatus.value = "Receita compartilhada.";
           } catch (error) {
             if (error?.name === "AbortError") {
@@ -2003,6 +2142,8 @@ createApp({
       menuOpen,
       levainDialog,
       recipesDialog,
+      shareDialog,
+      importInput,
       aboutDialog,
       tempDialog,
       calDialog,
@@ -2047,6 +2188,14 @@ createApp({
       sharingCard,
       shareStatus,
       shareRecipeCard,
+      openShareCard,
+      closeShareCard,
+      onShareClick,
+      sharePreviewLoading,
+      shareCardUrl,
+      exportRecipe,
+      importRecipeFile,
+      importStatus,
       cardPreview,
       cardPreviewUrl,
       openRecipes,
@@ -2114,6 +2263,9 @@ createApp({
       editPortions,
       finishPortionEdit,
       cancelPortionEdit,
+      notesOpen,
+      toggleNotes,
+      insertNotesTab,
       formatPct,
       formatPctFine,
       editing,
