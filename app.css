@@ -598,18 +598,19 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   line-height: 1;
 }
 
-.ing-actions {
+.icon-order {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
 }
 
 .move-ing {
   display: grid;
   place-items: center;
   flex: none;
-  width: 30px;
-  height: 36px;
+  width: 34px;
+  height: 26px;
   padding: 0;
   margin: 0;
   border: 0;

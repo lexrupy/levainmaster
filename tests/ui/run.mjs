@@ -81,8 +81,13 @@ async function scenarioTelas(client, width) {
 
   const moveBounds = await client.evaluate(`({
     firstUpDisabled: document.querySelector('[aria-label="Mover Água para cima"]')?.disabled,
-    lastDownDisabled: document.querySelector('[aria-label="Mover Fermento seco para baixo"]')?.disabled
+    lastDownDisabled: document.querySelector('[aria-label="Mover Fermento seco para baixo"]')?.disabled,
+    arrowsAroundIcon: (() => {
+      const up = document.querySelector('[aria-label="Mover Água para cima"]');
+      return !!up && up.parentElement.classList.contains("icon-order") && up.nextElementSibling?.classList.contains("icon") && up.nextElementSibling.nextElementSibling?.getAttribute("aria-label") === "Mover Água para baixo";
+    })()
   })`);
+  check(`tela ${width} setas acima e abaixo do ícone`, moveBounds.arrowsAroundIcon === true, JSON.stringify(moveBounds));
   check(`tela ${width} limites dos botões de ordem`, moveBounds.firstUpDisabled === true && moveBounds.lastDownDisabled === true, JSON.stringify(moveBounds));
   await client.evaluate(`document.querySelector('[aria-label="Mover Sal para baixo"]').click()`);
   await sleep(80);
