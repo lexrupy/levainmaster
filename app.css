@@ -1020,12 +1020,41 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 /* Peso da massa em destaque, abaixo da barra */
 .mass {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 5px;
   margin: 8px 0 0;
 }
 .mass b { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.03em; color: var(--ink); }
 .mass span { font-size: 0.78rem; font-weight: 600; color: var(--muted); }
+.mass .portion-label {
+  padding: 2px 5px;
+  margin: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--brown);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 620;
+  text-align: left;
+  cursor: pointer;
+}
+.mass .portion-label:hover { background: #f6f1e8; }
+.mass .portion-label:focus-visible { outline: 2px solid var(--brown-soft); outline-offset: 1px; }
+.mass .portion-input {
+  width: 4.5ch;
+  padding: 2px 5px !important;
+  margin: 0 !important;
+  height: auto !important;
+  border: 1px solid var(--line-strong) !important;
+  border-radius: 7px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8rem;
+}
 
 /* Perfil da ativação do levain: textura, pico e sabor */
 .profile {

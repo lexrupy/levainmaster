@@ -71,7 +71,13 @@
             <span class="water">Água<b>{{ formatPct(result.waterShare) }}%</b></span>
             <span class="other">Outros<b>{{ formatPct(result.otherShare) }}%</b></span>
           </div>
-          <p class="mass" :data-total="result.totalWeight"><b>{{ formatG(result.totalWeight) }} g</b><span>de massa</span></p>
+          <p class="mass" :data-total="result.totalWeight">
+            <b>{{ formatG(result.totalWeight) }} g</b><span>de massa</span>
+            <input v-if="portionEditing" v-focus class="portion-input" type="number" min="1" max="99" step="1" inputmode="numeric" v-model="portionDraft" @blur="finishPortionEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc.prevent="cancelPortionEdit" aria-label="Quantidade de porções">
+            <button v-else type="button" class="portion-label" @click="editPortions" :aria-label="state.portions === 1 ? 'Uma porção. Selecionar quantidade de porções' : state.portions + ' porções de ' + formatPortionG(result.totalWeight / state.portions) + ' gramas. Alterar quantidade'">
+              {{ state.portions === 1 ? 'Uma porção' : state.portions + ' porções de ' + formatPortionG(result.totalWeight / state.portions) + ' g' }}
+            </button>
+          </p>
           <div class="recipe-card-actions">
             <button type="button" class="clear-recipe" @click="clearRecipe" aria-label="Limpar a receita da tela" title="Limpar a receita">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>

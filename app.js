@@ -158,6 +158,8 @@ function normalizeState(raw) {
   // Campo vazio vale 0. Só falta de valor ou valor inválido volta para 500.
   const flour = raw.flour === "" ? 0 : Number(raw.flour);
   raw.flour = Number.isFinite(flour) ? Math.min(FLOUR_MAX, Math.max(0, flour)) : 500;
+  const portions = Number.isFinite(Number(raw.portions)) ? Math.round(Number(raw.portions)) : 1;
+  raw.portions = Math.min(99, Math.max(1, portions));
   raw.levain = raw.levain || { L: 1, A: 2, F: 2 };
   raw.levain.L = Math.max(0, Padeiro.num(raw.levain.L));
   raw.levain.A = Math.max(0, Padeiro.num(raw.levain.A));
@@ -371,6 +373,8 @@ createApp({
     // Percentual e gramas de um ingrediente aparecem como texto e viram campo ao clicar.
     // Enquanto o campo está aberto, o texto digitado fica aqui para o Vue não reescrevê-lo.
     const editing = reactive({ key: null, text: "", undo: 0 });
+    const portionEditing = ref(false);
+    const portionDraft = ref("1");
 
     const result = computed(() => Padeiro.compute(state, configStore));
     const ratioId = computed(() => Padeiro.matchRatio(state.levain.L, state.levain.A, state.levain.F));
@@ -506,6 +510,27 @@ createApp({
 
     function formatG(value) {
       return gramsFormat.format(Math.round(Padeiro.num(value)));
+    }
+
+    function formatPortionG(value) {
+      return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(Padeiro.num(value));
+    }
+
+    function editPortions() {
+      portionDraft.value = String(state.portions);
+      portionEditing.value = true;
+    }
+
+    function finishPortionEdit() {
+      const value = Number.parseInt(String(portionDraft.value).trim(), 10);
+      state.portions = Math.min(99, Math.max(1, Number.isFinite(value) ? value : 1));
+      portionDraft.value = String(state.portions);
+      portionEditing.value = false;
+    }
+
+    function cancelPortionEdit() {
+      portionDraft.value = String(state.portions);
+      portionEditing.value = false;
     }
 
     function formatPct(value) {
@@ -869,7 +894,9 @@ createApp({
       state.flour = saved.flour;
       state.ingredients = saved.ingredients;
       state.levain = saved.levain;
+      state.portions = saved.portions;
       state.recipeName = typeof recipe.name === "string" ? recipe.name.slice(0, 80) : saved.recipeName;
+      portionEditing.value = false;
       closeRecipes();
     }
 
@@ -890,7 +917,9 @@ createApp({
       state.flour = fresh.flour;
       state.ingredients = fresh.ingredients;
       state.levain = fresh.levain;
+      state.portions = fresh.portions;
       state.recipeName = fresh.recipeName;
+      portionEditing.value = false;
     }
 
     function askConfirm(options) {
@@ -2079,6 +2108,12 @@ createApp({
       onDialogClick,
       canInstall,
       formatG,
+      formatPortionG,
+      portionEditing,
+      portionDraft,
+      editPortions,
+      finishPortionEdit,
+      cancelPortionEdit,
       formatPct,
       formatPctFine,
       editing,
