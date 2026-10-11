@@ -976,26 +976,60 @@ createApp({
     }
 
     function exportBackup() {
-      const payload = {
-        appKey: "levainmaster",
-        format: "levainmaster-backup",
-        version: 1,
-        exportedAt: new Date().toISOString(),
-        data: {
-          currentState: JSON.parse(JSON.stringify(state)),
-          recipes: JSON.parse(JSON.stringify(recipes.value)),
-          calibrations: JSON.parse(JSON.stringify({ activeId: calStore.activeId, items: calStore.items })),
-          config: JSON.parse(JSON.stringify({ includeLevain: configStore.includeLevain, includeSeed: configStore.includeSeed })),
-        },
-      };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "levainmaster-backup-" + new Date().toISOString().slice(0, 10) + ".json";
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      backupStatus.value = "Backup exportado com a receita atual, receitas salvas, configurações e calibrações.";
+      try {
+        const readStored = (key, fallback) => {
+          const value = localStorage.getItem(key);
+          return value === null ? fallback : JSON.parse(value);
+        };
+        const currentState = normalizeState(readStored(STORAGE_KEY, JSON.parse(JSON.stringify(state))));
+        const savedRecipes = readStored(RECIPES_KEY, JSON.parse(JSON.stringify(recipes.value)));
+        const calibrations = readStored(CAL_KEY, JSON.parse(JSON.stringify({ activeId: calStore.activeId, items: calStore.items })));
+        const config = normalizeConfig(readStored(CONFIG_KEY, { includeLevain: configStore.includeLevain, includeSeed: configStore.includeSeed }));
+        if (!currentState || !Array.isArray(savedRecipes)) throw new Error("Os dados salvos neste aparelho estão incompletos; nenhum backup foi exportado.");
+        const recipeIds = new Set();
+        const backupRecipes = savedRecipes.map((recipe, index) => {
+          if (!recipe || typeof recipe.id !== "string" || !recipe.id || recipeIds.has(recipe.id) || typeof recipe.name !== "string" || !recipe.name.trim()) {
+            throw new Error("A receita salva número " + (index + 1) + " não tem identificação válida; nenhum backup foi exportado.");
+          }
+          const recipeState = normalizeState(recipe.state);
+          if (!recipeState) throw new Error("A receita salva “" + recipe.name + "” está inválida; nenhum backup foi exportado.");
+          const name = recipe.name.trim().slice(0, 80);
+          recipeState.recipeName = name;
+          recipeIds.add(recipe.id);
+          return {
+            id: recipe.id,
+            name,
+            savedAt: typeof recipe.savedAt === "string" ? recipe.savedAt : "",
+            state: recipeState,
+          };
+        });
+        const backupCalibrations = normalizeCalibrations(calibrations);
+        if (!calibrations || !Array.isArray(calibrations.items) || backupCalibrations.items.length !== calibrations.items.length || (calibrations.activeId && backupCalibrations.activeId !== calibrations.activeId)) {
+          throw new Error("Há uma calibração inválida; nenhum backup foi exportado.");
+        }
+        const payload = {
+          appKey: "levainmaster",
+          format: "levainmaster-backup",
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          data: {
+            currentState,
+            recipes: backupRecipes,
+            calibrations: backupCalibrations,
+            config,
+          },
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "levainmaster-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        backupStatus.value = "Backup exportado com " + backupRecipes.length + " receitas salvas, a receita atual, configurações e calibrações.";
+      } catch (error) {
+        backupStatus.value = error.message || "Não foi possível exportar o backup.";
+      }
     }
 
     async function importBackupFile(event) {
