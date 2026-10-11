@@ -155,9 +155,9 @@
     if (sum < ENRICHED_MIN) return null;
     const eggs = totals.ovos || 0;
     const fat = totals.gordura || 0;
-    if (eggs >= 15 || (eggs > 0 && fat >= 15)) return "Brioche";
     const base = BASES.filter((key) => (totals[key] || 0) >= BASE_MIN).sort((x, y) => totals[y] - totals[x])[0];
     if (base) return ENRICHED_NAMES[base];
+    if (eggs >= 15 || (eggs > 0 && fat >= 15)) return "Brioche";
     const top = Object.keys(totals).sort((x, y) => totals[y] - totals[x])[0];
     return ENRICHED_NAMES[top];
   }
