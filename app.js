@@ -467,21 +467,20 @@ createApp({
 
     // Atalhos abaixo do slider da água: tocar leva direto ao valor.
     const waterMarks = [55, 65, 72, 85];
-    // O trilho usual é 30–110. Fora disso, a ponta acompanha o número e fica lá
-    // enquanto a água não volta para dentro: se o mínimo só mudasse depois do valor,
-    // o navegador gravaria 30 ou 109 por cima do que foi digitado.
-    const sliderBound = reactive({ min: 30, max: 110 });
+    // O trilho vai de 0–110. Acima disso, a ponta acompanha o número e fica lá
+    // enquanto a água não volta para dentro, para o navegador não gravar 109
+    // por cima do valor digitado.
+    const sliderBound = reactive({ min: 0, max: 110 });
     const sliderMin = computed(() => sliderBound.min);
     const sliderMax = computed(() => sliderBound.max);
     let syncingSlider = false;
 
     function syncSliderBound(value) {
       const pct = Math.max(0, Padeiro.num(value));
-      if (pct < 30 || pct > 110) {
-        if (pct < sliderBound.min) sliderBound.min = pct;
+      if (pct > 110) {
         if (pct > sliderBound.max) sliderBound.max = pct;
       } else {
-        sliderBound.min = 30;
+        sliderBound.min = 0;
         sliderBound.max = 110;
       }
     }
