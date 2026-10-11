@@ -910,6 +910,7 @@ createApp({
     function exportRecipe() {
       const name = String(state.recipeName || "Minha Receita").trim() || "Minha Receita";
       const payload = {
+        appKey: "levainmaster",
         format: "levainmaster-recipe",
         version: 1,
         exportedAt: new Date().toISOString(),
@@ -931,12 +932,21 @@ createApp({
       if (!file) return;
       try {
         const payload = JSON.parse(await file.text());
-        if (payload?.format !== "levainmaster-recipe" || payload.version !== 1 || typeof payload.recipe?.name !== "string") {
-          throw new Error("Formato de receita inválido.");
+        if ((payload?.appKey !== "levainmaster" && payload?.format !== "levainmaster-recipe") || payload.version !== 1 || typeof payload.recipe?.name !== "string") {
+          throw new Error("Este arquivo não foi exportado pelo Levain Master.");
         }
         const importedState = normalizeState(payload.recipe.state);
         const name = payload.recipe.name.trim().slice(0, 80);
         if (!importedState || !name) throw new Error("A receita não contém dados válidos.");
+        const confirmed = await askConfirm({
+          title: "Importar receita?",
+          message: "Deseja importar “" + name + "” para a lista de receitas deste dispositivo?",
+          confirmLabel: "Importar",
+        });
+        if (!confirmed) {
+          importStatus.value = "Importação cancelada.";
+          return;
+        }
         importedState.recipeName = name;
         const imported = {
           id: "r-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
