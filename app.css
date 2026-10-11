@@ -515,21 +515,21 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 }
 
 .icon--liquid {
-  background: radial-gradient(ellipse at 50% 48%, #fff 48%, #edf7fb 100%);
-  box-shadow: 0 0 0 1px rgba(82, 157, 190, 0.22), 0 0 9px 1px rgba(82, 157, 190, 0.12);
+  background: radial-gradient(ellipse at 50% 48%, #fff 38%, #d9f0f8 100%);
+  box-shadow: 0 0 0 1px rgba(62, 151, 190, 0.34), 0 0 10px 1px rgba(62, 151, 190, 0.2);
 }
 
 .icon--solid {
-  background: radial-gradient(ellipse at 50% 48%, #fff 48%, #f0f1f2 100%);
-  box-shadow: 0 0 0 1px rgba(122, 132, 141, 0.2), 0 0 9px 1px rgba(122, 132, 141, 0.1);
+  background: radial-gradient(ellipse at 50% 48%, #fff 38%, #e5e8eb 100%);
+  box-shadow: 0 0 0 1px rgba(112, 124, 136, 0.3), 0 0 10px 1px rgba(112, 124, 136, 0.17);
 }
 
 .icon--intermediate {
-  background: radial-gradient(ellipse at 50% 48%, #fff 48%, #f3eff8 100%);
-  box-shadow: 0 0 0 1px rgba(146, 119, 174, 0.22), 0 0 9px 1px rgba(146, 119, 174, 0.12);
+  background: radial-gradient(ellipse at 50% 48%, #fff 38%, #e9def3 100%);
+  box-shadow: 0 0 0 1px rgba(139, 103, 175, 0.32), 0 0 10px 1px rgba(139, 103, 175, 0.19);
 }
 
-.icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 
 .ing-name, .ferment-select, .liquid-select, .name-input {
   font-size: 0.98rem;
