@@ -378,6 +378,9 @@ createApp({
     const recipes = ref(loadRecipes());
     const recipeName = ref("");
     const recipeNameEditing = ref(false);
+    const renamingRecipeId = ref("");
+    const renamingRecipeName = ref("");
+    const renamingRecipeError = ref("");
     // Modal de confirmação genérico: askConfirm({ title, message, confirmLabel, cancelLabel, danger })
     // devolve uma Promise com true (confirmou) ou false (cancelou, Esc ou clique no fundo).
     const confirmDialog = ref(null);
@@ -1261,6 +1264,38 @@ createApp({
       const nextRecipes = recipes.value.filter((item) => item.id !== recipe.id);
       if (!persistRecipes(nextRecipes)) return;
       recipes.value = nextRecipes;
+    }
+
+    function startRecipeRename(recipe) {
+      renamingRecipeId.value = recipe.id;
+      renamingRecipeName.value = recipe.name || "";
+      renamingRecipeError.value = "";
+      nextTick(() => document.getElementById("saved-recipe-name-" + recipe.id)?.focus());
+    }
+
+    function cancelRecipeRename() {
+      renamingRecipeId.value = "";
+      renamingRecipeName.value = "";
+      renamingRecipeError.value = "";
+    }
+
+    function saveRecipeRename(recipe) {
+      const name = renamingRecipeName.value.trim().slice(0, 80);
+      if (!name) {
+        renamingRecipeError.value = "Digite um nome para a receita.";
+        return;
+      }
+      const duplicate = recipes.value.find((item) => item.id !== recipe.id && recipeNameKey(item.name) === recipeNameKey(name));
+      if (duplicate) {
+        renamingRecipeError.value = "Já existe uma receita com esse nome.";
+        return;
+      }
+      const nextRecipes = recipes.value.map((item) => item.id === recipe.id
+        ? { ...item, name, state: { ...item.state, recipeName: name } }
+        : item);
+      if (!persistRecipes(nextRecipes)) return;
+      recipes.value = nextRecipes;
+      cancelRecipeRename();
     }
 
     function formatDate(iso) {
@@ -2360,6 +2395,12 @@ createApp({
       reloadApp,
       recipes,
       recipeName,
+      renamingRecipeId,
+      renamingRecipeName,
+      renamingRecipeError,
+      startRecipeRename,
+      cancelRecipeRename,
+      saveRecipeRename,
       backupImportInput,
       backupStatus,
       exportBackup,

@@ -393,13 +393,24 @@
         <ul v-else class="recipe-list">
           <li v-for="recipe in recipes" :key="recipe.id" class="recipe-item">
             <div class="recipe-text">
-              <p class="recipe-name">{{ recipe.name }}</p>
+              <template v-if="renamingRecipeId === recipe.id">
+                <input :id="'saved-recipe-name-' + recipe.id" class="name-input" v-model="renamingRecipeName" maxlength="80" :aria-label="'Novo nome para ' + recipe.name" @keydown.enter.prevent="saveRecipeRename(recipe)" @keydown.esc="cancelRecipeRename">
+                <p v-if="renamingRecipeError" class="import-status" role="alert">{{ renamingRecipeError }}</p>
+              </template>
+              <p v-else class="recipe-name">{{ recipe.name }}</p>
               <p class="recipe-meta"><time :datetime="recipe.savedAt">{{ formatDate(recipe.savedAt) }}</time></p>
               <p class="recipe-meta">{{ summaryOf(recipe.state) }}</p>
             </div>
             <div class="recipe-actions">
+              <template v-if="renamingRecipeId === recipe.id">
+                <button type="button" class="install" @click="saveRecipeRename(recipe)">Salvar nome</button>
+                <button type="button" class="install" @click="cancelRecipeRename">Cancelar</button>
+              </template>
+              <template v-else>
               <button type="button" class="install" @click="openRecipe(recipe)">Abrir</button>
+              <button type="button" class="install" @click="startRecipeRename(recipe)">Renomear</button>
               <button type="button" class="install recipe-del" @click="deleteRecipe(recipe)">Apagar</button>
+              </template>
             </div>
           </li>
         </ul>
