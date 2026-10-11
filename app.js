@@ -208,15 +208,18 @@ function loadRecipes() {
   }
 }
 
+function normalizeConfig(raw) {
+  return {
+    includeLevain: raw && raw.includeLevain !== undefined ? !!raw.includeLevain : true,
+    includeSeed: !!(raw && raw.includeSeed),
+  };
+}
+
 function loadConfig() {
   try {
-    const raw = JSON.parse(localStorage.getItem(CONFIG_KEY) || "null");
-    return {
-      includeLevain: raw && raw.includeLevain !== undefined ? !!raw.includeLevain : true,
-      includeSeed: !!(raw && raw.includeSeed),
-    };
+    return normalizeConfig(JSON.parse(localStorage.getItem(CONFIG_KEY) || "null"));
   } catch (error) {
-    return { includeLevain: true, includeSeed: false };
+    return normalizeConfig(null);
   }
 }
 
@@ -270,45 +273,48 @@ function hoursBetween(start, end) {
   return (b - a) / 3600000;
 }
 
+function normalizeCalibrations(raw) {
+  const items = Array.isArray(raw && raw.items) ? raw.items : [];
+  const clean = [];
+  items.forEach((item) => {
+    if (!item || typeof item !== "object" || !item.id) return;
+    const name = String(item.name || "").trim().slice(0, 40);
+    const t1Hours = Padeiro.num(item.t1Hours);
+    const t5Hours = Padeiro.num(item.t5Hours);
+    if (!name || !(t1Hours > 0) || !(t5Hours > t1Hours)) return;
+    let tempLo = item.tempLo === undefined || item.tempLo === "" ? 24 : Padeiro.num(item.tempLo);
+    let tempHi = item.tempHi === undefined || item.tempHi === "" ? 26 : Padeiro.num(item.tempHi);
+    if (tempLo > tempHi) {
+      const swap = tempLo;
+      tempLo = tempHi;
+      tempHi = swap;
+    }
+    clean.push({
+      id: String(item.id),
+      name,
+      savedAt: typeof item.savedAt === "string" ? item.savedAt : "",
+      t1Hours,
+      t5Hours,
+      tempLo,
+      tempHi,
+      mixAt: typeof item.mixAt === "string" ? item.mixAt : "",
+      peak111At: typeof item.peak111At === "string" ? item.peak111At : "",
+      peak155At: typeof item.peak155At === "string" ? item.peak155At : "",
+      seed111: Padeiro.num(item.seed111),
+      water111: Padeiro.num(item.water111),
+      flour111: Padeiro.num(item.flour111),
+      seed155: Padeiro.num(item.seed155),
+      water155: Padeiro.num(item.water155),
+      flour155: Padeiro.num(item.flour155),
+    });
+  });
+  const activeId = clean.some((item) => item.id === (raw && raw.activeId)) ? String(raw.activeId) : "";
+  return { activeId, items: clean };
+}
+
 function loadCalibrations() {
   try {
-    const raw = JSON.parse(localStorage.getItem(CAL_KEY) || "null");
-    const items = Array.isArray(raw && raw.items) ? raw.items : [];
-    const clean = [];
-    items.forEach((item) => {
-      if (!item || typeof item !== "object" || !item.id) return;
-      const name = String(item.name || "").trim().slice(0, 40);
-      const t1Hours = Padeiro.num(item.t1Hours);
-      const t5Hours = Padeiro.num(item.t5Hours);
-      if (!name || !(t1Hours > 0) || !(t5Hours > t1Hours)) return;
-      let tempLo = item.tempLo === undefined || item.tempLo === "" ? 24 : Padeiro.num(item.tempLo);
-      let tempHi = item.tempHi === undefined || item.tempHi === "" ? 26 : Padeiro.num(item.tempHi);
-      if (tempLo > tempHi) {
-        const swap = tempLo;
-        tempLo = tempHi;
-        tempHi = swap;
-      }
-      clean.push({
-        id: String(item.id),
-        name,
-        savedAt: typeof item.savedAt === "string" ? item.savedAt : "",
-        t1Hours,
-        t5Hours,
-        tempLo,
-        tempHi,
-        mixAt: typeof item.mixAt === "string" ? item.mixAt : "",
-        peak111At: typeof item.peak111At === "string" ? item.peak111At : "",
-        peak155At: typeof item.peak155At === "string" ? item.peak155At : "",
-        seed111: Padeiro.num(item.seed111),
-        water111: Padeiro.num(item.water111),
-        flour111: Padeiro.num(item.flour111),
-        seed155: Padeiro.num(item.seed155),
-        water155: Padeiro.num(item.water155),
-        flour155: Padeiro.num(item.flour155),
-      });
-    });
-    const activeId = clean.some((item) => item.id === (raw && raw.activeId)) ? String(raw.activeId) : "";
-    return { activeId, items: clean };
+    return normalizeCalibrations(JSON.parse(localStorage.getItem(CAL_KEY) || "null"));
   } catch (error) {
     return { activeId: "", items: [] };
   }
@@ -322,6 +328,7 @@ createApp({
     const recipesDialog = ref(null);
     const shareDialog = ref(null);
     const importInput = ref(null);
+    const backupImportInput = ref(null);
     const aboutDialog = ref(null);
     const configDialog = ref(null);
     const tempDialog = ref(null);
@@ -347,6 +354,7 @@ createApp({
     const breadShown = ref("");
     const about = reactive({ version: "", offline: false, persisted: false, checking: false, status: "", reload: false });
     const persistenceErrors = reactive({ state: false, recipes: false, calibrations: false, config: false });
+    const backupStatus = ref("");
     const persistenceWarning = computed(() => {
       const labels = [];
       if (persistenceErrors.state) labels.push("a receita atual");
@@ -786,6 +794,7 @@ createApp({
     }
 
     function openConfig() {
+      backupStatus.value = "";
       const dialog = configDialog.value;
       if (dialog && !dialog.open) dialog.showModal();
     }
@@ -928,7 +937,7 @@ createApp({
       if (event.target === shareDialog.value) closeShareCard();
     }
 
-    function exportRecipe() {
+    async function exportRecipe() {
       const name = String(state.recipeName || "Minha Receita").trim() || "Minha Receita";
       const payload = {
         appKey: "levainmaster",
@@ -938,13 +947,136 @@ createApp({
         recipe: { name, bread: result.value.bread, state: JSON.parse(JSON.stringify(state)) },
       };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const fileName = recipeFileName(name).replace(/\.png$/, ".json");
+      if (typeof File !== "undefined" && navigator.share) {
+        const file = new File([blob], fileName, { type: "application/json" });
+        if (!navigator.canShare || navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({ files: [file], title: name, text: "Receita do Levain Master" });
+            shareStatus.value = "Arquivo da receita enviado ao compartilhamento.";
+            return;
+          } catch (error) {
+            if (error && error.name === "AbortError") {
+              shareStatus.value = "Compartilhamento cancelado.";
+              return;
+            }
+          }
+        }
+      }
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = recipeFileName(name).replace(/\.png$/, ".json");
+      link.download = fileName;
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-      shareStatus.value = "Arquivo JSON da receita exportado.";
+      shareStatus.value = "Este navegador não oferece compartilhamento de arquivo. O JSON foi baixado.";
+    }
+
+    function exportBackup() {
+      const payload = {
+        appKey: "levainmaster",
+        format: "levainmaster-backup",
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        data: {
+          currentState: JSON.parse(JSON.stringify(state)),
+          recipes: JSON.parse(JSON.stringify(recipes.value)),
+          calibrations: JSON.parse(JSON.stringify({ activeId: calStore.activeId, items: calStore.items })),
+          config: JSON.parse(JSON.stringify({ includeLevain: configStore.includeLevain, includeSeed: configStore.includeSeed })),
+        },
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "levainmaster-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      backupStatus.value = "Backup exportado com a receita atual, receitas salvas, configurações e calibrações.";
+    }
+
+    async function importBackupFile(event) {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file) return;
+      backupStatus.value = "";
+      try {
+        const payload = JSON.parse(await file.text());
+        const data = payload && payload.data;
+        if (payload?.appKey !== "levainmaster" || payload?.format !== "levainmaster-backup" || payload.version !== 1 || !data) {
+          throw new Error("Este arquivo não é um backup compatível do Levain Master.");
+        }
+        const restoredState = normalizeState(data.currentState);
+        if (!restoredState || !Array.isArray(data.recipes) || !data.calibrations || !Array.isArray(data.calibrations.items) || !data.config || typeof data.config.includeLevain !== "boolean" || typeof data.config.includeSeed !== "boolean") {
+          throw new Error("O backup está incompleto ou contém dados inválidos.");
+        }
+        const restoredRecipes = [];
+        const recipeIds = new Set();
+        for (const item of data.recipes) {
+          if (!item || typeof item.id !== "string" || !item.id || recipeIds.has(item.id) || typeof item.name !== "string" || !item.name.trim()) {
+            throw new Error("O backup contém uma receita inválida ou repetida.");
+          }
+          const restoredRecipeState = normalizeState(item.state);
+          if (!restoredRecipeState) throw new Error("O backup contém uma receita sem dados válidos: “" + item.name + "”.");
+          const name = item.name.trim().slice(0, 80);
+          restoredRecipeState.recipeName = name;
+          recipeIds.add(item.id);
+          restoredRecipes.push({
+            id: item.id,
+            name,
+            savedAt: typeof item.savedAt === "string" ? item.savedAt : "",
+            state: restoredRecipeState,
+          });
+        }
+        const restoredCalibrations = normalizeCalibrations(data.calibrations);
+        if (restoredCalibrations.items.length !== data.calibrations.items.length || (data.calibrations.activeId && restoredCalibrations.activeId !== data.calibrations.activeId)) {
+          throw new Error("O backup contém uma calibração inválida.");
+        }
+        const restoredConfig = normalizeConfig(data.config);
+        const accepted = await askConfirm({
+          title: "Substituir os dados deste aparelho?",
+          message: "A importação vai substituir a receita atual, todas as receitas salvas, as configurações e as calibrações do levain por este backup (" + restoredRecipes.length + " receitas salvas). Essa ação não pode ser desfeita. Exporte um backup dos dados atuais antes, se quiser guardá-los.",
+          confirmLabel: "Substituir dados",
+          danger: true,
+        });
+        if (!accepted) {
+          backupStatus.value = "Importação do backup cancelada.";
+          return;
+        }
+        const replacements = [
+          [STORAGE_KEY, JSON.stringify(restoredState), "state"],
+          [RECIPES_KEY, JSON.stringify(restoredRecipes), "recipes"],
+          [CAL_KEY, JSON.stringify(restoredCalibrations), "calibrations"],
+          [CONFIG_KEY, JSON.stringify(restoredConfig), "config"],
+        ];
+        const previous = replacements.map(([key]) => [key, localStorage.getItem(key)]);
+        try {
+          replacements.forEach(([key, value]) => localStorage.setItem(key, value));
+        } catch (error) {
+          previous.forEach(([key, value]) => {
+            try {
+              if (value === null) localStorage.removeItem(key);
+              else localStorage.setItem(key, value);
+            } catch (rollbackError) {}
+          });
+          backupStatus.value = "Não foi possível gravar o backup. Os dados que já estavam neste aparelho foram mantidos.";
+          return;
+        }
+        Object.keys(state).forEach((key) => { if (!(key in restoredState)) delete state[key]; });
+        Object.assign(state, restoredState);
+        recipes.value = restoredRecipes;
+        Object.assign(calStore, restoredCalibrations);
+        Object.assign(configStore, restoredConfig);
+        const active = restoredCalibrations.items.find((item) => item.id === restoredCalibrations.activeId);
+        sessionTemp.lo = active ? active.tempLo : 24;
+        sessionTemp.hi = active ? active.tempHi : 26;
+        tempFields.lo = formatTempField(sessionTemp.lo);
+        tempFields.hi = formatTempField(sessionTemp.hi);
+        Object.keys(persistenceErrors).forEach((key) => { persistenceErrors[key] = false; });
+        backupStatus.value = "Backup importado. Os dados deste aparelho foram substituídos.";
+      } catch (error) {
+        backupStatus.value = error instanceof SyntaxError ? "O arquivo não contém JSON válido." : (error.message || "Não foi possível importar este backup.");
+      }
     }
 
     async function importRecipeFile(event) {
@@ -2228,6 +2360,10 @@ createApp({
       reloadApp,
       recipes,
       recipeName,
+      backupImportInput,
+      backupStatus,
+      exportBackup,
+      importBackupFile,
       recipeNameEditing,
       editRecipeName,
       finishRecipeNameEdit,
