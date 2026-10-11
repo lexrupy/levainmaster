@@ -1170,6 +1170,8 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 .recipe-actions { display: flex; flex-direction: column; gap: 6px; flex: none; }
 .recipe-actions .install { padding: 6px 12px; box-shadow: none; }
 .recipe-del { color: var(--wet); }
+.backup-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.backup-actions button { margin: 0; }
 
 @media (max-width: 340px) {
   .parts { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr); }

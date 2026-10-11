@@ -355,6 +355,16 @@
           <p v-if="persistenceErrors.calibrations" class="storage-inline" role="alert">Falha ao salvar as calibrações. As alterações continuam disponíveis nesta sessão, mas podem se perder ao fechar o app.</p>
           <p class="hint">A escolha muda só a hora do pico. Sabor e textura ficam. Abrir ou limpar uma receita não mexe nesta lista.</p>
         </section>
+        <section class="about-cal" aria-labelledby="config-backup-title">
+          <h3 id="config-backup-title" class="kicker">Backup</h3>
+          <p class="hint">Exporta ou restaura a receita atual, as receitas salvas, as configurações e as calibrações do levain.</p>
+          <div class="backup-actions">
+            <button type="button" class="install" @click="exportBackup">Exportar backup</button>
+            <button type="button" class="install" @click="backupImportInput?.click()">Importar backup</button>
+          </div>
+          <input ref="backupImportInput" type="file" accept="application/json,.json" class="file-input-hidden" @change="importBackupFile">
+          <p v-if="backupStatus" class="import-status" role="status">{{ backupStatus }}</p>
+        </section>
         <div class="sheet-foot">
           <button type="button" class="levain-done" @click="closeConfig">Concluir</button>
         </div>
