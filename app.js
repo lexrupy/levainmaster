@@ -116,6 +116,28 @@ function iconFor(item) {
   return ICON_BY_NAME[item.name] || ICONS.generic;
 }
 
+const MIX_STATE_BY_NAME = {
+  Ovos: "liquid",
+  Leitelho: "liquid",
+  Iogurte: "liquid",
+  Mel: "liquid",
+  Melado: "liquid",
+  "Batata inglesa cozida": "liquid",
+  "Batata-doce cozida": "liquid",
+  "Mandioca cozida": "liquid",
+  "Abóbora cozida": "liquid",
+  Banana: "liquid",
+  Manteiga: "intermediate",
+  "Margarina sem sal": "intermediate",
+  "Margarina com sal": "intermediate",
+};
+
+function mixState(item) {
+  if (item.role === "water" || (Padeiro.isFerment(item) && item.ferment === "levain")) return "liquid";
+  if (item.role === "salt" || MIX_STATE_BY_NAME[item.name] === "intermediate") return "intermediate";
+  return MIX_STATE_BY_NAME[item.name] || "solid";
+}
+
 // Limpa um estado salvo (na tela ou numa receita). Devolve null se não der para usar.
 function normalizeState(raw) {
   if (!raw || !Array.isArray(raw.ingredients)) return null;
@@ -2330,6 +2352,7 @@ createApp({
       barWidth,
       rowOf,
       iconFor,
+      mixState,
       install,
     };
   },

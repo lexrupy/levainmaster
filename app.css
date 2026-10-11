@@ -514,6 +514,21 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   place-items: center;
 }
 
+.icon--liquid {
+  background: radial-gradient(ellipse at 50% 48%, #fff 48%, #edf7fb 100%);
+  box-shadow: 0 0 0 1px rgba(82, 157, 190, 0.22), 0 0 9px 1px rgba(82, 157, 190, 0.12);
+}
+
+.icon--solid {
+  background: radial-gradient(ellipse at 50% 48%, #fff 48%, #f0f1f2 100%);
+  box-shadow: 0 0 0 1px rgba(122, 132, 141, 0.2), 0 0 9px 1px rgba(122, 132, 141, 0.1);
+}
+
+.icon--intermediate {
+  background: radial-gradient(ellipse at 50% 48%, #fff 48%, #f3eff8 100%);
+  box-shadow: 0 0 0 1px rgba(146, 119, 174, 0.22), 0 0 9px 1px rgba(146, 119, 174, 0.12);
+}
+
 .icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 
 .ing-name, .ferment-select, .liquid-select, .name-input {

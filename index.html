@@ -122,7 +122,7 @@
             <button type="button" class="move-ing" :disabled="index === 0" @click="moveIngredient(item.id, -1)" :aria-label="'Mover ' + (item.name || 'ingrediente') + ' para cima'" :title="'Mover ' + (item.name || 'ingrediente') + ' para cima'">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 14 6-6 6 6"/></svg>
             </button>
-            <div class="icon" v-html="iconFor(item)"></div>
+            <div class="icon" :class="'icon--' + mixState(item)" v-html="iconFor(item)"></div>
             <button type="button" class="move-ing" :disabled="index === state.ingredients.length - 1" @click="moveIngredient(item.id, 1)" :aria-label="'Mover ' + (item.name || 'ingrediente') + ' para baixo'" :title="'Mover ' + (item.name || 'ingrediente') + ' para baixo'">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 10 6 6 6-6"/></svg>
             </button>
