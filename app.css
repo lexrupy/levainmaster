@@ -1376,7 +1376,7 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 /* Confirmação genérica */
 .confirm-dialog { align-items: center; } /* confirmação é curta: fica no meio da tela */
 .confirm-dialog > .levain { width: min(420px, 100%); }
-.confirm-text { margin: 4px 0 16px; font-size: 0.95rem; line-height: 1.4; overflow-wrap: anywhere; }
+.confirm-text { margin: 4px 0 16px; font-size: 0.95rem; line-height: 1.4; overflow-wrap: anywhere; white-space: pre-line; }
 .confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .confirm-actions button { min-height: 46px; margin: 0; padding: 10px 12px; border-radius: 12px; font-size: 0.95rem; font-weight: 650; }
 .confirm-actions .install { box-shadow: none; }

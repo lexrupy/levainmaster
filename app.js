@@ -914,7 +914,7 @@ createApp({
         format: "levainmaster-recipe",
         version: 1,
         exportedAt: new Date().toISOString(),
-        recipe: { name, state: JSON.parse(JSON.stringify(state)) },
+        recipe: { name, bread: result.value.bread, state: JSON.parse(JSON.stringify(state)) },
       };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -938,9 +938,12 @@ createApp({
         const importedState = normalizeState(payload.recipe.state);
         const name = payload.recipe.name.trim().slice(0, 80);
         if (!importedState || !name) throw new Error("A receita não contém dados válidos.");
+        const bread = typeof payload.recipe.bread === "string" && payload.recipe.bread.trim()
+          ? payload.recipe.bread.trim().slice(0, 100)
+          : Padeiro.compute(importedState, configStore).bread;
         const confirmed = await askConfirm({
           title: "Importar receita?",
-          message: "Deseja importar “" + name + "” para a lista de receitas deste dispositivo?",
+          message: "Arquivo reconhecido: receita do Levain Master (JSON).\n\nReceita: “" + name + "”\nTipo de pão: " + bread + "\n\nDeseja importar para este dispositivo?",
           confirmLabel: "Importar",
         });
         if (!confirmed) {
