@@ -554,6 +554,18 @@ createApp({
       return gramsFormat.format(Math.round(Padeiro.num(value)));
     }
 
+    // Peso da massa: arredonda para 0,5 g (840,5 g), já que o fermento seco tem casa decimal.
+    function formatHalfG(value) {
+      const half = Math.round(Padeiro.num(value) * 2) / 2;
+      return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(half);
+    }
+
+    // Linha da lista: inteiro, ou 1 casa no fermento seco (0,1 g).
+    function formatRowG(row) {
+      if (!row || !row.fine) return formatG(row ? row.shown : 0);
+      return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(Padeiro.num(row.shown));
+    }
+
     function formatPortionG(value) {
       return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(Padeiro.num(value));
     }
@@ -1569,7 +1581,7 @@ createApp({
       const stats = [
         ["FARINHA", formatG(result.value.flour) + " g"],
         ["HIDRATAÇÃO TOTAL", formatPct(result.value.hydration) + "%"],
-        ["PESO DA MASSA", formatG(result.value.totalWeight) + " g"],
+        ["PESO DA MASSA", formatHalfG(result.value.totalWeight) + " g"],
       ];
       stats.forEach(([label, value], index) => {
         const x = pad + index * (statW + statGap);
@@ -1715,7 +1727,7 @@ createApp({
         ctx.fillText(formatPctFine(row.pct) + "%", 790, y + item.nameY);
         ctx.fillStyle = "#2c241c";
         ctx.font = "700 24px Outfit, sans-serif";
-        ctx.fillText(formatG(row.shown) + " g", rowRight, y + item.nameY);
+        ctx.fillText(formatRowG(row) + " g", rowRight, y + item.nameY);
         ctx.textAlign = "left";
         if (item.note) {
           ctx.fillStyle = "#8d7f70";
@@ -2527,6 +2539,8 @@ createApp({
       onDialogClick,
       canInstall,
       formatG,
+      formatRowG,
+      formatHalfG,
       formatPortionG,
       portionEditing,
       portionDraft,

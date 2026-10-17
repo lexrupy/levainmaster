@@ -35,6 +35,22 @@ test("gramas são farinha vezes percentual", () => {
   close(row(result, "ferment").grams, 5);
 });
 
+test("fermento seco mostra 0,1 g e os inteiros continuam fechando a massa", () => {
+  assert.deepEqual(Padeiro.balanceShown([333, 216.45, 0.4329], [2]), [333, 216, 0.4]);
+  [300, 333, 350].forEach((flour) => {
+    const result = recipe((state) => {
+      state.flour = flour;
+      state.ingredients.find((item) => item.role === "ferment").pct = 0.13;
+    });
+    const yeast = row(result, "ferment");
+    assert.equal(yeast.fine, true);
+    assert.equal(yeast.shown, Math.round(flour * 0.013) / 10);
+    assert.ok(yeast.shown > 0);
+    const sum = [result.flour, ...result.rows.map((item) => item.shown)].reduce((a, b) => a + b, 0);
+    assert.ok(Math.abs(sum - result.totalWeight) <= 0.55);
+  });
+});
+
 test("os inteiros da lista fecham o peso da massa", () => {
   const shown = Padeiro.balanceShown([250, 162.5, 5, 2.5]);
   assert.deepEqual(shown, [250, 163, 5, 2]);
@@ -42,10 +58,11 @@ test("os inteiros da lista fecham o peso da massa", () => {
     state.flour = 250;
   });
   const lines = [result.flour, ...result.rows.map((item) => item.shown)];
-  assert.equal(lines.reduce((sum, value) => sum + value, 0), Math.round(result.totalWeight));
+  // O fermento seco mostra 1 casa (2,5 g), então a soma fecha a menos de 0,5 g.
+  assert.ok(Math.abs(lines.reduce((sum, value) => sum + value, 0) - result.totalWeight) <= 0.5);
   close(result.hydration, 65);
   assert.equal(row(result, "water").shown, 163);
-  assert.equal(row(result, "ferment").shown, 2);
+  assert.equal(row(result, "ferment").shown, 2.5);
 });
 
 test("hidratação soma água direta, teor do ingrediente e água e farinha da alimentação", () => {

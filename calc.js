@@ -406,13 +406,23 @@
     return (Math.max(0, num(flour)) * Math.max(0, num(pct))) / 100;
   }
 
+  // Fermento seco aparece com 1 casa (0,1 g): em receitas pequenas, 0,13% de 333 g seria "0" ou "1".
+  function isDryYeast(item) {
+    return isFerment(item) && item.ferment === "seco";
+  }
+
   // Inteiros que somam o arredondado do total. O grama do empate em ,5 fica na primeira linha.
-  function balanceShown(values) {
+  // Os índices em `fine` ficam com 1 casa decimal e saem da divisão em inteiros.
+  function balanceShown(values, fine) {
     const exact = values.map((value) => Math.max(0, num(value)));
-    const shown = exact.map((value) => Math.floor(value));
-    let left = Math.round(exact.reduce((sum, value) => sum + value, 0)) - shown.reduce((sum, value) => sum + value, 0);
+    const fineSet = new Set(fine || []);
+    const shown = exact.map((value, index) => (fineSet.has(index) ? Math.round(value * 10) / 10 : Math.floor(value)));
+    const intSum = (list) => list.reduce((sum, value, index) => (fineSet.has(index) ? sum : sum + value), 0);
+    const fineSum = shown.reduce((sum, value, index) => (fineSet.has(index) ? sum + value : sum), 0);
+    let left = Math.round(exact.reduce((sum, value) => sum + value, 0) - fineSum) - intSum(shown);
     const order = exact
       .map((value, index) => ({ index, frac: value - shown[index] }))
+      .filter((entry) => !fineSet.has(entry.index))
       .sort((a, b) => b.frac - a.frac || a.index - b.index);
     let guard = 0;
     while (left > 0 && order.length && guard < exact.length * 4) {
@@ -508,9 +518,14 @@
       };
     });
 
-    const shown = balanceShown([flour, ...rows.map((row) => row.grams)]);
+    const fine = [];
+    ingredients.forEach((item, index) => {
+      if (isDryYeast(item)) fine.push(index + 1);
+    });
+    const shown = balanceShown([flour, ...rows.map((row) => row.grams)], fine);
     rows.forEach((row, index) => {
       row.shown = shown[index + 1];
+      row.fine = fine.includes(index + 1);
     });
 
     const totalFlour = flour + rows.reduce((sum, row) => sum + (row.addedFlour || 0), 0);
@@ -563,6 +578,7 @@
     acceptJar,
     peakEstimate,
     isFerment,
+    isDryYeast,
     enrichedBread,
     gramsOf,
     balanceShown,

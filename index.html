@@ -72,7 +72,7 @@
             <span class="other">Outros<b>{{ formatPct(result.otherShare) }}%</b></span>
           </div>
           <p class="mass" :data-total="result.totalWeight">
-            <b>{{ formatG(result.totalWeight) }} g</b>
+            <b>{{ formatHalfG(result.totalWeight) }} g</b>
             <input v-if="portionEditing" v-focus class="portion-input" type="number" min="1" max="99" step="1" inputmode="numeric" v-model="portionDraft" @blur="finishPortionEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc.prevent="cancelPortionEdit" aria-label="Quantidade de porções">
             <button v-else type="button" class="portion-label" @click="editPortions" :aria-label="state.portions === 1 ? 'Uma porção de massa. Selecionar quantidade de porções' : state.portions + ' porções de ' + formatPortionG(result.totalWeight / state.portions) + ' gramas. Alterar quantidade'">
               {{ state.portions === 1 ? 'Uma porção de massa' : state.portions + ' porções de ' + formatPortionG(result.totalWeight / state.portions) + ' g' }}
@@ -163,7 +163,7 @@
               <button v-if="item.role === 'extra' || item.role === 'ferment2' || item.role === 'salt'" type="button" class="del" @click="removeIngredient(item.id)" :aria-label="'Remover ' + (item.name || 'ingrediente')">×</button>
             </div>
             <div class="pct">
-              <input v-if="isEditing(item, 'pct')" v-focus type="number" min="0" step="0.5" inputmode="decimal" :value="editing.text" @input="onEdit(item, 'pct', $event.target.value)" @blur="endEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc="cancelEdit(item)" :aria-label="'Percentual de ' + (item.name || 'ingrediente')">
+              <input v-if="isEditing(item, 'pct')" v-focus type="number" min="0" :step="rowOf(item.id).fine ? 0.01 : 0.5" inputmode="decimal" :value="editing.text" @input="onEdit(item, 'pct', $event.target.value)" @blur="endEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc="cancelEdit(item)" :aria-label="'Percentual de ' + (item.name || 'ingrediente')">
               <button v-else type="button" class="pct-value" @click="startEdit(item, 'pct')" :aria-label="'Editar percentual de ' + (item.name || 'ingrediente')">{{ formatPctFine(item.pct) }}</button>
               <span>%</span>
               <span v-if="isFerment(item) && item.ferment === 'levain'" class="levain-info">Hidratação {{ levainProfile ? formatPct(levainProfile.hydration) + '%' : '—' }}</span>
@@ -179,8 +179,8 @@
             <div class="bar" aria-hidden="true"><span :style="{ width: barWidth(item.pct) }"></span></div>
           </div>
           <div class="grams" :data-grams="item.role">
-            <input v-if="isEditing(item, 'grams')" v-focus class="grams-input" type="number" min="0" step="1" inputmode="decimal" :value="editing.text" @input="onEdit(item, 'grams', $event.target.value)" @blur="endEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc="cancelEdit(item)" :aria-label="'Gramas de ' + (item.name || 'ingrediente')">
-            <button v-else type="button" class="grams-value" :disabled="result.flour <= 0" @click="startEdit(item, 'grams')" :aria-label="'Editar gramas de ' + (item.name || 'ingrediente')">{{ formatG(rowOf(item.id).shown) }}</button><small>g</small>
+            <input v-if="isEditing(item, 'grams')" v-focus class="grams-input" type="number" min="0" :step="rowOf(item.id).fine ? 0.1 : 1" inputmode="decimal" :value="editing.text" @input="onEdit(item, 'grams', $event.target.value)" @blur="endEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc="cancelEdit(item)" :aria-label="'Gramas de ' + (item.name || 'ingrediente')">
+            <button v-else type="button" class="grams-value" :disabled="result.flour <= 0" @click="startEdit(item, 'grams')" :aria-label="'Editar gramas de ' + (item.name || 'ingrediente')">{{ formatRowG(rowOf(item.id)) }}</button><small>g</small>
           </div>
         </div>
       </div>
