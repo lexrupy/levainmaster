@@ -108,6 +108,7 @@
     { group: "Ovos, leite e gordura", name: "Manteiga", water: 16, enrich: "gordura" },
     { group: "Ovos, leite e gordura", name: "Margarina sem sal", water: 16, enrich: "gordura" },
     { group: "Ovos, leite e gordura", name: "Margarina com sal", water: 16, enrich: "gordura" },
+    { group: "Ovos, leite e gordura", name: "Azeite", water: 0, enrich: "gordura" },
     { group: "Ovos, leite e gordura", name: "Açúcar", water: 0, enrich: "açúcar" },
     { group: "Ovos, leite e gordura", name: "Açúcar mascavo", water: 0, enrich: "açúcar" },
     { group: "Ovos, leite e gordura", name: "Adoçante culinário", water: 0, enrich: "açúcar" },
