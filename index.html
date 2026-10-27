@@ -263,7 +263,6 @@
           <h2 id="portion-title">Porções e peso</h2>
           <button type="button" class="del" @click="closePortionTarget" aria-label="Fechar">×</button>
         </header>
-        <p class="hint">Diga quantas porções e quanto cada uma deve pesar. A farinha é recalculada, e o resto da receita acompanha os percentuais.</p>
         <div class="portion-fields">
           <label>Porções<input type="number" min="1" max="99" step="1" inputmode="numeric" v-model="portionTarget.count" aria-label="Quantidade de porções"></label>
           <label>Peso de cada (g)<input type="number" min="1" step="1" inputmode="numeric" v-model="portionTarget.weight" aria-label="Peso de cada porção em gramas"></label>
