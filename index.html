@@ -268,7 +268,7 @@
           <label>Porções<input type="number" min="1" max="99" step="1" inputmode="numeric" v-model="portionTarget.count" aria-label="Quantidade de porções"></label>
           <label>Peso de cada (g)<input type="number" min="1" step="1" inputmode="numeric" v-model="portionTarget.weight" aria-label="Peso de cada porção em gramas"></label>
         </div>
-        <p class="hint" data-portion-preview>{{ portionTargetPreview ? 'Peso final: ' + portionTargetPreview.count + ' × ~' + formatG(portionTargetPreview.each) + ' g (farinha ' + formatG(portionTargetPreview.flour) + ' g, massa ' + formatHalfG(portionTargetPreview.total) + ' g).' + (portionTargetPreview.extra > 0.05 ? ' A farinha é arredondada para cima, de 10 em 10 g.' : '') : 'Informe a quantidade e o peso.' }}</p>
+        <p class="hint" data-portion-preview>{{ portionTargetPreview ? 'Peso final: ' + portionTargetPreview.count + ' × ~' + formatG(portionTargetPreview.each) + ' g (farinha ' + formatG(portionTargetPreview.flour) + ' g, massa ' + formatHalfG(portionTargetPreview.total) + ' g).' : 'Informe a quantidade e o peso.' }}</p>
         <div class="confirm-actions">
           <button type="button" class="install" @click="closePortionTarget">Cancelar</button>
           <button type="submit" class="levain-done" :disabled="!portionTargetPreview">Recalcular</button>

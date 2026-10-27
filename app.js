@@ -592,7 +592,7 @@ createApp({
       const flour = Padeiro.flourForTotal(state, configStore, count * weight, 10);
       if (!(flour > 0) || flour > FLOUR_MAX) return null;
       const total = Padeiro.compute({ ...state, flour }, configStore).totalWeight;
-      return { count, flour, total, each: total / count, extra: total - count * weight };
+      return { count, flour, total, each: total / count };
     });
 
     function openPortionTarget() {
