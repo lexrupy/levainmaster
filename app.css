@@ -1084,6 +1084,26 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
   font-size: 0.8rem;
 }
 
+.mass .portion-target {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--brown);
+  cursor: pointer;
+}
+.mass .portion-target svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.mass .portion-target:focus-visible { outline: 2px solid var(--brown-soft); outline-offset: 1px; }
+.portion-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0 4px; }
+.portion-fields label { font-size: 0.8rem; font-weight: 620; color: var(--brown); }
+.portion-fields input { margin: 4px 0 0; }
+
 /* Perfil da ativação do levain: textura, pico e sabor */
 .profile {
   margin: 14px 0 4px;

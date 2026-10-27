@@ -396,3 +396,18 @@ test("peakEstimate trata perfil ou calibração inválidos e faixas invertidas",
   assert.equal(firmEstimate.stiff, true);
   assert.equal(firmEstimate.time, "8,5 a 10 h");
 });
+
+test("flourForTotal: 6 porções de 270 g na receita inicial sobem a farinha para 970 g", () => {
+  const state = Padeiro.defaultState();
+  const flour = Padeiro.flourForTotal(state, undefined, 6 * 270, 10);
+  assert.equal(flour, 970);
+  state.flour = flour;
+  const total = Padeiro.compute(state).totalWeight;
+  assert.ok(total >= 1620 && total < 1620 + 10 * 1.68 + 1e-9, "massa " + total);
+});
+
+test("flourForTotal: total exato não sobe um degrau à toa e zero devolve zero", () => {
+  const state = Padeiro.defaultState();
+  assert.equal(Padeiro.flourForTotal(state, undefined, 840, 10), 500);
+  assert.equal(Padeiro.flourForTotal(state, undefined, 0, 10), 0);
+});

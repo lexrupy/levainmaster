@@ -74,6 +74,9 @@
           <p class="mass" :data-total="result.totalWeight">
             <b>{{ formatHalfG(result.totalWeight) }} g</b>
             <input v-if="portionEditing" v-focus class="portion-input" type="number" min="1" max="99" step="1" inputmode="numeric" v-model="portionDraft" @blur="finishPortionEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc.prevent="cancelPortionEdit" aria-label="Quantidade de porções">
+            <button v-if="portionEditing" type="button" class="portion-target" @mousedown.prevent @click="openPortionTarget" aria-label="Definir porções e peso por porção" title="Definir porções e peso por porção">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2" fill="currentColor"/><circle cx="15" cy="12" r="2" fill="currentColor"/><circle cx="8" cy="17" r="2" fill="currentColor"/></svg>
+            </button>
             <button v-else type="button" class="portion-label" @click="editPortions" :aria-label="state.portions === 1 ? 'Uma porção de massa. Selecionar quantidade de porções' : state.portions + ' porções de ' + formatPortionG(result.totalWeight / state.portions) + ' gramas. Alterar quantidade'">
               {{ state.portions === 1 ? 'Uma porção de massa' : state.portions + ' porções de ' + formatPortionG(result.totalWeight / state.portions) + ' g' }}
             </button>
@@ -252,6 +255,25 @@
           <button type="button" class="levain-done" :class="{ danger: confirmState.danger }" @click="answerConfirm(true)">{{ confirmState.confirmLabel }}</button>
         </div>
       </article>
+    </dialog>
+
+    <dialog ref="portionDialog" class="levain-dialog confirm-dialog" @click="onPortionClick" aria-labelledby="portion-title">
+      <form class="levain compact confirm" @submit.prevent="applyPortionTarget">
+        <header class="levain-head">
+          <h2 id="portion-title">Porções e peso</h2>
+          <button type="button" class="del" @click="closePortionTarget" aria-label="Fechar">×</button>
+        </header>
+        <p class="hint">Diga quantas porções e quanto cada uma deve pesar. A farinha é recalculada, e o resto da receita acompanha os percentuais.</p>
+        <div class="portion-fields">
+          <label>Porções<input type="number" min="1" max="99" step="1" inputmode="numeric" v-model="portionTarget.count" aria-label="Quantidade de porções"></label>
+          <label>Peso de cada (g)<input type="number" min="1" step="1" inputmode="numeric" v-model="portionTarget.weight" aria-label="Peso de cada porção em gramas"></label>
+        </div>
+        <p class="hint" data-portion-preview>{{ portionTargetPreview ? 'Peso final: ' + portionTargetPreview.count + ' × ~' + formatG(portionTargetPreview.each) + ' g (farinha ' + formatG(portionTargetPreview.flour) + ' g, massa ' + formatHalfG(portionTargetPreview.total) + ' g).' + (portionTargetPreview.extra > 0.05 ? ' A farinha é arredondada para cima, de 10 em 10 g.' : '') : 'Informe a quantidade e o peso.' }}</p>
+        <div class="confirm-actions">
+          <button type="button" class="install" @click="closePortionTarget">Cancelar</button>
+          <button type="submit" class="levain-done" :disabled="!portionTargetPreview">Recalcular</button>
+        </div>
+      </form>
     </dialog>
 
     <dialog ref="duplicateDialog" class="levain-dialog confirm-dialog" @click="onDuplicateClick" @close="answerDuplicate(null)" aria-labelledby="duplicate-title" aria-describedby="duplicate-text">

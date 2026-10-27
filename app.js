@@ -582,6 +582,45 @@ createApp({
       portionEditing.value = false;
     }
 
+    // Cálculo reverso: porções × peso de cada → farinha. Pontual, nada novo fica no estado.
+    const portionDialog = ref(null);
+    const portionTarget = reactive({ count: "1", weight: "" });
+    const portionTargetPreview = computed(() => {
+      const count = Math.round(Number(portionTarget.count));
+      const weight = Number(portionTarget.weight);
+      if (!(count >= 1 && count <= 99) || !(weight > 0)) return null;
+      const flour = Padeiro.flourForTotal(state, configStore, count * weight, 10);
+      if (!(flour > 0) || flour > FLOUR_MAX) return null;
+      const total = Padeiro.compute({ ...state, flour }, configStore).totalWeight;
+      return { count, flour, total, each: total / count, extra: total - count * weight };
+    });
+
+    function openPortionTarget() {
+      portionTarget.count = String(Math.min(99, Math.max(1, Number.parseInt(String(portionDraft.value).trim(), 10) || state.portions)));
+      portionTarget.weight = String(Math.round(result.value.totalWeight / state.portions));
+      const dialog = portionDialog.value;
+      if (dialog && !dialog.open) dialog.showModal();
+    }
+
+    function closePortionTarget() {
+      const dialog = portionDialog.value;
+      if (dialog && dialog.open) dialog.close();
+    }
+
+    function onPortionClick(event) {
+      if (event.target === portionDialog.value) closePortionTarget();
+    }
+
+    function applyPortionTarget() {
+      const preview = portionTargetPreview.value;
+      if (!preview) return;
+      state.flour = preview.flour;
+      state.portions = preview.count;
+      portionDraft.value = String(preview.count);
+      portionEditing.value = false;
+      closePortionTarget();
+    }
+
     function cancelPortionEdit() {
       portionDraft.value = String(state.portions);
       portionEditing.value = false;
@@ -2547,6 +2586,13 @@ createApp({
       editPortions,
       finishPortionEdit,
       cancelPortionEdit,
+      portionDialog,
+      portionTarget,
+      portionTargetPreview,
+      openPortionTarget,
+      closePortionTarget,
+      onPortionClick,
+      applyPortionTarget,
       notesOpen,
       toggleNotes,
       insertNotesTab,

@@ -562,6 +562,16 @@
     };
   }
 
+  // Farinha que fecha um peso de massa com os percentuais atuais. Sobe para o próximo múltiplo
+  // de `step` g: melhor sobrar um pouco de massa que faltar. O peso é linear na farinha.
+  function flourForTotal(state, config, total, step) {
+    const target = Math.max(0, num(total));
+    const unit = step > 0 ? step : 10;
+    const perGram = compute(Object.assign({}, state, { flour: 1000 }), config).totalWeight / 1000;
+    if (!(perGram > 0) || target === 0) return 0;
+    return Math.ceil(target / perGram / unit - 1e-9) * unit;
+  }
+
   return {
     RATIOS,
     RATIO_GROUPS,
@@ -584,6 +594,7 @@
     balanceShown,
     convertYeast,
     compute,
+    flourForTotal,
     defaultState,
   };
 });
