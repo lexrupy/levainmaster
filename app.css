@@ -1103,6 +1103,7 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 .portion-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0 4px; }
 .portion-fields label { font-size: 0.8rem; font-weight: 620; color: var(--brown); }
 .portion-fields input { margin: 4px 0 0; }
+.portion-fields ~ .confirm-actions { margin-top: 18px; }
 
 /* Perfil da ativação do levain: textura, pico e sabor */
 .profile {
