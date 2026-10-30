@@ -386,6 +386,18 @@
           <input ref="backupImportInput" type="file" accept="application/json,.json" class="file-input-hidden" @change="importBackupFile">
           <p v-if="backupStatus" class="import-status" role="status">{{ backupStatus }}</p>
         </section>
+        <section class="about-cal" aria-labelledby="config-sync-title">
+          <h3 id="config-sync-title" class="kicker">Sincronizar receitas</h3>
+          <p class="hint">Junta as receitas salvas com um gist do GitHub. Sem o token só lê; com ele, também grava.</p>
+          <label class="hint" for="sync-gist">Id do gist</label>
+          <input id="sync-gist" type="text" v-model="syncStore.gistId" autocomplete="off" autocapitalize="off" spellcheck="false">
+          <label class="hint" for="sync-token">Token (permissão Gists)</label>
+          <input id="sync-token" type="password" v-model="syncStore.token" autocomplete="off">
+          <div class="backup-actions">
+            <button type="button" class="install" :disabled="syncing" @click="syncRecipes">{{ syncing ? "Sincronizando…" : "Sincronizar receitas" }}</button>
+          </div>
+          <p v-if="syncStatus" class="import-status" role="status">{{ syncStatus }}</p>
+        </section>
         <div class="sheet-foot">
           <button type="button" class="levain-done" @click="closeConfig">Concluir</button>
         </div>

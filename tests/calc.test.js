@@ -411,3 +411,17 @@ test("flourForTotal: total exato não sobe um degrau à toa e zero devolve zero"
   assert.equal(Padeiro.flourForTotal(state, undefined, 840, 10), 500);
   assert.equal(Padeiro.flourForTotal(state, undefined, 0, 10), 0);
 });
+
+test("mergeRecipes: junta por id, o savedAt mais recente vence e nada é apagado", () => {
+  const a = { id: "a", name: "A", savedAt: "2026-10-01T10:00:00Z" };
+  const b = { id: "b", name: "B", savedAt: "2026-10-02T10:00:00Z" };
+  const aNova = { id: "a", name: "A2", savedAt: "2026-10-03T10:00:00Z" };
+  const c = { id: "c", name: "C", savedAt: "2026-10-04T10:00:00Z" };
+  const r = Padeiro.mergeRecipes([a, b], [aNova, c]);
+  assert.deepEqual(r.list.map((x) => x.name), ["C", "A2", "B"]);
+  assert.equal(r.added, 1);
+  assert.equal(r.updated, 1);
+  const empate = Padeiro.mergeRecipes([a], [{ id: "a", name: "outro", savedAt: a.savedAt }]);
+  assert.equal(empate.list[0].name, "A");
+  assert.equal(empate.updated, 0);
+});

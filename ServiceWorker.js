@@ -1,6 +1,6 @@
 // Levain Master — © 2026 Alexandre da Silva
 // SPDX-License-Identifier: LGPL-3.0-or-later
-const CACHE = "padeiro-v132";
+const CACHE = "padeiro-v133";
 const FILES = [
   "./",
   "./index.html",

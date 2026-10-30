@@ -6,6 +6,8 @@ const STORAGE_KEY = "percentual-padeiro-v1";
 const RECIPES_KEY = "percentual-padeiro-receitas-v1";
 const CAL_KEY = "percentual-padeiro-calibracoes-v1";
 const CONFIG_KEY = "percentual-padeiro-config-v1";
+const SYNC_KEY = "percentual-padeiro-sync-v1";
+const SYNC_FILE = "levainmaster-receitas.json";
 const TEMP_BANDS = [
   { lo: 18, hi: 20 },
   { lo: 20, hi: 22 },
@@ -211,6 +213,15 @@ function loadRecipes() {
   }
 }
 
+function loadSync() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SYNC_KEY) || "null");
+    return { gistId: String(raw && raw.gistId || ""), token: String(raw && raw.token || "") };
+  } catch (error) {
+    return { gistId: "", token: "" };
+  }
+}
+
 function normalizeConfig(raw) {
   return {
     includeLevain: raw && raw.includeLevain !== undefined ? !!raw.includeLevain : true,
@@ -358,6 +369,9 @@ createApp({
     const about = reactive({ version: "", offline: false, persisted: false, checking: false, status: "", reload: false });
     const persistenceErrors = reactive({ state: false, recipes: false, calibrations: false, config: false });
     const backupStatus = ref("");
+    const syncStore = reactive(loadSync());
+    const syncStatus = ref("");
+    const syncing = ref(false);
     const persistenceWarning = computed(() => {
       const labels = [];
       if (persistenceErrors.state) labels.push("a receita atual");
@@ -1167,6 +1181,90 @@ createApp({
         backupStatus.value = "Backup importado. Os dados deste aparelho foram substituídos.";
       } catch (error) {
         backupStatus.value = error instanceof SyntaxError ? "O arquivo não contém JSON válido." : (error.message || "Não foi possível importar este backup.");
+      }
+    }
+
+    // Sincroniza só as receitas salvas com um gist do GitHub: lê, junta por id e, com token, grava de volta.
+    function validRemoteRecipes(list) {
+      const seen = new Set();
+      const valid = [];
+      for (const item of Array.isArray(list) ? list : []) {
+        if (!item || typeof item.id !== "string" || !item.id || seen.has(item.id) || typeof item.name !== "string" || !item.name.trim()) continue;
+        const itemState = normalizeState(item.state);
+        if (!itemState) continue;
+        const name = item.name.trim().slice(0, 80);
+        itemState.recipeName = name;
+        seen.add(item.id);
+        valid.push({ id: item.id, name, savedAt: typeof item.savedAt === "string" ? item.savedAt : "", state: itemState });
+      }
+      return valid;
+    }
+
+    async function gistRequest(path, options = {}) {
+      const headers = { Accept: "application/vnd.github+json" };
+      if (syncStore.token) headers.Authorization = "Bearer " + syncStore.token;
+      if (options.body) headers["Content-Type"] = "application/json";
+      let response;
+      try {
+        response = await fetch("https://api.github.com" + path, { ...options, headers, cache: "no-store" });
+      } catch (error) {
+        throw new Error("Sem conexão com o GitHub.");
+      }
+      if (response.status === 401 || response.status === 403) throw new Error("O GitHub recusou o token ou o limite de acessos.");
+      if (response.status === 404) throw new Error("Gist não encontrado. Confira o id e a permissão “Gists” do token.");
+      if (!response.ok) throw new Error("O GitHub respondeu com erro " + response.status + ".");
+      return response.json();
+    }
+
+    async function syncRecipes() {
+      if (syncing.value) return;
+      syncStatus.value = "";
+      syncStore.gistId = syncStore.gistId.trim();
+      syncStore.token = syncStore.token.trim();
+      if (!syncStore.gistId && !syncStore.token) {
+        syncStatus.value = "Informe o id do gist, ou um token para criar um.";
+        return;
+      }
+      syncing.value = true;
+      try {
+        let remote = [];
+        if (syncStore.gistId) {
+          const gist = await gistRequest("/gists/" + encodeURIComponent(syncStore.gistId));
+          const file = gist.files && gist.files[SYNC_FILE];
+          if (file) {
+            const text = file.truncated ? await (await fetch(file.raw_url, { cache: "no-store" })).text() : file.content;
+            const payload = JSON.parse(text);
+            if (payload?.appKey !== "levainmaster" || payload.version !== 1) throw new Error("O gist não tem receitas do Levain Master.");
+            remote = validRemoteRecipes(payload.recipes);
+          }
+        }
+        const merged = Padeiro.mergeRecipes(recipes.value, remote);
+        if (merged.added || merged.updated) {
+          if (!persistRecipes(merged.list)) throw new Error("Não foi possível salvar as receitas neste aparelho.");
+          recipes.value = merged.list;
+        }
+        let sent = false;
+        if (syncStore.token) {
+          const body = JSON.stringify({
+            description: "Receitas do Levain Master",
+            public: false,
+            files: { [SYNC_FILE]: { content: JSON.stringify({ appKey: "levainmaster", format: "levainmaster-receitas", version: 1, recipes: merged.list }, null, 1) } },
+          });
+          const gist = syncStore.gistId
+            ? await gistRequest("/gists/" + encodeURIComponent(syncStore.gistId), { method: "PATCH", body })
+            : await gistRequest("/gists", { method: "POST", body });
+          syncStore.gistId = gist.id;
+          sent = true;
+        }
+        try { localStorage.setItem(SYNC_KEY, JSON.stringify({ gistId: syncStore.gistId, token: syncStore.token })); } catch (error) {
+          syncStatus.value = "Sincronizado, mas não foi possível guardar o id e o token neste aparelho.";
+          return;
+        }
+        syncStatus.value = "Sincronizado: " + merged.added + " novas, " + merged.updated + " atualizadas" + (sent ? ", " + merged.list.length + " no gist." : ". Sem token, nada foi enviado.");
+      } catch (error) {
+        syncStatus.value = error instanceof SyntaxError ? "O gist não contém JSON válido." : (error.message || "Não foi possível sincronizar.");
+      } finally {
+        syncing.value = false;
       }
     }
 
@@ -2491,6 +2589,10 @@ createApp({
       saveRecipeRename,
       backupImportInput,
       backupStatus,
+      syncStore,
+      syncStatus,
+      syncing,
+      syncRecipes,
       exportBackup,
       importBackupFile,
       recipeNameEditing,

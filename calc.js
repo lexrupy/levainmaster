@@ -572,6 +572,27 @@
     return Math.ceil(target / perGram / unit - 1e-9) * unit;
   }
 
+  // Junta duas listas de receitas pelo id; no mesmo id vale o savedAt mais recente (empate: a local).
+  // Não apaga nada: receita que sumiu de um lado volta na próxima junção.
+  function mergeRecipes(local, remote) {
+    const byId = new Map();
+    local.forEach((item) => byId.set(item.id, item));
+    let added = 0;
+    let updated = 0;
+    remote.forEach((item) => {
+      const mine = byId.get(item.id);
+      if (!mine) {
+        byId.set(item.id, item);
+        added += 1;
+      } else if (String(item.savedAt || "") > String(mine.savedAt || "")) {
+        byId.set(item.id, item);
+        updated += 1;
+      }
+    });
+    const list = Array.from(byId.values()).sort((a, b) => String(b.savedAt || "").localeCompare(String(a.savedAt || "")));
+    return { list, added, updated };
+  }
+
   return {
     RATIOS,
     RATIO_GROUPS,
@@ -595,6 +616,7 @@
     convertYeast,
     compute,
     flourForTotal,
+    mergeRecipes,
     defaultState,
   };
 });
