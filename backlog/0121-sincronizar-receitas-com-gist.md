@@ -11,7 +11,7 @@ As receitas salvas só existiam em cada aparelho. O app é de uso pessoal, não 
 
 ## O que foi feito
 
-- Seção "Sincronizar receitas" em Configurações: id do gist, token (permissão Gists) e o botão "Sincronizar receitas". Id e token ficam em `percentual-padeiro-sync-v1`, só no aparelho.
+- Seção "Sincronizar receitas" em Configurações: id do gist, token clássico (escopo `gist`; o fine-grained não tem gists) e o botão "Sincronizar receitas". Id e token ficam em `percentual-padeiro-sync-v1`, só no aparelho.
 - `mergeRecipes` (`calc.js`) junta pelo `id`; no mesmo `id` vale o `savedAt` mais recente, e o empate fica com a local. Não apaga: receita apagada num lado volta na próxima junção.
 - Lê o arquivo `levainmaster-receitas.json` do gist, valida cada receita com `normalizeState`, junta, grava local e, com token, envia de volta. Sem id, o token cria um gist secreto. Sem token, só lê.
 - Só as receitas salvas: receita atual, opções e calibrações ficam de fora.

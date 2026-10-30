@@ -1211,7 +1211,7 @@ createApp({
         throw new Error("Sem conexão com o GitHub.");
       }
       if (response.status === 401 || response.status === 403) throw new Error("O GitHub recusou o token ou o limite de acessos.");
-      if (response.status === 404) throw new Error("Gist não encontrado. Confira o id e a permissão “Gists” do token.");
+      if (response.status === 404) throw new Error("Gist não encontrado. Confira o id e a escopo “gist” do token.");
       if (!response.ok) throw new Error("O GitHub respondeu com erro " + response.status + ".");
       return response.json();
     }
