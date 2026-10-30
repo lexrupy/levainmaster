@@ -421,10 +421,13 @@
           <p v-if="persistenceErrors.state" class="storage-inline" role="alert">Falha ao salvar a receita atual. As alterações continuam nesta sessão, mas podem se perder ao fechar o app.</p>
         </form>
         <template v-if="!quickSave">
-        <p class="kicker recipes-label">Salvas</p>
-        <p v-if="!recipes.length" class="hint">Nenhuma receita salva ainda.</p>
+        <div class="recipe-tabs" role="group" aria-label="Filtrar receitas">
+          <button type="button" class="install" :class="{ on: !showTrash }" :aria-pressed="!showTrash" @click="showTrash = false">Salvas ({{ liveRecipes.length }})</button>
+          <button type="button" class="install" :class="{ on: showTrash }" :aria-pressed="showTrash" @click="showTrash = true">Lixeira ({{ trashedRecipes.length }})</button>
+        </div>
+        <p v-if="!listedRecipes.length" class="hint">{{ showTrash ? 'A lixeira está vazia.' : 'Nenhuma receita salva ainda.' }}</p>
         <ul v-else class="recipe-list">
-          <li v-for="recipe in recipes" :key="recipe.id" class="recipe-item">
+          <li v-for="recipe in listedRecipes" :key="recipe.id" class="recipe-item">
             <div class="recipe-text">
               <template v-if="renamingRecipeId === recipe.id">
                 <input :id="'saved-recipe-name-' + recipe.id" class="name-input" v-model="renamingRecipeName" maxlength="80" :aria-label="'Novo nome para ' + recipe.name" @keydown.enter.prevent="saveRecipeRename(recipe)" @keydown.esc="cancelRecipeRename">
@@ -435,14 +438,18 @@
               <p class="recipe-meta">{{ summaryOf(recipe.state) }}</p>
             </div>
             <div class="recipe-actions">
-              <template v-if="renamingRecipeId === recipe.id">
+              <template v-if="showTrash">
+                <button type="button" class="install" @click="restoreRecipe(recipe)">Restaurar</button>
+                <button type="button" class="install recipe-del" @click="purgeRecipe(recipe)">Excluir permanentemente</button>
+              </template>
+              <template v-else-if="renamingRecipeId === recipe.id">
                 <button type="button" class="install" @click="saveRecipeRename(recipe)">Salvar nome</button>
                 <button type="button" class="install" @click="cancelRecipeRename">Cancelar</button>
               </template>
               <template v-else>
               <button type="button" class="install" @click="openRecipe(recipe)">Abrir</button>
               <button type="button" class="install" @click="startRecipeRename(recipe)">Renomear</button>
-              <button type="button" class="install recipe-del" @click="deleteRecipe(recipe)">Apagar</button>
+              <button type="button" class="install recipe-del" @click="trashRecipe(recipe)">Lixeira</button>
               </template>
             </div>
           </li>
@@ -450,7 +457,7 @@
         <input ref="importInput" type="file" accept="application/json,.json" class="file-input-hidden" @change="importRecipeFile">
         <button v-if="!quickSave" type="button" class="install import-recipe" @click="importInput?.click()">Importar receita JSON</button>
         <p v-if="importStatus" class="import-status" role="status">{{ importStatus }}</p>
-        <p v-if="recipes.length" class="hint">Abrir troca a receita da tela pela salva.</p>
+        <p v-if="liveRecipes.length && !showTrash" class="hint">Abrir troca a receita da tela pela salva.</p>
         </template>
       </article>
     </dialog>

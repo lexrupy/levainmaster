@@ -572,8 +572,13 @@
     return Math.ceil(target / perGram / unit - 1e-9) * unit;
   }
 
-  // Junta duas listas de receitas pelo id; no mesmo id vale o savedAt mais recente (empate: a local).
-  // Não apaga nada: receita que sumiu de um lado volta na próxima junção.
+  // Junta duas listas de receitas pelo id; no mesmo id vale a modificação mais recente
+  // (`updatedAt`, ou `savedAt` nas antigas; empate: a local). Lixeira e exclusão definitiva
+  // viajam como marcas na própria receita, então nada volta sozinho.
+  function modifiedAt(item) {
+    return String(item.updatedAt || item.savedAt || "");
+  }
+
   function mergeRecipes(local, remote) {
     const byId = new Map();
     local.forEach((item) => byId.set(item.id, item));
@@ -584,7 +589,7 @@
       if (!mine) {
         byId.set(item.id, item);
         added += 1;
-      } else if (String(item.savedAt || "") > String(mine.savedAt || "")) {
+      } else if (modifiedAt(item) > modifiedAt(mine)) {
         byId.set(item.id, item);
         updated += 1;
       }

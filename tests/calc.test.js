@@ -425,3 +425,13 @@ test("mergeRecipes: junta por id, o savedAt mais recente vence e nada é apagado
   assert.equal(empate.list[0].name, "A");
   assert.equal(empate.updated, 0);
 });
+
+test("mergeRecipes: lixeira e exclusão definitiva propagam e não são desfeitas pela cópia antiga", () => {
+  const viva = { id: "a", name: "A", savedAt: "2026-10-01T10:00:00Z" };
+  const lixo = { ...viva, deletedAt: "2026-10-05T10:00:00Z", updatedAt: "2026-10-05T10:00:00Z" };
+  const purgada = { id: "a", name: "", savedAt: viva.savedAt, updatedAt: "2026-10-06T10:00:00Z", purged: true };
+  assert.equal(Padeiro.mergeRecipes([viva], [lixo]).list[0].deletedAt, lixo.deletedAt);
+  assert.equal(Padeiro.mergeRecipes([lixo], [viva]).list[0].deletedAt, lixo.deletedAt);
+  assert.equal(Padeiro.mergeRecipes([viva], [purgada]).list[0].purged, true);
+  assert.equal(Padeiro.mergeRecipes([purgada], [lixo]).list[0].purged, true);
+});

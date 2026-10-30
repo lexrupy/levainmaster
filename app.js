@@ -204,10 +204,23 @@ function loadState() {
   }
 }
 
+// Campos de controle da lixeira e da sincronização. `purged` é o que sobra de uma receita
+// excluída para sempre: sem estado, só para a exclusão chegar aos outros aparelhos.
+function recipeMeta(item) {
+  const meta = {};
+  if (typeof item.updatedAt === "string" && item.updatedAt) meta.updatedAt = item.updatedAt;
+  if (typeof item.deletedAt === "string" && item.deletedAt) meta.deletedAt = item.deletedAt;
+  return meta;
+}
+
+function purgedRecipe(item, updatedAt) {
+  return { id: item.id, name: "", savedAt: typeof item.savedAt === "string" ? item.savedAt : "", updatedAt, purged: true };
+}
+
 function loadRecipes() {
   try {
     const list = JSON.parse(localStorage.getItem(RECIPES_KEY) || "[]");
-    return Array.isArray(list) ? list.filter((item) => item && item.id && item.state) : [];
+    return Array.isArray(list) ? list.filter((item) => item && item.id && (item.state || item.purged)) : [];
   } catch (error) {
     return [];
   }
@@ -394,6 +407,11 @@ createApp({
     }
     const recipes = ref(loadRecipes());
     const recipeName = ref("");
+    const showTrash = ref(false);
+    const isLive = (item) => !item.purged && !item.deletedAt;
+    const liveRecipes = computed(() => recipes.value.filter(isLive));
+    const trashedRecipes = computed(() => recipes.value.filter((item) => !item.purged && item.deletedAt));
+    const listedRecipes = computed(() => (showTrash.value ? trashedRecipes.value : liveRecipes.value));
     const recipeNameEditing = ref(false);
     const renamingRecipeId = ref("");
     const renamingRecipeName = ref("");
@@ -1056,6 +1074,10 @@ createApp({
         if (!currentState || !Array.isArray(savedRecipes)) throw new Error("Os dados salvos neste aparelho estão incompletos; nenhum backup foi exportado.");
         const recipeIds = new Set();
         const backupRecipes = savedRecipes.map((recipe, index) => {
+          if (recipe && recipe.purged && typeof recipe.id === "string" && recipe.id && !recipeIds.has(recipe.id)) {
+            recipeIds.add(recipe.id);
+            return purgedRecipe(recipe, recipe.updatedAt || "");
+          }
           if (!recipe || typeof recipe.id !== "string" || !recipe.id || recipeIds.has(recipe.id) || typeof recipe.name !== "string" || !recipe.name.trim()) {
             throw new Error("A receita salva número " + (index + 1) + " não tem identificação válida; nenhum backup foi exportado.");
           }
@@ -1068,6 +1090,7 @@ createApp({
             id: recipe.id,
             name,
             savedAt: typeof recipe.savedAt === "string" ? recipe.savedAt : "",
+            ...recipeMeta(recipe),
             state: recipeState,
           };
         });
@@ -1118,6 +1141,11 @@ createApp({
         const restoredRecipes = [];
         const recipeIds = new Set();
         for (const item of data.recipes) {
+          if (item && item.purged && typeof item.id === "string" && item.id && !recipeIds.has(item.id)) {
+            recipeIds.add(item.id);
+            restoredRecipes.push(purgedRecipe(item, item.updatedAt || ""));
+            continue;
+          }
           if (!item || typeof item.id !== "string" || !item.id || recipeIds.has(item.id) || typeof item.name !== "string" || !item.name.trim()) {
             throw new Error("O backup contém uma receita inválida ou repetida.");
           }
@@ -1130,6 +1158,7 @@ createApp({
             id: item.id,
             name,
             savedAt: typeof item.savedAt === "string" ? item.savedAt : "",
+            ...recipeMeta(item),
             state: restoredRecipeState,
           });
         }
@@ -1189,13 +1218,18 @@ createApp({
       const seen = new Set();
       const valid = [];
       for (const item of Array.isArray(list) ? list : []) {
+        if (item && item.purged && typeof item.id === "string" && item.id && !seen.has(item.id)) {
+          seen.add(item.id);
+          valid.push(purgedRecipe(item, item.updatedAt || ""));
+          continue;
+        }
         if (!item || typeof item.id !== "string" || !item.id || seen.has(item.id) || typeof item.name !== "string" || !item.name.trim()) continue;
         const itemState = normalizeState(item.state);
         if (!itemState) continue;
         const name = item.name.trim().slice(0, 80);
         itemState.recipeName = name;
         seen.add(item.id);
-        valid.push({ id: item.id, name, savedAt: typeof item.savedAt === "string" ? item.savedAt : "", state: itemState });
+        valid.push({ id: item.id, name, savedAt: typeof item.savedAt === "string" ? item.savedAt : "", ...recipeMeta(item), state: itemState });
       }
       return valid;
     }
@@ -1314,7 +1348,7 @@ createApp({
     async function saveRecipe() {
       const name = recipeName.value.trim();
       if (!name) return;
-      const duplicateIndex = recipes.value.findIndex((item) => recipeNameKey(item.name) === recipeNameKey(name));
+      const duplicateIndex = recipes.value.findIndex((item) => isLive(item) && recipeNameKey(item.name) === recipeNameKey(name));
       let replaceIndex = -1;
       if (duplicateIndex >= 0) {
         duplicateName.value = recipes.value[duplicateIndex].name || name;
@@ -1323,12 +1357,14 @@ createApp({
         if (choice === "replace") replaceIndex = duplicateIndex;
       }
       state.recipeName = name;
+      const now = new Date().toISOString();
       const updated = {
         id: replaceIndex >= 0
           ? recipes.value[replaceIndex].id
           : "r-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
         name,
-        savedAt: new Date().toISOString(),
+        savedAt: now,
+        updatedAt: now,
         state: JSON.parse(JSON.stringify(state)),
       };
       const nextRecipes = recipes.value.slice();
@@ -1438,18 +1474,37 @@ createApp({
       if (event.target === duplicateDialog.value) answerDuplicate(null);
     }
 
-    async function deleteRecipe(recipe) {
-      const when = formatDate(recipe.savedAt);
+    function setRecipes(nextRecipes) {
+      if (!persistRecipes(nextRecipes)) return false;
+      recipes.value = nextRecipes;
+      return true;
+    }
+
+    function trashRecipe(recipe) {
+      const now = new Date().toISOString();
+      setRecipes(recipes.value.map((item) => (item.id === recipe.id ? { ...item, deletedAt: now, updatedAt: now } : item)));
+    }
+
+    function restoreRecipe(recipe) {
+      const now = new Date().toISOString();
+      const taken = liveRecipes.value.some((item) => recipeNameKey(item.name) === recipeNameKey(recipe.name));
+      const name = taken ? (recipe.name.slice(0, 66) + " (restaurada)") : recipe.name;
+      setRecipes(recipes.value.map((item) => {
+        if (item.id !== recipe.id) return item;
+        const { deletedAt, ...rest } = item;
+        return { ...rest, name, updatedAt: now, state: { ...item.state, recipeName: name } };
+      }));
+    }
+
+    async function purgeRecipe(recipe) {
       const ok = await askConfirm({
-        title: "Apagar receita?",
-        message: "“" + recipe.name + "”" + (when ? ", salva em " + when + "," : "") + " vai ser apagada. Não dá para desfazer.",
-        confirmLabel: "Apagar",
+        title: "Excluir permanentemente?",
+        message: "“" + recipe.name + "” vai ser excluída para sempre, inclusive nos outros aparelhos que sincronizam. Não dá para desfazer.",
+        confirmLabel: "Excluir",
         danger: true,
       });
       if (!ok) return;
-      const nextRecipes = recipes.value.filter((item) => item.id !== recipe.id);
-      if (!persistRecipes(nextRecipes)) return;
-      recipes.value = nextRecipes;
+      setRecipes(recipes.value.map((item) => (item.id === recipe.id ? purgedRecipe(item, new Date().toISOString()) : item)));
     }
 
     function startRecipeRename(recipe) {
@@ -1471,13 +1526,13 @@ createApp({
         renamingRecipeError.value = "Digite um nome para a receita.";
         return;
       }
-      const duplicate = recipes.value.find((item) => item.id !== recipe.id && recipeNameKey(item.name) === recipeNameKey(name));
+      const duplicate = liveRecipes.value.find((item) => item.id !== recipe.id && recipeNameKey(item.name) === recipeNameKey(name));
       if (duplicate) {
         renamingRecipeError.value = "Já existe uma receita com esse nome.";
         return;
       }
       const nextRecipes = recipes.value.map((item) => item.id === recipe.id
-        ? { ...item, name, state: { ...item.state, recipeName: name } }
+        ? { ...item, name, updatedAt: new Date().toISOString(), state: { ...item.state, recipeName: name } }
         : item);
       if (!persistRecipes(nextRecipes)) return;
       recipes.value = nextRecipes;
@@ -2580,6 +2635,13 @@ createApp({
       checkUpdate,
       reloadApp,
       recipes,
+      showTrash,
+      liveRecipes,
+      trashedRecipes,
+      listedRecipes,
+      trashRecipe,
+      restoreRecipe,
+      purgeRecipe,
       recipeName,
       renamingRecipeId,
       renamingRecipeName,
@@ -2627,7 +2689,6 @@ createApp({
       saveRecipe,
       openRecipe,
       clearRecipe,
-      deleteRecipe,
       formatDate,
       summaryOf,
       openLevain,

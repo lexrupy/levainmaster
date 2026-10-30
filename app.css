@@ -1169,6 +1169,8 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 .recipe-save-btn:disabled { opacity: 0.45; cursor: default; }
 
 .recipes-label { margin: 0 0 8px; }
+.recipe-tabs { display: flex; gap: 8px; margin: 0 0 12px; }
+.recipe-tabs .install.on { background: var(--ink); color: #fff; }
 
 .recipe-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 

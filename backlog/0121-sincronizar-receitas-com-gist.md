@@ -28,4 +28,4 @@ As receitas salvas só existiam em cada aparelho. O app é de uso pessoal, não 
 
 ## Fora do escopo
 
-- Propagar exclusões e renomeações com o mesmo `savedAt`; sincronização automática.
+- Sincronização automática. Exclusões e renomeações passaram a propagar na tarefa 0122.
