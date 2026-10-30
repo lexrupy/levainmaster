@@ -6,6 +6,7 @@ const STORAGE_KEY = "percentual-padeiro-v1";
 const RECIPES_KEY = "percentual-padeiro-receitas-v1";
 const CAL_KEY = "percentual-padeiro-calibracoes-v1";
 const CONFIG_KEY = "percentual-padeiro-config-v1";
+const NOTE_MAX = 200;
 const SYNC_KEY = "percentual-padeiro-sync-v1";
 const SYNC_FILE = "levainmaster-receitas.json";
 const TEMP_BANDS = [
@@ -164,6 +165,7 @@ function normalizeState(raw) {
   raw.ingredients.forEach((item) => {
     item.pct = Math.max(0, Padeiro.num(item.pct));
     item.water = Math.max(0, Padeiro.num(item.water));
+    item.note = typeof item.note === "string" ? item.note.slice(0, NOTE_MAX) : "";
     if (item.role === "water") {
       const spec = Padeiro.MAIN_LIQUIDS.find((liq) => liq.name === item.name);
       if (spec) {
@@ -450,6 +452,7 @@ createApp({
     const portionEditing = ref(false);
     const portionDraft = ref("1");
     const notesOpen = ref(!!state.notes);
+    const noteEditingId = ref("");
 
     const result = computed(() => Padeiro.compute(state, configStore));
     const ratioId = computed(() => Padeiro.matchRatio(state.levain.L, state.levain.A, state.levain.F));
@@ -1677,7 +1680,7 @@ createApp({
       if (!ctx) throw new Error("Canvas indisponível");
 
       // Linha sem observação fica baixa. O levain não repete aqui o bloco destacado.
-      function ingredientNote(row) {
+      function autoNote(row) {
         if (row.ferment === "levain") return "";
         if (row.custom) return "Teor de água " + formatPct(row.waterPct) + "%";
         if (row.waterPct > 0 && row.waterPct < 100) return formatPct(row.waterPct) + "% de água";
@@ -1686,6 +1689,10 @@ createApp({
           return "Equivale a " + formatPct(Padeiro.convertYeast(row.pct, row.ferment, to)) + "% de " + to;
         }
         return "";
+      }
+
+      function ingredientNote(row) {
+        return [autoNote(row), String(row.note || "").trim()].filter(Boolean).join(" · ");
       }
 
       const ingFrame = 6;
@@ -1702,7 +1709,7 @@ createApp({
         let noteLines = 0;
         if (note) {
           ctx.font = "500 15px Outfit, sans-serif";
-          noteLines = Math.max(1, cardLines(ctx, note, noteMax, 2).length);
+          noteLines = Math.max(1, cardLines(ctx, note, noteMax, 3).length);
         }
         const nameY = 34;
         const nameStep = 27;
@@ -1924,7 +1931,7 @@ createApp({
         if (item.note) {
           ctx.fillStyle = "#8d7f70";
           ctx.font = "500 15px Outfit, sans-serif";
-          cardText(ctx, item.note, nameX, y + item.noteY, noteMax, 18, 2);
+          cardText(ctx, item.note, nameX, y + item.noteY, noteMax, 18, 3);
         }
         rowY += item.height;
       });
@@ -2496,6 +2503,11 @@ createApp({
       if (index >= 0) state.ingredients.splice(index, 1);
     }
 
+    function toggleIngredientNote(item) {
+      noteEditingId.value = noteEditingId.value === item.id ? "" : item.id;
+      if (noteEditingId.value) nextTick(() => document.getElementById("ing-note-" + item.id)?.focus());
+    }
+
     function moveIngredient(id, direction) {
       const index = state.ingredients.findIndex((item) => item.id === id);
       const target = index + direction;
@@ -2757,6 +2769,9 @@ createApp({
       onPortionClick,
       applyPortionTarget,
       notesOpen,
+      noteEditingId,
+      toggleIngredientNote,
+      NOTE_MAX,
       toggleNotes,
       insertNotesTab,
       formatPct,

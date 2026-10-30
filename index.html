@@ -179,11 +179,18 @@
             <p v-else-if="isFerment(item) && item.ferment === 'seco'" class="moisture">Equivale a {{ formatPct(yeastEquivalent(item.pct, 'seco', 'fresco')) }}% de fresco</p>
             <p v-else-if="isFerment(item) && item.ferment === 'fresco'" class="moisture">Equivale a {{ formatPct(yeastEquivalent(item.pct, 'fresco', 'seco')) }}% de seco</p>
             <p v-else-if="isFerment(item) && item.ferment === 'levain' && result.levain && result.levain.valid" class="moisture">{{ formatG(result.levain.seed) }} g de isca · {{ formatG(result.levain.water) }} g de água · {{ formatG(result.levain.flour) }} g de farinha</p>
+            <input v-if="noteEditingId === item.id" :id="'ing-note-' + item.id" class="ing-note-input" v-model="item.note" :maxlength="NOTE_MAX" aria-label="Observação do ingrediente" @keydown.enter.prevent="noteEditingId = ''" @keydown.esc="noteEditingId = ''" @blur="noteEditingId = ''">
+            <p v-else-if="item.note" class="ing-note">{{ item.note }}</p>
             <div class="bar" aria-hidden="true"><span :style="{ width: barWidth(item.pct) }"></span></div>
           </div>
-          <div class="grams" :data-grams="item.role">
-            <input v-if="isEditing(item, 'grams')" v-focus class="grams-input" type="number" min="0" :step="rowOf(item.id).fine ? 0.1 : 1" inputmode="decimal" :value="editing.text" @input="onEdit(item, 'grams', $event.target.value)" @blur="endEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc="cancelEdit(item)" :aria-label="'Gramas de ' + (item.name || 'ingrediente')">
-            <button v-else type="button" class="grams-value" :disabled="result.flour <= 0" @click="startEdit(item, 'grams')" :aria-label="'Editar gramas de ' + (item.name || 'ingrediente')">{{ formatRowG(rowOf(item.id)) }}</button><small>g</small>
+          <div class="grams-col">
+            <button type="button" class="ing-note-btn" :class="{ filled: item.note }" :aria-expanded="noteEditingId === item.id" @mousedown.prevent @click="toggleIngredientNote(item)" :aria-label="'Observação de ' + (item.name || 'ingrediente')">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.8v.1"/></svg>
+            </button>
+            <div class="grams" :data-grams="item.role">
+              <input v-if="isEditing(item, 'grams')" v-focus class="grams-input" type="number" min="0" :step="rowOf(item.id).fine ? 0.1 : 1" inputmode="decimal" :value="editing.text" @input="onEdit(item, 'grams', $event.target.value)" @blur="endEdit" @keydown.enter.prevent="$event.target.blur()" @keydown.esc="cancelEdit(item)" :aria-label="'Gramas de ' + (item.name || 'ingrediente')">
+              <button v-else type="button" class="grams-value" :disabled="result.flour <= 0" @click="startEdit(item, 'grams')" :aria-label="'Editar gramas de ' + (item.name || 'ingrediente')">{{ formatRowG(rowOf(item.id)) }}</button><small>g</small>
+            </div>
           </div>
         </div>
       </div>

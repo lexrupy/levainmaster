@@ -509,6 +509,7 @@
         name: item.name,
         pct: num(item.pct),
         waterPct: num(item.water),
+        note: typeof item.note === "string" ? item.note : "",
         role: item.role,
         ferment: item.ferment || "",
         custom: !!item.custom,
