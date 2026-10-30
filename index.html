@@ -455,7 +455,11 @@
           </li>
         </ul>
         <input ref="importInput" type="file" accept="application/json,.json" class="file-input-hidden" @change="importRecipeFile">
-        <button v-if="!quickSave" type="button" class="install import-recipe" @click="importInput?.click()">Importar receita JSON</button>
+        <div class="recipe-import-row" :class="{ two: syncStore.token }">
+          <button type="button" class="install" @click="importInput?.click()">Importar receita JSON</button>
+          <button v-if="syncStore.token" type="button" class="install" :disabled="syncing" @click="syncRecipes">{{ syncing ? "Sincronizando…" : "Sincronizar" }}</button>
+        </div>
+        <p v-if="syncStatus" class="import-status" role="status">{{ syncStatus }}</p>
         <p v-if="importStatus" class="import-status" role="status">{{ importStatus }}</p>
         <p v-if="liveRecipes.length && !showTrash" class="hint">Abrir troca a receita da tela pela salva.</p>
         </template>
