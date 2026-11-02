@@ -97,8 +97,8 @@
             <div>
               <p class="kicker side-kicker">Hidratação total</p>
               <p class="side-hyd" :data-final-hyd="result.hydration">{{ formatPct(result.hydration) }}<small>%</small></p>
-              <p class="side-feel" :data-feel="result.band.feel">{{ result.band.sensacao }}</p>
-              <p class="side-bread" :data-enriched="result.enriched"><span class="bread-pre">Típico de</span> <button type="button" class="bread-link" @click="openBread()">{{ result.bread }}</button></p>
+              <p class="side-feel" :data-feel="result.band.feel">{{ result.isCake ? 'Massa de bolo' : result.band.sensacao }}</p>
+              <p class="side-bread" :data-enriched="result.enriched"><span class="bread-pre">{{ result.isCake ? 'Categoria:' : 'Típico de' }}</span> <button type="button" class="bread-link" @click="openBread()">{{ result.bread }}</button></p>
             </div>
           </div>
         </aside>
@@ -231,24 +231,29 @@
           <h2 id="bread-title">{{ breadDetail.name }}</h2>
           <button type="button" class="del" @click="closeBread" aria-label="Fechar">×</button>
         </header>
-        <template v-if="!breadDetail.enriched">
+        <template v-if="!breadDetail.enriched && !breadDetail.cake">
           <p class="bread-range">Hidratação típica: <b>{{ breadDetail.min }}% a {{ breadDetail.max }}%</b><span v-if="breadDetail.approx"> (aproximada)</span></p>
           <p class="bread-where" v-if="breadDetail.current">Sua massa está com <b>{{ formatPct(result.hydration) }}%</b>, {{ breadDetail.where }}.</p>
         </template>
         <p class="bread-text">{{ breadDetail.text }}</p>
-        <p class="hint">A hidratação indica um pão típico, não o que você está fazendo: as faixas se sobrepõem, e dá para fazer focaccia a 60%.</p>
-        <p class="kicker bread-list-label">Pães por hidratação</p>
-        <table class="bread-table">
-          <thead><tr><th>Pão</th><th>Típico</th><th>No app</th></tr></thead>
-          <tbody>
-            <tr v-for="row in breadRows" :key="row.name" :class="{ on: row.name === breadDetail.name }">
-              <td><button type="button" class="bread-link" @click="openBread(row.name)">{{ row.name }}</button></td>
-              <td>{{ row.typical }}<span v-if="row.approx">*</span></td>
-              <td>{{ row.appRange }}</td>
-            </tr>
-          </tbody>
-        </table>
-        <p class="hint">* Faixa aproximada, sem fonte com números. Pães enriquecidos (com ovos, leite, gordura ou purês) recebem o nome pelos ingredientes.</p>
+        <template v-if="breadDetail.cake">
+          <p class="hint">Classificado como bolo porque o fermento químico é o único fermento e a hidratação total passa de 100%.</p>
+        </template>
+        <template v-else>
+          <p class="hint">A hidratação indica um pão típico, não o que você está fazendo: as faixas se sobrepõem, e dá para fazer focaccia a 60%.</p>
+          <p class="kicker bread-list-label">Pães por hidratação</p>
+          <table class="bread-table">
+            <thead><tr><th>Pão</th><th>Típico</th><th>No app</th></tr></thead>
+            <tbody>
+              <tr v-for="row in breadRows" :key="row.name" :class="{ on: row.name === breadDetail.name }">
+                <td><button type="button" class="bread-link" @click="openBread(row.name)">{{ row.name }}</button></td>
+                <td>{{ row.typical }}<span v-if="row.approx">*</span></td>
+                <td>{{ row.appRange }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="hint">* Faixa aproximada, sem fonte com números. Pães enriquecidos (com ovos, leite, gordura ou purês) recebem o nome pelos ingredientes.</p>
+        </template>
       </article>
     </dialog>
 
