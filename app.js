@@ -118,7 +118,7 @@ const ICON_BY_NAME = {
 function iconFor(item) {
   if (item.role === "water") return ICON_BY_NAME[item.name] || ICONS.water;
   if (item.role === "salt") return ICONS.salt;
-  if (Padeiro.isFerment(item)) return item.ferment === "levain" ? ICONS.levain : ICONS.yeast;
+  if (Padeiro.isFerment(item)) return item.ferment === "levain" ? ICONS.levain : item.ferment === "quimico" ? ICONS.flour : ICONS.yeast;
   return ICON_BY_NAME[item.name] || ICONS.generic;
 }
 
@@ -176,7 +176,7 @@ function normalizeState(raw) {
         item.water = 100;
       }
     }
-    if (item.role === "ferment" && item.ferment !== "levain" && item.ferment !== "fresco" && item.ferment !== "seco") {
+    if (item.role === "ferment" && item.ferment !== "levain" && item.ferment !== "fresco" && item.ferment !== "seco" && item.ferment !== "quimico") {
       item.ferment = "seco";
       item.name = "Fermento seco";
     }
@@ -745,15 +745,18 @@ createApp({
     }
 
     function yeastName(kind) {
-      return kind === "fresco" ? "Fermento fresco" : "Fermento seco";
+      return kind === "fresco" ? "Fermento fresco" : kind === "quimico" ? "Fermento químico" : "Fermento seco";
     }
 
     function setFerment(kind) {
       const row = state.ingredients.find((item) => item.role === "ferment");
       if (!row || row.ferment === kind) return;
       if (kind === "levain") {
-        row.yeastPct = row.pct;
-        row.yeastKind = row.ferment === "fresco" ? "fresco" : "seco";
+        if (row.ferment === "seco" || row.ferment === "fresco") {
+          row.yeastPct = row.pct;
+          row.yeastKind = row.ferment;
+        }
+        if (row.ferment === "quimico") row.chemicalPct = row.pct;
         // A ativação só abre sozinha na primeira vez que a receita usa levain.
         // Voltando a um levain já configurado, ela fica fechada (o lápis edita).
         const firstTime = row.levainPct == null;
@@ -763,8 +766,24 @@ createApp({
         if (firstTime) nextTick(openLevain);
         return;
       }
-      let sourceKind = row.ferment === "fresco" ? "fresco" : "seco";
-      let sourcePct = row.pct;
+      if (kind === "quimico") {
+        if (row.ferment === "seco" || row.ferment === "fresco") {
+          row.yeastPct = row.pct;
+          row.yeastKind = row.ferment;
+        }
+        if (row.ferment === "levain") row.levainPct = row.pct;
+        row.chemicalPct = row.chemicalPct > 0 ? row.chemicalPct : 2;
+        row.pct = row.chemicalPct;
+        row.ferment = "quimico";
+        row.name = yeastName(kind);
+        row.water = 0;
+        return;
+      }
+      if (row.ferment === "quimico") row.chemicalPct = row.pct;
+      let sourceKind = row.ferment === "fresco" ? "fresco" : row.ferment === "quimico" ? (row.yeastKind === "fresco" ? "fresco" : "seco") : "seco";
+      let sourcePct = row.ferment === "quimico"
+        ? row.yeastPct != null ? row.yeastPct : sourceKind === "fresco" ? 3 : 1
+        : row.pct;
       if (row.ferment === "levain") {
         row.levainPct = row.pct;
         sourceKind = row.yeastKind === "fresco" ? "fresco" : "seco";
@@ -1557,6 +1576,8 @@ createApp({
         .map((item) =>
           item.ferment === "levain"
             ? "Levain " + formatPct(item.pct) + "% · " + [lv.L, lv.A, lv.F].map((v) => Padeiro.num(v)).join(":")
+            : item.ferment === "quimico"
+              ? "Fermento químico " + formatPct(item.pct) + "%"
             : (item.ferment === "fresco" ? "Fermento fresco " : "Fermento seco ") + formatPct(item.pct) + "%"
         )
         .join(" + ");
@@ -1821,6 +1842,7 @@ createApp({
       const fermentKinds = new Set(rows.filter((row) => Padeiro.isFerment(row)).map((row) => row.ferment));
       const fermentacao = fermentKinds.size > 1 ? "Misto"
         : fermentKinds.has("levain") ? "Levain"
+        : fermentKinds.has("quimico") ? "Químico"
         : fermentKinds.has("fresco") ? "Fresco"
         : fermentKinds.has("seco") ? "Seco"
         : "—";

@@ -140,6 +140,7 @@
                       <option value="fresco">Fermento fresco</option>
                     </template>
                     <option v-if="!secondFerment || secondFerment.ferment !== 'levain'" value="levain">Levain</option>
+                    <option value="quimico">Fermento químico</option>
                   </select>
                   <select v-else-if="item.ferment !== 'levain'" class="ferment-select" :value="item.ferment" @change="setSecondYeast($event.target.value)" aria-label="Tipo do segundo fermento">
                     <option value="seco">Fermento seco</option>
