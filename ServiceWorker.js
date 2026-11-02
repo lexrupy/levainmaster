@@ -1,6 +1,6 @@
 // Levain Master — © 2026 Alexandre da Silva
 // SPDX-License-Identifier: LGPL-3.0-or-later
-const CACHE = "padeiro-v140";
+const CACHE = "padeiro-v141";
 const FILES = [
   "./",
   "./index.html",
@@ -19,7 +19,7 @@ const FILES = [
   "./img/miolo-5-aberto-irregular.svg",
   "./img/miolo-6-muito-aberto.svg",
   "./img/miolo-7-rendado.svg",
-  "./img/bolo.svg",
+  "./img/muffin.svg",
   "./img/miolo-enriquecido.jpg",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

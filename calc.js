@@ -537,7 +537,7 @@
     const band = BANDS.find((item) => hydration <= item.max) || BANDS[BANDS.length - 1];
     const enriched = enrichedBread(ingredients);
     const fermentRows = ingredients.filter(isFerment);
-    const isCake = hydration > 100 && fermentRows.length === 1 && fermentRows[0].ferment === "quimico";
+    const isQuickMass = hydration > 100 && fermentRows.length === 1 && fermentRows[0].ferment === "quimico";
     const flourShare = totalWeight > 0 ? (totalFlour / totalWeight) * 100 : 0;
     const waterShare = totalWeight > 0 ? (totalWater / totalWeight) * 100 : 0;
     const otherShare = Math.max(0, 100 - flourShare - waterShare);
@@ -556,11 +556,11 @@
       totalWeight,
       hydration,
       band,
-      isCake,
-      enriched: !!enriched && !isCake,
-      bread: isCake ? "Bolo" : enriched || band.pao,
+      isQuickMass,
+      enriched: !!enriched && !isQuickMass,
+      bread: isQuickMass ? "Massa rápida" : enriched || band.pao,
       // Pão enriquecido tem miolo fechado e macio, qualquer que seja a hidratação.
-      img: isCake ? "img/bolo.svg" : enriched ? "img/miolo-enriquecido.jpg" : band.img,
+      img: isQuickMass ? "img/muffin.svg" : enriched ? "img/miolo-enriquecido.jpg" : band.img,
       flourShare,
       waterShare,
       otherShare,

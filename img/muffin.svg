@@ -1,0 +1,18 @@
+<!-- Levain Master — © 2026 Alexandre da Silva -->
+<!-- SPDX-License-Identifier: LGPL-3.0-or-later -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="600" height="400" role="img" aria-label="Muffin dourado em forminha de papel">
+  <rect width="600" height="400" fill="#f2eadf"/>
+  <ellipse cx="300" cy="326" rx="164" ry="24" fill="#71543a" opacity=".13"/>
+  <ellipse cx="300" cy="316" rx="193" ry="34" fill="#fffdf8" stroke="#d8cbb9" stroke-width="3"/>
+  <ellipse cx="300" cy="311" rx="155" ry="20" fill="#eee6da"/>
+
+  <!-- Forminha plissada -->
+  <path d="M188 207 213 319q87 27 174 0l25-112z" fill="#f4ead9" stroke="#c7b69f" stroke-width="3"/>
+  <path d="m204 215 24 104m3-106 18 111m10-112 10 114m20-115 4 117m26-117-4 117m29-117-13 114m33-113-20 110m39-107-27 103" fill="none" stroke="#c4b49f" stroke-width="3" opacity=".75"/>
+  <path d="M188 207q112 24 224 0l-4 18q-108 25-216 0z" fill="#e4d7c4" stroke="#c7b69f" stroke-width="3"/>
+
+  <!-- Miolo arredondado e dourado, levemente rachado no topo. -->
+  <path d="M183 210c-9-17 4-36 16-45-2-25 18-43 39-42 10-25 37-35 59-22 20-25 57-23 72 2 27-8 53 12 49 40 25 12 34 39 13 62-74 24-174 24-248 5z" fill="#e8b85e" stroke="#b36e2c" stroke-width="4"/>
+  <circle cx="238" cy="176" r="4" fill="#a96129" opacity=".6"/><circle cx="354" cy="172" r="4" fill="#a96129" opacity=".6"/>
+  <circle cx="278" cy="193" r="3" fill="#a96129" opacity=".55"/><circle cx="329" cy="151" r="3" fill="#a96129" opacity=".55"/>
+</svg>

@@ -28,29 +28,29 @@ test("receita inicial: 840 g, 65% e baguete", () => {
   assert.equal(result.enriched, false);
 });
 
-test("hidratação acima de 100% vira bolo só com fermento químico como único fermento", () => {
-  const cake = recipe((state) => {
+test("hidratação acima de 100% vira massa rápida só com fermento químico", () => {
+  const quickMass = recipe((state) => {
     state.ingredients.find((item) => item.role === "water").pct = 101;
     const ferment = state.ingredients.find((item) => item.role === "ferment");
     ferment.ferment = "quimico";
     ferment.name = "Fermento químico";
   });
-  assert.equal(cake.isCake, true);
-  assert.equal(cake.bread, "Bolo");
-  assert.equal(cake.img, "img/bolo.svg");
+  assert.equal(quickMass.isQuickMass, true);
+  assert.equal(quickMass.bread, "Massa rápida");
+  assert.equal(quickMass.img, "img/muffin.svg");
 
   const exactly100 = recipe((state) => {
     state.ingredients.find((item) => item.role === "water").pct = 100;
     state.ingredients.find((item) => item.role === "ferment").ferment = "quimico";
   });
-  assert.equal(exactly100.isCake, false);
+  assert.equal(exactly100.isQuickMass, false);
 
   const mixed = recipe((state) => {
     state.ingredients.find((item) => item.role === "water").pct = 101;
     state.ingredients.find((item) => item.role === "ferment").ferment = "quimico";
     state.ingredients.push({ id: "fermento2", name: "Levain", pct: 10, water: 0, role: "ferment2", ferment: "levain" });
   });
-  assert.equal(mixed.isCake, false);
+  assert.equal(mixed.isQuickMass, false);
 });
 
 test("gramas são farinha vezes percentual", () => {

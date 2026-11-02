@@ -852,12 +852,12 @@ createApp({
 
     const breadDetail = computed(() => {
       const name = breadShown.value;
-      if (name === "Bolo") {
+      if (name === "Massa rápida") {
         return {
           name,
-          cake: true,
+          quickMass: true,
           enriched: false,
-          text: "Massa com fermento químico e hidratação total acima de 100%, apresentada como bolo.",
+          text: "O app usa esta categoria quando o fermento químico é o único fermento e a hidratação total passa de 100%. A hidratação compara a água contada com a farinha total; sozinha, ela não determina o que será assado.",
         };
       }
       const info = Padeiro.BREAD_INFO[name];
@@ -1866,10 +1866,10 @@ createApp({
       const feelColor = { firme: "#7a6244", macia: "#2f7a45", pegajosa: "#8a5a20", umida: "#8a3e28" }[result.value.band.feel] || "#8d7f70";
       ctx.fillStyle = feelColor;
       ctx.font = "600 32px Outfit, sans-serif";
-      cardText(ctx, result.value.isCake ? "Massa de bolo" : result.value.band.sensacao, infoX, 548, 480, 38, 2);
+      cardText(ctx, result.value.isQuickMass ? "Massa rápida" : result.value.band.sensacao, infoX, 548, 480, 38, 2);
       ctx.fillStyle = "#8d7f70";
       ctx.font = "650 20px Outfit, sans-serif";
-      ctx.fillText(result.value.isCake ? "BOLO" : result.value.enriched ? "PÃO ENRIQUECIDO" : "PÃO TÍPICO", infoX, 594);
+      ctx.fillText(result.value.isQuickMass ? "MASSA RÁPIDA" : result.value.enriched ? "PÃO ENRIQUECIDO" : "PÃO TÍPICO", infoX, 594);
       ctx.fillStyle = "#2c241c";
       ctx.font = "600 32px Outfit, sans-serif";
       cardText(ctx, result.value.bread, infoX, 636, 480, 38, 2);
