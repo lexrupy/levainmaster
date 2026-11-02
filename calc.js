@@ -103,6 +103,7 @@
     { group: "Ovos, leite e gordura", name: "Leite em pó integral", water: 0, enrich: "leite" },
     { group: "Ovos, leite e gordura", name: "Leite em pó desnatado", water: 0, enrich: "leite" },
     { group: "Ovos, leite e gordura", name: "Cacau em pó", water: 0 },
+    { group: "Ovos, leite e gordura", name: "Achocolatado (Nescau)", water: 0, enrich: "açúcar" },
     { group: "Ovos, leite e gordura", name: "Leitelho", water: 90, enrich: "leite" },
     { group: "Ovos, leite e gordura", name: "Iogurte", water: 85, enrich: "leite" },
     { group: "Ovos, leite e gordura", name: "Manteiga", water: 16, enrich: "gordura" },

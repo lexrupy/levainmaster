@@ -87,6 +87,7 @@ const ICON_BY_NAME = {
   "Leite em pó integral": ICONS.flour,
   "Leite em pó desnatado": ICONS.flour,
   "Cacau em pó": ICONS.flour,
+  "Achocolatado (Nescau)": ICONS.flour,
   Leitelho: ICONS.milk,
   Iogurte: ICONS.milk,
   Manteiga: ICONS.butter,
