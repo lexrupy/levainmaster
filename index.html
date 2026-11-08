@@ -56,11 +56,11 @@
             <span class="pill">100%</span>
           </div>
           <div class="mega" :style="{ '--flour-ch': flourDigits }">
-            <input id="flour" type="number" min="0" max="99999" step="1" inputmode="numeric" v-model="flourField" :placeholder="state.flour" @blur="settleFlour" @keydown.enter.prevent="$event.target.blur()" @keydown.up.prevent="bumpFlour(50)" @keydown.down.prevent="bumpFlour(-50)" aria-label="Farinha em gramas">
+            <input id="flour" type="number" min="0" max="99999" step="1" inputmode="numeric" v-model="flourField" :placeholder="state.flour" @blur="settleFlour" @keydown.enter.prevent="$event.target.blur()" @keydown.up.prevent="bumpFlour(1)" @keydown.down.prevent="bumpFlour(-1)" aria-label="Farinha em gramas">
             <span class="unit">g</span>
             <div class="spins">
-              <button type="button" class="spin" @click="bumpFlour(50)" aria-label="Aumentar farinha">▲</button>
-              <button type="button" class="spin" @click="bumpFlour(-50)" aria-label="Diminuir farinha">▼</button>
+              <button type="button" class="spin" @click="bumpFlour(1)" aria-label="Aumentar farinha">▲</button>
+              <button type="button" class="spin" @click="bumpFlour(-1)" aria-label="Diminuir farinha">▼</button>
             </div>
           </div>
           <div class="comp-bar" role="img" :aria-label="'Composição da massa: farinha ' + formatPct(result.flourShare) + '%, água ' + formatPct(result.waterShare) + '%, outros ' + formatPct(result.otherShare) + '%'">

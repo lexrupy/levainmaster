@@ -754,9 +754,24 @@ createApp({
       item.water = Math.min(100, Math.max(0, Padeiro.num(item.water)));
     }
 
-    function bumpFlour(delta) {
+    // Setas da farinha por etapas: de 5 em 5 até 50 g, de 10 em 10 até 100 g, de 20 em 20 até 300 g
+    // e de 50 em 50 acima. Cada etapa para na divisa, então subir e descer passam pelos mesmos valores.
+    const FLOUR_STEPS = [[50, 5], [100, 10], [300, 20], [Infinity, 50]];
+
+    function bumpFlour(direction) {
       flourDraft.value = null;
-      state.flour = Math.min(FLOUR_MAX, Math.max(0, Math.round(Padeiro.num(state.flour) + delta)));
+      const flour = Math.round(Padeiro.num(state.flour));
+      let next;
+      if (direction > 0) {
+        const [limit, step] = FLOUR_STEPS.find(([edge]) => flour < edge);
+        next = Math.min(limit, flour + step);
+      } else {
+        const index = FLOUR_STEPS.findIndex(([edge]) => flour <= edge);
+        const [, step] = FLOUR_STEPS[index];
+        const floor = index > 0 ? FLOUR_STEPS[index - 1][0] : 0;
+        next = flour > floor ? Math.max(floor, flour - step) : flour - (index > 0 ? FLOUR_STEPS[index - 1][1] : step);
+      }
+      state.flour = Math.min(FLOUR_MAX, Math.max(0, next));
     }
 
     function yeastName(kind) {
