@@ -724,16 +724,24 @@ createApp({
       return Math.min(5, Math.max(1, text.length));
     });
 
-    function clampFlour() {
-      if (state.flour === "" || state.flour == null || Number.isNaN(state.flour)) return;
-      const n = Padeiro.num(state.flour);
-      if (n > FLOUR_MAX) state.flour = FLOUR_MAX;
-      else if (n < 0) state.flour = 0;
-    }
+    // Enquanto o campo está em edição, o texto vive em `flourDraft` e a receita não muda:
+    // apagar o campo para digitar outro valor não zera as contas dos demais ingredientes.
+    // A farinha só vale ao sair do campo; vazio ou inválido volta à anterior.
+    const flourDraft = ref(null);
+    const flourField = computed({
+      get: () => (flourDraft.value !== null ? flourDraft.value : state.flour),
+      set: (value) => {
+        flourDraft.value = value == null ? "" : String(value);
+      },
+    });
 
-    // Ao sair do campo, vazio vira 0 de verdade.
     function settleFlour() {
-      state.flour = Math.min(FLOUR_MAX, Math.max(0, Padeiro.num(state.flour)));
+      const text = flourDraft.value;
+      flourDraft.value = null;
+      if (text === null || text === "") return;
+      const n = Number(text);
+      if (!Number.isFinite(n)) return;
+      state.flour = Math.min(FLOUR_MAX, Math.max(0, n));
     }
 
     function settleWater(item) {
@@ -741,6 +749,7 @@ createApp({
     }
 
     function bumpFlour(delta) {
+      flourDraft.value = null;
       state.flour = Math.min(FLOUR_MAX, Math.max(0, Math.round(Padeiro.num(state.flour) + delta)));
     }
 
@@ -2814,7 +2823,7 @@ createApp({
       endEdit,
       cancelEdit,
       flourDigits,
-      clampFlour,
+      flourField,
       settleFlour,
       settleWater,
       settlePart,

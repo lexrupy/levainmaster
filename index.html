@@ -56,7 +56,7 @@
             <span class="pill">100%</span>
           </div>
           <div class="mega" :style="{ '--flour-ch': flourDigits }">
-            <input id="flour" type="number" min="0" max="99999" step="1" inputmode="numeric" v-model.number="state.flour" @input="clampFlour" @blur="settleFlour" aria-label="Farinha em gramas">
+            <input id="flour" type="number" min="0" max="99999" step="1" inputmode="numeric" v-model="flourField" @blur="settleFlour" @keydown.enter.prevent="$event.target.blur()" aria-label="Farinha em gramas">
             <span class="unit">g</span>
             <div class="spins">
               <button type="button" class="spin" @click="bumpFlour(50)" aria-label="Aumentar farinha">▲</button>

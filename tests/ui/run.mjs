@@ -61,6 +61,7 @@ function setField(selector, value) {
     input.value = ${JSON.stringify(String(value))};
     input.dispatchEvent(new Event("input", { bubbles: true }));
     input.dispatchEvent(new Event("change", { bubbles: true }));
+    if (${JSON.stringify(selector)} === "#flour") input.dispatchEvent(new Event("blur"));
   })()`;
 }
 
@@ -104,6 +105,18 @@ async function scenarioTelas(client, width) {
     total: document.querySelector("[data-total]").getAttribute("data-total")
   })`);
   check(`tela ${width} farinha recalcula`, flour.flour === "600" && flour.water === "390" && flour.total === "1008", JSON.stringify(flour));
+  await client.evaluate(`(() => {
+    const input = document.querySelector("#flour");
+    input.value = "";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  })()`);
+  await sleep(40);
+  const typing = await client.evaluate(`document.querySelector('[data-grams="water"] .grams-value').textContent.trim()`);
+  check(`tela ${width} farinha apagada não zera os outros`, typing === "390", typing);
+  await client.evaluate(`document.querySelector("#flour").dispatchEvent(new Event("blur"))`);
+  await sleep(40);
+  const back = await client.evaluate(`document.querySelector("#flour").value`);
+  check(`tela ${width} farinha vazia volta à anterior`, back === "600", back);
   await client.evaluate(`document.querySelector('[aria-label="Aumentar farinha"]').click()`);
   await sleep(40);
   const up = await client.evaluate(`document.querySelector("#flour").value`);
