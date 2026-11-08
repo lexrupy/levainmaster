@@ -1,4 +1,4 @@
-# 0125 — A farinha só vale ao sair do campo
+# 0125 — A farinha não zera ao digitar
 
 - **Autor:** Alexandre da Silva
 - **Data:** 2026-11-08
@@ -11,16 +11,18 @@ Ao apagar o campo da farinha para digitar outro valor, a farinha virava 0 na hor
 
 ## O que foi feito
 
-- O texto digitado fica num rascunho (`flourDraft`); a receita só muda quando o campo perde o foco (ou com Enter).
-- Ao sair: número válido vale (limitado a 0–99.999 g); campo vazio ou inválido volta à farinha anterior; 0 digitado vale 0.
+- O texto digitado fica num rascunho (`flourDraft`). Número válido acima de zero vale na hora (limitado a 99.999 g); vazio ou 0 mantém a farinha anterior.
+- Ao sair do campo (ou com Enter): vazio volta à farinha anterior; 0 digitado vale 0.
+- Esperar só a saída do campo não funcionou no celular: fechar o teclado nem sempre tira o foco, e o valor digitado não chegava a valer.
 - Com o campo vazio, a farinha mantida aparece esmaecida dentro dele (`placeholder`), para não parecer que o valor sumiu.
+- As setas do teclado no campo andam de 50 em 50, como os botões ▲▼.
 - Os botões ▲▼ descartam o rascunho e somam direto.
 
 ## Critérios de aceite
 
 - [x] Apagar o campo não altera os gramas dos demais ingredientes.
 - [x] Sair do campo vazio devolve a farinha anterior.
-- [x] Digitar 600 e sair recalcula a receita.
+- [x] Digitar 600 recalcula a receita na hora, sem precisar sair do campo.
 
 ## Como verificar
 
@@ -28,4 +30,4 @@ Ao apagar o campo da farinha para digitar outro valor, a farinha virava 0 na hor
 
 ## Fora do escopo
 
-- Recalcular durante a digitação.
+- Recalcular com campo vazio ou 0 durante a digitação.

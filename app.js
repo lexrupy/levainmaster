@@ -724,14 +724,20 @@ createApp({
       return Math.min(5, Math.max(1, text.length));
     });
 
-    // Enquanto o campo está em edição, o texto vive em `flourDraft` e a receita não muda:
-    // apagar o campo para digitar outro valor não zera as contas dos demais ingredientes.
-    // A farinha só vale ao sair do campo; vazio ou inválido volta à anterior.
+    // Enquanto o campo está em edição, o texto vive em `flourDraft`. Um número válido acima
+    // de zero vale na hora; apagar o campo (ou digitar 0) para digitar outro valor mantém a
+    // farinha anterior, e as contas dos demais ingredientes não zeram no meio da digitação.
+    // Fechar o teclado no celular nem sempre tira o foco, por isso não dá para esperar a saída.
     const flourDraft = ref(null);
     const flourField = computed({
       get: () => (flourDraft.value !== null ? flourDraft.value : state.flour),
       set: (value) => {
-        flourDraft.value = value == null ? "" : String(value);
+        const text = value == null ? "" : String(value);
+        flourDraft.value = text;
+        const n = Number(text);
+        if (text === "" || !Number.isFinite(n) || n <= 0) return;
+        state.flour = Math.min(FLOUR_MAX, n);
+        if (n > FLOUR_MAX) flourDraft.value = String(FLOUR_MAX);
       },
     });
 

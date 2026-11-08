@@ -61,7 +61,6 @@ function setField(selector, value) {
     input.value = ${JSON.stringify(String(value))};
     input.dispatchEvent(new Event("input", { bubbles: true }));
     input.dispatchEvent(new Event("change", { bubbles: true }));
-    if (${JSON.stringify(selector)} === "#flour") input.dispatchEvent(new Event("blur"));
   })()`;
 }
 
