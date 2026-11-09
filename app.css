@@ -1507,3 +1507,5 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 .flour-parts { list-style: none; margin: 0 0 4px; padding: 0; }
 .flour-parts li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line-strong); }
 .flour-parts .flour-total { border-bottom: 0; font-weight: 700; }
+
+.ing-dup { margin: 0 0 6px; padding: 4px 10px; border-radius: 8px; background: var(--amber-bg); color: var(--amber); font-size: 0.78rem; font-weight: 600; }

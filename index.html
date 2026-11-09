@@ -128,6 +128,7 @@
         <button type="button" class="move-ing" @click="removeSection(item.id)" aria-label="Remover seção" title="Remover seção"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
       </template>
       <template v-else>
+        <p v-if="duplicateIds.has(item.id)" class="ing-dup" role="status">Ingrediente repetido nesta seção</p>
         <div class="ing">
           <div class="icon-order">
             <button type="button" class="move-ing" :disabled="index === 0" @click="moveIngredient(item.id, -1)" :aria-label="'Mover ' + (item.name || 'ingrediente') + ' para cima'" :title="'Mover ' + (item.name || 'ingrediente') + ' para cima'">

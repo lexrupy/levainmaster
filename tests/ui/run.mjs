@@ -296,6 +296,29 @@ async function scenarioTelas(client, width) {
   await sleep(40);
   await client.evaluate(`[...document.querySelectorAll(".menu button")].find((button) => button.textContent.trim().startsWith("Farinha de trigo"))?.click()`);
   await sleep(60);
+  // Ingredientes podem repetir (leite no tangzhong e na massa), inclusive o sal.
+  await client.evaluate(`document.querySelector(".add-btn").click()`);
+  await sleep(40);
+  const menuAgain = await client.evaluate(`({
+    again: [...document.querySelectorAll(".menu button")].some((button) => button.textContent.trim().startsWith("Farinha de trigo")),
+    agua: [...document.querySelectorAll(".menu button")].some((button) => button.textContent.trim().startsWith("Água")),
+    sal: [...document.querySelectorAll(".menu button")].some((button) => button.textContent.trim().startsWith("Sal"))
+  })`);
+  check(`tela ${width} menu repete ingrediente já na lista`, menuAgain.again === true && menuAgain.agua === true && menuAgain.sal === true, JSON.stringify(menuAgain));
+  await client.evaluate(`document.querySelector(".add-btn").click()`);
+  await sleep(40);
+  const dupAlerts = await client.evaluate(`document.querySelectorAll(".ing-dup").length`);
+  check(`tela ${width} sem repetição não avisa`, dupAlerts === 0, String(dupAlerts));
+  await client.evaluate(`document.querySelector(".add-btn").click()`);
+  await sleep(40);
+  await client.evaluate(`[...document.querySelectorAll(".menu button")].find((button) => button.textContent.trim().startsWith("Farinha de trigo"))?.click()`);
+  await sleep(60);
+  const dupBoth = await client.evaluate(`document.querySelectorAll(".ing-dup").length`);
+  check(`tela ${width} repetido na mesma seção avisa nas duas linhas`, dupBoth === 2, String(dupBoth));
+  await client.evaluate(`document.querySelector('[aria-label="Remover Farinha de trigo"]')?.click()`);
+  await sleep(60);
+  const dupGone = await client.evaluate(`document.querySelectorAll(".ing-dup").length`);
+  check(`tela ${width} remover o repetido tira o aviso`, dupGone === 0, String(dupGone));
   const noChipYet = await client.evaluate(`!document.querySelector(".pill-btn")`);
   check(`tela ${width} extra a 0% não abre o selo`, noChipYet === true, String(noChipYet));
   await client.evaluate(`(() => {

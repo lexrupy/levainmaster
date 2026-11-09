@@ -501,18 +501,37 @@ createApp({
       }
     }
 
+    // Qualquer ingrediente pode repetir (leite no tangzhong e na massa, em seções diferentes). A linha do sal
+    // (`role: "salt"`) é uma só; um segundo sal entra como extra com água 0.
+    // Mesmo ingrediente duas vezes na mesma seção (ou fora de qualquer seção): avisa na linha.
+    // Repetir em seções diferentes é normal (leite no tangzhong e na massa).
+    const duplicateIds = computed(() => {
+      const dups = new Set();
+      let seen = new Map();
+      state.ingredients.forEach((item) => {
+        if (item.role === "section") {
+          seen = new Map();
+          return;
+        }
+        const key = String(item.name || "").trim().toLowerCase();
+        if (!key) return;
+        if (seen.has(key)) {
+          dups.add(item.id);
+          dups.add(seen.get(key));
+        } else {
+          seen.set(key, item.id);
+        }
+      });
+      return dups;
+    });
+
     const menuGroups = computed(() => {
-      const present = new Set(state.ingredients.map((row) => row.name));
       const groups = [];
-      const addables = [];
-      if (!present.has("Água")) {
-        addables.push({ group: "Base da receita", name: "Água", water: 100 });
-      }
-      if (!present.has("Sal")) {
-        addables.push({ group: "Base da receita", name: "Sal", water: 0 });
-      }
+      const addables = [
+        { group: "Base da receita", name: "Água", water: 100 },
+        { group: "Base da receita", name: "Sal", water: 0 },
+      ];
       Padeiro.ADDABLE.forEach((spec) => {
-        if (present.has(spec.name)) return;
         addables.push(spec);
       });
       addables.forEach((spec) => {
@@ -2537,7 +2556,7 @@ createApp({
     }
 
     function addIngredient(spec) {
-      if (spec.name === "Sal") {
+      if (spec.name === "Sal" && !state.ingredients.some((item) => item.role === "salt")) {
         const waterIndex = state.ingredients.findIndex((item) => item.role === "water");
         const insertIndex = waterIndex >= 0 ? waterIndex + 1 : 0;
         state.ingredients.splice(insertIndex, 0, {
@@ -2929,6 +2948,7 @@ createApp({
       fermentChoices,
       removeIngredient,
       moveIngredient,
+      duplicateIds,
       addSection,
       removeSection,
       settleSectionName,
