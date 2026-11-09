@@ -231,7 +231,23 @@ A água e a farinha da alimentação entram sempre nessa conta, porque estão na
 
 Ligada, a opção parte a isca ao meio, 50% água e 50% farinha. Isso é a conta de uma cultura mantida a 100% de hidratação, partes iguais de farinha e água. Não é o que vale para toda isca. A King Arthur define o poolish como partes iguais e descreve o levain numa faixa de 50% a 125%. O 1:5:4 do app, o levain líquido ligado ao Hamelman, é 125%: mais água do que farinha. O lievito madre de 1:1:2 e 1:5:10 é 50%: mais farinha do que água. Metade e metade, nesses dois, não é a composição da isca. A opção serve para quem guarda a cultura em partes iguais. Não há um campo para dizer que a isca está a 50% ou a 125%.
 
+## 9. Pós e açúcar contra a hidratação
+
+O app conta água ÷ farinha. Farinhas e amidos extras entram no divisor, e cacau, leite em pó, achocolatado, açúcar e sal ficam com água 0 e fora do divisor. Quis saber se isso descreve a massa ou só a conta.
+
+**Cacau.** Um estudo ucraniano de 2025 sobre pão de trigo com 2% a 6% de cacau achou que o cacau aumenta a absorção de água da massa. A umidade da massa caiu de 1% a 3%, o volume específico caiu de 3% a 9% e o miolo ficou menos poroso. Os autores atribuem isso à alta capacidade do cacau de reter água e ao efeito de taninos e alcaloides sobre o glúten, e pedem mais trabalho para achar a umidade ótima. É resumo de tese com amostra pequena. Entre padeiros, a recomendação é pôr mais água aos poucos, pelo ponto da massa; há quem diga que o cacau absorve mais que a farinha, e quem diga que os taninos apertam o glúten e que a água extra compensa. Isso é relato, não medida.
+
+**Leite em pó.** Não achei consenso. Uns somam o pó à farinha base e corrigem a água; outro padeiro diz que nunca compensou a água, porque a gordura do leite amolece a massa mais do que o pó tira de hidratação. A regra de ~10% de sólidos que apareceu é palpite de fórum.
+
+**Número.** Nenhuma fonte dá uma razão de água por grama de cacau ou de leite em pó. Por isso o app não aplica fator: ele seria inventado.
+
+**Sal e açúcar.** Aqui o que está escrito vem da minha leitura e da minha cozinha, sem pesquisa nesta rodada, e fica como hipótese a confirmar. O sal reduz a absorção de água da farinha e aperta o glúten, e na bancada a massa com sal parece mais mole. O açúcar se dissolve e amolece a massa; em quantidades altas (a partir de uns 10% a 15%) disputa água com o glúten e atrasa o desenvolvimento dele. Os dois puxam a massa para parecer mais mole do que a hidratação calculada, ao contrário do cacau e do leite em pó, que a deixam parecer mais seca.
+
+**O que ficou decidido.** A conta continua água ÷ farinha, sem fator de absorção. Se um dia aparecer um aviso na tela sobre pós que absorvem água, ele precisa ser pedido antes, e o texto não promete número.
+
 ## Referências
+
+Baking with Butter. Chocolate sourdough bread. <https://bakingwithbutter.com/chocolate-sourdough-bread/>
 
 Gänzle, M. G., Ehmann, M., & Hammes, W. P. (1998). Modeling of growth of *Lactobacillus sanfranciscensis* and *Candida milleri* in response to process parameters of sourdough fermentation. *Applied and Environmental Microbiology*, 64(7), 2616–2623. <https://doi.org/10.1128/AEM.64.7.2616-2623.1998>
 
@@ -253,7 +269,11 @@ Röcken, W., Rick, M., & Reinkemeier, M. (1992). Controlled production of acetic
 
 Spicher, G., & Rabe, E. (1980). Die Mikroflora des Sauerteiges. XI. Mitteilung: Der Einfluß der Temperatur auf die Lactat-/Acetatbildung in mit heterofermentativen Milchsäurebakterien angestellten Sauerteigen. *Zeitschrift für Lebensmittel-Untersuchung und -Forschung*, 171, 437–442. <https://doi.org/10.1007/BF01907235>
 
+The influence of cocoa powder on the quality of wheat bread (2025). Universidade Nacional de Tecnologias Alimentares, Kiev. <https://dspace.nuft.edu.ua/items/a262571a-e268-40b4-9bfc-4e545d039411>
+
 The Fresh Loaf. Discussões usadas na montagem das faixas do app: fermento firme e líquido, <https://www.thefreshloaf.com/comment/58320>; alimentação 1:10:10 e 1:1:1, <https://www.thefreshloaf.com/node/64197>; levain líquido a 125% no Hamelman, <https://www.thefreshloaf.com/node/67229>. O preset 1:5:4 do app é essa hidratação de 125%, não uma transcrição de página.
+
+The Fresh Loaf. Cacau e hidratação, <https://www.thefreshloaf.com/comment/492604>; leite em pó e hidratação, <https://www.thefreshloaf.com/comment/280904>.
 
 You Knead Sourdough. Feeding ratios. <https://www.youkneadsourdough.com.au/blogs/guides/sourdough-starter-feeding-ratios>
 
