@@ -69,6 +69,13 @@ function setFlour(value) {
   return setField("#flour", value) + `;document.querySelector("#flour").dispatchEvent(new Event("blur"))`;
 }
 
+// Remover pede confirmação: confirma o modal aberto.
+async function acceptConfirm(client) {
+  await sleep(80);
+  await client.evaluate(`document.querySelector(".confirm-dialog .confirm-actions .levain-done")?.click()`);
+  await sleep(60);
+}
+
 async function scenarioTelas(client, width) {
   await fresh(client, width);
   const initial = await client.evaluate(`({
@@ -247,6 +254,7 @@ async function scenarioTelas(client, width) {
   const withEggs = await client.evaluate(`document.querySelector("[data-final-hyd]").getAttribute("data-final-hyd")`);
   check(`tela ${width} ovos somam água`, withEggs === "72.5", withEggs);
   await client.evaluate(`document.querySelector('[aria-label="Remover Ovos"]').click()`);
+  await acceptConfirm(client);
   await sleep(40);
   const withoutEggs = await client.evaluate(`document.querySelector("[data-final-hyd]").getAttribute("data-final-hyd")`);
   check(`tela ${width} remover ovos tira a água`, withoutEggs === "65", withoutEggs);
@@ -277,6 +285,7 @@ async function scenarioTelas(client, width) {
 
   // Remove Sal e re-adiciona pelo menu
   await client.evaluate(`document.querySelector('[aria-label="Remover Sal"]')?.click()`);
+  await acceptConfirm(client);
   await sleep(40);
   const hasSalt = await client.evaluate(`!!document.querySelector('[aria-label="Remover Sal"]')`);
   check(`tela ${width} sal removido`, hasSalt === false, String(hasSalt));
@@ -316,9 +325,42 @@ async function scenarioTelas(client, width) {
   const dupBoth = await client.evaluate(`document.querySelectorAll(".ing-dup").length`);
   check(`tela ${width} repetido na mesma seção avisa nas duas linhas`, dupBoth === 2, String(dupBoth));
   await client.evaluate(`document.querySelector('[aria-label="Remover Farinha de trigo"]')?.click()`);
+  await acceptConfirm(client);
   await sleep(60);
   const dupGone = await client.evaluate(`document.querySelectorAll(".ing-dup").length`);
   check(`tela ${width} remover o repetido tira o aviso`, dupGone === 0, String(dupGone));
+  // Título da seção: texto até tocar; aí vira campo.
+  await client.evaluate(`document.querySelector(".add-btn").click()`);
+  await sleep(40);
+  await client.evaluate(`[...document.querySelectorAll(".menu button")].find((button) => button.textContent.trim().startsWith("Seção"))?.click()`);
+  await sleep(80);
+  const secEdit = await client.evaluate(`!!document.querySelector("input.sec-name") && document.activeElement === document.querySelector("input.sec-name")`);
+  check(`tela ${width} seção nova já abre em edição`, secEdit === true, String(secEdit));
+  await client.evaluate(`(() => { const input = document.querySelector("input.sec-name"); input.value = "Tangzhong"; input.dispatchEvent(new Event("input", { bubbles: true })); input.dispatchEvent(new Event("blur")); })()`);
+  await sleep(80);
+  const secText = await client.evaluate(`({ input: !!document.querySelector("input.sec-name"), title: document.querySelector(".sec-title")?.textContent.trim(), upper: getComputedStyle(document.querySelector(".sec-title")).textTransform })`);
+  check(`tela ${width} seção fora da edição é só texto em caixa alta`, secText.input === false && secText.title === "Tangzhong" && secText.upper === "uppercase", JSON.stringify(secText));
+  await client.evaluate(`document.querySelector(".sec-title").click()`);
+  await sleep(80);
+  const secAgain = await client.evaluate(`!!document.querySelector("input.sec-name")`);
+  check(`tela ${width} tocar no título abre a edição`, secAgain === true, String(secAgain));
+  await client.evaluate(`document.querySelector("input.sec-name").dispatchEvent(new Event("blur"))`);
+  await sleep(60);
+  await client.evaluate(`document.querySelector('[aria-label="Remover seção"]')?.click()`);
+  await sleep(80);
+  const secStays = await client.evaluate(`!!document.querySelector(".sec-title")`);
+  check(`tela ${width} remover seção pede confirmação`, secStays === true && await client.evaluate(`document.querySelector(".confirm-dialog")?.open === true`), String(secStays));
+  await client.evaluate(`document.querySelector(".confirm-dialog .confirm-actions .levain-done").click()`);
+  await sleep(80);
+  const secGone = await client.evaluate(`!document.querySelector(".sec-title")`);
+  check(`tela ${width} confirmar remove a seção`, secGone === true, String(secGone));
+  // Cancelar mantém o ingrediente.
+  await client.evaluate(`document.querySelector('[aria-label="Remover Farinha de trigo"]')?.click()`);
+  await sleep(80);
+  await client.evaluate(`document.querySelector(".confirm-dialog .confirm-actions .install")?.click()`);
+  await sleep(60);
+  const keptIng = await client.evaluate(`!!document.querySelector('[aria-label="Remover Farinha de trigo"]')`);
+  check(`tela ${width} cancelar mantém o ingrediente`, keptIng === true, String(keptIng));
   const noChipYet = await client.evaluate(`!document.querySelector(".pill-btn")`);
   check(`tela ${width} extra a 0% não abre o selo`, noChipYet === true, String(noChipYet));
   await client.evaluate(`(() => {

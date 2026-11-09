@@ -2618,10 +2618,21 @@ createApp({
       menuOpen.value = false;
     }
 
-    function removeIngredient(id) {
-      const index = state.ingredients.findIndex(
+    async function removeIngredient(id) {
+      const target = state.ingredients.find(
         (item) => item.id === id && (item.role === "extra" || item.role === "ferment2" || item.role === "salt")
       );
+      if (!target) return;
+      const name = String(target.name || "").trim() || "sem nome";
+      const confirmed = await askConfirm({
+        title: "Remover o ingrediente?",
+        message: "\"" + name + "\" sai da receita, com o percentual e a observação dele.",
+        confirmLabel: "Remover",
+        cancelLabel: "Cancelar",
+        danger: true,
+      });
+      if (!confirmed) return;
+      const index = state.ingredients.findIndex((item) => item.id === id);
       if (index >= 0) state.ingredients.splice(index, 1);
     }
 
@@ -2634,15 +2645,35 @@ createApp({
       const id = "sec-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
       state.ingredients.push({ id, name: "Nova seção", role: "section" });
       menuOpen.value = false;
+      editSection(id);
+    }
+
+    // O título da seção só vira campo ao tocar nele.
+    const editingSectionId = ref("");
+
+    function editSection(id) {
+      editingSectionId.value = id;
       nextTick(() => {
         const input = document.getElementById("sec-name-" + id);
         if (input) { input.focus(); input.select(); }
       });
     }
 
-    function removeSection(id) {
+
+    async function removeSection(id) {
       const index = state.ingredients.findIndex((item) => item.id === id);
-      if (index >= 0) state.ingredients.splice(index, 1);
+      if (index < 0) return;
+      const name = String(state.ingredients[index].name || "").trim() || "sem título";
+      const confirmed = await askConfirm({
+        title: "Remover a seção?",
+        message: "A seção \"" + name + "\" será removida. Os ingredientes dela ficam na lista.",
+        confirmLabel: "Remover seção",
+        cancelLabel: "Cancelar",
+        danger: true,
+      });
+      if (!confirmed) return;
+      const at = state.ingredients.findIndex((item) => item.id === id);
+      if (at >= 0) state.ingredients.splice(at, 1);
     }
 
     function moveIngredient(id, direction) {
@@ -2654,6 +2685,7 @@ createApp({
     }
 
     function settleSectionName(sec) {
+      if (editingSectionId.value === sec.id) editingSectionId.value = "";
       sec.name = String(sec.name || "").trim().slice(0, SECTION_NAME_MAX) || "Seção";
     }
 
@@ -2950,6 +2982,8 @@ createApp({
       moveIngredient,
       duplicateIds,
       addSection,
+      editingSectionId,
+      editSection,
       removeSection,
       settleSectionName,
       barWidth,
