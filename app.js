@@ -146,6 +146,8 @@ function mixState(item) {
 }
 
 // Limpa um estado salvo (na tela ou numa receita). Devolve null se não der para usar.
+const SECTION_NAME_MAX = 60;
+
 function normalizeState(raw) {
   if (!raw || !Array.isArray(raw.ingredients)) return null;
   // Descarta entradas inválidas antes de ler campos; localStorage e receitas antigas
@@ -163,7 +165,13 @@ function normalizeState(raw) {
     hasSecond = hasSecond || ok;
     return ok;
   });
+  // Seção = título na lista (role "section"), que agrupa os ingredientes abaixo dela até a próxima.
+  raw.ingredients = raw.ingredients.filter((item) => item.role !== "section" || (typeof item.id === "string" && item.id));
   raw.ingredients.forEach((item) => {
+    if (item.role === "section") {
+      item.name = typeof item.name === "string" ? item.name.slice(0, SECTION_NAME_MAX) : "";
+      return;
+    }
     item.pct = Math.max(0, Padeiro.num(item.pct));
     item.water = Math.max(0, Padeiro.num(item.water));
     item.note = typeof item.note === "string" ? item.note.slice(0, NOTE_MAX) : "";
@@ -724,20 +732,15 @@ createApp({
       return Math.min(5, Math.max(1, text.length));
     });
 
-    // Enquanto o campo está em edição, o texto vive em `flourDraft`. Um número válido acima
-    // de zero vale na hora; apagar o campo (ou digitar 0) para digitar outro valor mantém a
-    // farinha anterior, e as contas dos demais ingredientes não zeram no meio da digitação.
-    // Fechar o teclado no celular nem sempre tira o foco, por isso não dá para esperar a saída.
+    // Enquanto o campo está em edição, o texto vive em `flourDraft` e nada é recalculado:
+    // os demais ingredientes só acompanham a farinha quando se sai do campo (`settleFlour`),
+    // sem passos intermediários da digitação. Campo vazio mantém a farinha anterior.
     const flourDraft = ref(null);
     const flourField = computed({
       get: () => (flourDraft.value !== null ? flourDraft.value : state.flour),
       set: (value) => {
         const text = value == null ? "" : String(value);
-        flourDraft.value = text;
-        const n = Number(text);
-        if (text === "" || !Number.isFinite(n) || n <= 0) return;
-        state.flour = Math.min(FLOUR_MAX, n);
-        if (n > FLOUR_MAX) flourDraft.value = String(FLOUR_MAX);
+        flourDraft.value = Number(text) > FLOUR_MAX ? String(FLOUR_MAX) : text;
       },
     });
 
@@ -1762,7 +1765,13 @@ createApp({
       const trackH = 5;
       const rowRight = width - pad - ingFrame - rowPad;
       const noteMax = rowRight - nameX;
-      const layouts = rows.map((row) => {
+      // Na ordem da lista: títulos de seção entre os ingredientes.
+      const cardEntries = state.ingredients
+        .map((item) => (item.role === "section" ? { head: String(item.name || "").trim() || "Seção" } : rows.find((row) => row.id === item.id)))
+        .filter(Boolean);
+      const layouts = cardEntries.map((entry) => {
+        if (entry.head !== undefined) return { head: entry.head, height: 52 };
+        const row = entry;
         const note = ingredientNote(row);
         ctx.font = "600 23px Outfit, sans-serif";
         const nameLines = Math.max(1, cardLines(ctx, row.name || "Ingrediente", 480, 2).length);
@@ -1969,6 +1978,15 @@ createApp({
       let rowY = ingBodyY + ingTopPad;
       const rowLeft = ingBodyX + rowPad;
       layouts.forEach((item) => {
+        if (item.head !== undefined) {
+          ctx.fillStyle = "#7d6244";
+          ctx.font = "700 20px Outfit, sans-serif";
+          ctx.fillText(item.head.toUpperCase(), rowLeft, rowY + 34);
+          ctx.fillStyle = "#e5d9c8";
+          ctx.fillRect(rowLeft, rowY + 44, rowRight - rowLeft, 2);
+          rowY += item.height;
+          return;
+        }
         const row = item.row;
         const y = rowY;
         const trackW = rowRight - rowLeft;
@@ -2569,12 +2587,31 @@ createApp({
       if (noteEditingId.value) nextTick(() => document.getElementById("ing-note-" + item.id)?.focus());
     }
 
+    function addSection() {
+      const id = "sec-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      state.ingredients.push({ id, name: "Nova seção", role: "section" });
+      menuOpen.value = false;
+      nextTick(() => {
+        const input = document.getElementById("sec-name-" + id);
+        if (input) { input.focus(); input.select(); }
+      });
+    }
+
+    function removeSection(id) {
+      const index = state.ingredients.findIndex((item) => item.id === id);
+      if (index >= 0) state.ingredients.splice(index, 1);
+    }
+
     function moveIngredient(id, direction) {
       const index = state.ingredients.findIndex((item) => item.id === id);
       const target = index + direction;
       if (index < 0 || target < 0 || target >= state.ingredients.length) return;
       const [item] = state.ingredients.splice(index, 1);
       state.ingredients.splice(target, 0, item);
+    }
+
+    function settleSectionName(sec) {
+      sec.name = String(sec.name || "").trim().slice(0, SECTION_NAME_MAX) || "Seção";
     }
 
     function barWidth(pct) {
@@ -2862,6 +2899,9 @@ createApp({
       fermentChoices,
       removeIngredient,
       moveIngredient,
+      addSection,
+      removeSection,
+      settleSectionName,
       barWidth,
       rowOf,
       iconFor,

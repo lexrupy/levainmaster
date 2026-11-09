@@ -1496,3 +1496,8 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 
 .about-id h2 { font-size: 1.4rem; line-height: 1.15; }
 .about .levain-head { align-items: flex-start; }
+
+/* SPDX-License-Identifier: LGPL-3.0-or-later */
+.sec-head { display: flex; align-items: center; gap: 6px; margin: 18px 0 8px; }
+.sec-head:first-child { margin-top: 0; }
+.sec-name { flex: 1; min-width: 0; margin: 0; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; font-size: .85rem; }

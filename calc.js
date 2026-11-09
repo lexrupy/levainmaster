@@ -83,6 +83,7 @@
   // Água que entra na hidratação da massa. Farinha e pó secos ficam em 0:
   // a umidade de laboratório (~12%) não é água livre, e a farinha base também não conta a dela.
   const ADDABLE = [
+    { group: "Farinhas e amidos", name: "Farinha de trigo", water: 0 },
     { group: "Farinhas e amidos", name: "Fubá", water: 0 },
     { group: "Farinhas e amidos", name: "Farinha de mandioca", water: 0 },
     { group: "Farinhas e amidos", name: "Amido de milho", water: 0 },
@@ -403,6 +404,12 @@
     return !!item && (item.role === "ferment" || item.role === "ferment2");
   }
 
+  function isExtraFlour(item) {
+    if (!item || item.role !== "extra" || item.custom) return false;
+    const spec = ADDABLE.find((entry) => entry.name === item.name);
+    return !!spec && spec.group === "Farinhas e amidos";
+  }
+
   function gramsOf(flour, pct) {
     return (Math.max(0, num(flour)) * Math.max(0, num(pct))) / 100;
   }
@@ -415,9 +422,10 @@
   // Inteiros que somam o arredondado do total. O grama do empate em ,5 fica na primeira linha.
   // Os índices em `fine` ficam com 1 casa decimal e saem da divisão em inteiros.
   function balanceShown(values, fine) {
+    // 1e-9 absorve o erro de ponto flutuante: 200 g viram 66,666…% e voltam como 199,99999999999997.
     const exact = values.map((value) => Math.max(0, num(value)));
     const fineSet = new Set(fine || []);
-    const shown = exact.map((value, index) => (fineSet.has(index) ? Math.round(value * 10) / 10 : Math.floor(value)));
+    const shown = exact.map((value, index) => (fineSet.has(index) ? Math.round(value * 10) / 10 : Math.floor(value + 1e-9)));
     const intSum = (list) => list.reduce((sum, value, index) => (fineSet.has(index) ? sum : sum + value), 0);
     const fineSum = shown.reduce((sum, value, index) => (fineSet.has(index) ? sum + value : sum), 0);
     let left = Math.round(exact.reduce((sum, value) => sum + value, 0) - fineSum) - intSum(shown);
@@ -478,8 +486,9 @@
         ? !!state.includeLevain
         : true;
     const includeSeed = includeLevain && !!((config && config.includeSeed) || (state && state.includeSeed));
+    // Seções ("section") são só títulos na lista: não entram nas contas.
     const ingredients = (Array.isArray(state.ingredients) ? state.ingredients : []).filter(
-      (item) => item && typeof item === "object"
+      (item) => item && typeof item === "object" && item.role !== "section"
     );
     // O levain pode ser o fermento principal (role "ferment") ou o segundo (role "ferment2").
     const levainRow = ingredients.find((item) => isFerment(item) && item.ferment === "levain");
@@ -491,7 +500,8 @@
     const rows = ingredients.map((item) => {
       const grams = gramsOf(flour, item.pct);
       let water = grams * (Math.max(0, num(item.water)) / 100);
-      let addedFlour = 0;
+      // Farinha extra (grupo "Farinhas e amidos") entra no divisor da hidratação, junto da farinha principal.
+      let addedFlour = isExtraFlour(item) ? grams : 0;
       if (isFerment(item) && item.ferment === "levain") {
         if (includeLevain && levain && levain.valid) {
           water = levain.water;

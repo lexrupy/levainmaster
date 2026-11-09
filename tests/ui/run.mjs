@@ -64,6 +64,11 @@ function setField(selector, value) {
   })()`;
 }
 
+// A farinha só vale ao sair do campo (tarefa 0129): digita e dispara o blur.
+function setFlour(value) {
+  return setField("#flour", value) + `;document.querySelector("#flour").dispatchEvent(new Event("blur"))`;
+}
+
 async function scenarioTelas(client, width) {
   await fresh(client, width);
   const initial = await client.evaluate(`({
@@ -98,6 +103,10 @@ async function scenarioTelas(client, width) {
 
   await client.evaluate(setField("#flour", 600));
   await sleep(40);
+  const midWater = await client.evaluate(`document.querySelector('[data-grams="water"] .grams-value').textContent.trim()`);
+  check(`tela ${width} farinha só recalcula ao sair do campo`, midWater === "325", midWater);
+  await client.evaluate(`document.querySelector("#flour").dispatchEvent(new Event("blur"))`);
+  await sleep(40);
   const flour = await client.evaluate(`({
     flour: document.querySelector("#flour").value,
     water: document.querySelector('[data-grams="water"] .grams-value').textContent.trim(),
@@ -124,7 +133,7 @@ async function scenarioTelas(client, width) {
   await sleep(40);
   const down = await client.evaluate(`document.querySelector("#flour").value`);
   check(`tela ${width} desce 50 g`, down === "600", down);
-  await client.evaluate(setField("#flour", 100000));
+  await client.evaluate(setFlour(100000));
   await sleep(40);
   const cap = await client.evaluate(`document.querySelector("#flour").value`);
   check(`tela ${width} trava em 99999`, cap === "99999", cap);
@@ -280,7 +289,7 @@ async function scenarioTelas(client, width) {
   check(`tela ${width} sal restaurado`, restoredSalt === true, String(restoredSalt));
 
   await fresh(client, width);
-  await client.evaluate(setField("#flour", 700));
+  await client.evaluate(setFlour(700));
   await sleep(80);
   const loaded = client.waitLoad();
   await client.send("Page.reload", { ignoreCache: true });
@@ -733,12 +742,12 @@ async function scenarioPersistencia(client) {
   })()`);
 
   await client.evaluate(`window.__blockedStorageKeys.add("percentual-padeiro-v1")`);
-  await client.evaluate(setField("#flour", 600));
+  await client.evaluate(setFlour(600));
   await sleep(80);
   let state = await client.evaluate(`document.querySelector(".storage-warning")?.textContent || ""`);
   check("persist estado avisa falha", state.includes("receita atual") && state.includes("podem se perder"), state);
   await client.evaluate(`window.__blockedStorageKeys.delete("percentual-padeiro-v1")`);
-  await client.evaluate(setField("#flour", 601));
+  await client.evaluate(setFlour(601));
   await sleep(80);
   state = await client.evaluate(`!!document.querySelector(".storage-warning")`);
   check("persist estado limpa aviso após gravar", state === false, String(state));

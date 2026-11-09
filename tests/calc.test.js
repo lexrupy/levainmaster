@@ -155,10 +155,8 @@ test("farinha da alimentação entra na conta e isca é configurável", () => {
   assert.equal(withoutLevainHyd.includeLevain, false);
 });
 
-test("pós e farinhas extras não somam água", () => {
+test("pós extras não somam água nem entram no divisor", () => {
   for (const name of [
-    "Farinha integral",
-    "Amido de milho",
     "Leite em pó integral",
     "Cacau em pó",
     "Açúcar",
@@ -169,6 +167,17 @@ test("pós e farinhas extras não somam água", () => {
       state.ingredients.push({ id: name, name, pct: 20, water: 0, role: "extra" });
     });
     close(result.hydration, 65, name);
+    close(result.flour, 500, name);
+  }
+});
+
+test("farinhas e amidos extras não somam água, mas entram no divisor", () => {
+  for (const name of ["Farinha integral", "Amido de milho"]) {
+    const result = recipe((state) => {
+      state.ingredients.push({ id: name, name, pct: 20, water: 0, role: "extra" });
+    });
+    close(result.hydration, (325 / 600) * 100, name);
+    close(result.totalFlour, 600, name);
     close(result.flour, 500, name);
   }
 });
@@ -459,4 +468,29 @@ test("mergeRecipes: lixeira e exclusão definitiva propagam e não são desfeita
   assert.equal(Padeiro.mergeRecipes([lixo], [viva]).list[0].deletedAt, lixo.deletedAt);
   assert.equal(Padeiro.mergeRecipes([viva], [purgada]).list[0].purged, true);
   assert.equal(Padeiro.mergeRecipes([purgada], [lixo]).list[0].purged, true);
+});
+
+test("balanceShown não perde 1 g por erro de ponto flutuante", () => {
+  const pct = (200 / 300) * 100;
+  const grams = (300 * pct) / 100; // 199.99999999999997
+  assert.ok(grams < 200);
+  assert.deepEqual(Padeiro.balanceShown([300, grams]), [300, 200]);
+});
+
+test("seção é só título: não entra nas contas", () => {
+  const state = Padeiro.defaultState();
+  const base = Padeiro.compute(state);
+  state.ingredients.splice(1, 0, { id: "sec-1", name: "Tangzhong", role: "section" });
+  const withSection = Padeiro.compute(state);
+  assert.equal(withSection.rows.length, base.rows.length);
+  assert.equal(withSection.total, base.total);
+});
+
+test("farinha extra entra no divisor da hidratação", () => {
+  const state = Padeiro.defaultState();
+  state.ingredients.push({ id: "x", name: "Farinha de trigo", pct: 20, water: 0, role: "extra" });
+  const r = Padeiro.compute(state);
+  // água 325 g ÷ (500 + 100) g de farinha
+  assert.ok(Math.abs(r.hydration - (325 / 600) * 100) < 1e-9);
+  assert.equal(r.totalFlour, 600);
 });

@@ -119,7 +119,14 @@
     <section class="sheet">
       <h2 class="section-label">Detalhamento da receita</h2>
 
-      <div v-for="(item, index) in state.ingredients" :key="item.id" class="ing-block">
+      <div v-for="(item, index) in state.ingredients" :key="item.id" :class="item.role === 'section' ? 'sec-head' : 'ing-block'">
+      <template v-if="item.role === 'section'">
+        <input :id="'sec-name-' + item.id" class="sec-name" type="text" maxlength="60" v-model="item.name" @blur="settleSectionName(item)" @keydown.enter.prevent="$event.target.blur()" aria-label="Título da seção">
+        <button type="button" class="move-ing" :disabled="index === 0" @click="moveIngredient(item.id, -1)" aria-label="Mover seção para cima" title="Mover seção para cima"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 14 6-6 6 6"/></svg></button>
+        <button type="button" class="move-ing" :disabled="index === state.ingredients.length - 1" @click="moveIngredient(item.id, 1)" aria-label="Mover seção para baixo" title="Mover seção para baixo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 10 6 6 6-6"/></svg></button>
+        <button type="button" class="move-ing" @click="removeSection(item.id)" aria-label="Remover seção" title="Remover seção"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </template>
+      <template v-else>
         <div class="ing">
           <div class="icon-order">
             <button type="button" class="move-ing" :disabled="index === 0" @click="moveIngredient(item.id, -1)" :aria-label="'Mover ' + (item.name || 'ingrediente') + ' para cima'" :title="'Mover ' + (item.name || 'ingrediente') + ' para cima'">
@@ -194,6 +201,7 @@
             </div>
           </div>
         </div>
+      </template>
       </div>
 
       <div class="add-wrap">
@@ -214,6 +222,7 @@
             </button>
           </div>
           <button type="button" @click="addCustom">Personalizado <small>você define a água</small></button>
+          <button type="button" @click="addSection">Seção <small>título para agrupar ingredientes</small></button>
         </div>
       </div>
       <div class="notes-wrap">
