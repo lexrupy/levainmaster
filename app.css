@@ -1501,3 +1501,9 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 .sec-head { display: flex; align-items: center; gap: 6px; margin: 18px 0 8px; }
 .sec-head:first-child { margin-top: 0; }
 .sec-name { flex: 1; min-width: 0; margin: 0; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; font-size: .85rem; }
+
+.pill-btn { background: transparent; cursor: pointer; font-family: inherit; }
+.pill-btn:focus-visible { outline: 2px solid var(--line-strong); outline-offset: 2px; }
+.flour-parts { list-style: none; margin: 0 0 4px; padding: 0; }
+.flour-parts li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line-strong); }
+.flour-parts .flour-total { border-bottom: 0; font-weight: 700; }

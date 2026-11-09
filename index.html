@@ -53,7 +53,8 @@
           </div>
           <div class="field-head">
             <label class="kicker" for="flour">Farinha</label>
-            <span class="pill">100%</span>
+            <button v-if="result.extraFlour > 0" type="button" class="pill pill-btn" @click="openFlourDialog" aria-label="Ver as farinhas que entram na conta">{{ formatG(flourTotal) }} g no total</button>
+            <span v-else class="pill">100%</span>
           </div>
           <div class="mega" :style="{ '--flour-ch': flourDigits }">
             <input id="flour" type="number" min="0" max="99999" step="1" inputmode="numeric" v-model="flourField" :placeholder="state.flour" @blur="settleFlour" @keydown.enter.prevent="$event.target.blur()" @keydown.up.prevent="bumpFlour(1)" @keydown.down.prevent="bumpFlour(-1)" aria-label="Farinha em gramas">
@@ -277,6 +278,19 @@
           <button type="button" class="levain-done" :class="{ danger: confirmState.danger }" @click="answerConfirm(true)">{{ confirmState.confirmLabel }}</button>
         </div>
       </article>
+    </dialog>
+
+    <dialog ref="flourDialog" class="levain-dialog confirm-dialog" @click="onFlourDialogClick" aria-labelledby="flour-title">
+      <div class="levain compact confirm">
+        <header class="levain-head">
+          <h2 id="flour-title">Farinha da receita</h2>
+          <button type="button" class="del" @click="closeFlourDialog" aria-label="Fechar">×</button>
+        </header>
+        <ul class="flour-parts">
+          <li v-for="part in flourParts" :key="part.id"><span>{{ part.name }}</span><b>{{ formatG(part.grams) }} g</b></li>
+          <li class="flour-total"><span>Total</span><b>{{ formatG(flourTotal) }} g</b></li>
+        </ul>
+      </div>
     </dialog>
 
     <dialog ref="portionDialog" class="levain-dialog confirm-dialog" @click="onPortionClick" aria-labelledby="portion-title">

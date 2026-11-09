@@ -288,6 +288,36 @@ async function scenarioTelas(client, width) {
   const restoredSalt = await client.evaluate(`!!document.querySelector('[aria-label="Remover Sal"]')`);
   check(`tela ${width} sal restaurado`, restoredSalt === true, String(restoredSalt));
 
+  // Chip da farinha: só aparece com farinha extra e abre a lista do que entra na conta.
+  await fresh(client, width);
+  const noChip = await client.evaluate(`!document.querySelector(".pill-btn")`);
+  check(`tela ${width} sem farinha extra o selo é só 100%`, noChip === true, String(noChip));
+  await client.evaluate(`document.querySelector(".add-btn").click()`);
+  await sleep(40);
+  await client.evaluate(`[...document.querySelectorAll(".menu button")].find((button) => button.textContent.trim().startsWith("Farinha de trigo"))?.click()`);
+  await sleep(60);
+  const noChipYet = await client.evaluate(`!document.querySelector(".pill-btn")`);
+  check(`tela ${width} extra a 0% não abre o selo`, noChipYet === true, String(noChipYet));
+  await client.evaluate(`(() => {
+    const block = [...document.querySelectorAll(".ing-block")].pop();
+    block.querySelector(".pct-value")?.click();
+  })()`);
+  await sleep(60);
+  await client.evaluate(`(() => {
+    const input = [...document.querySelectorAll(".ing-block")].pop().querySelector(".pct input");
+    input.value = "10";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("blur", { bubbles: true }));
+  })()`);
+  await sleep(80);
+  const chip = await client.evaluate(`document.querySelector(".pill-btn")?.textContent.trim() || ""`);
+  check(`tela ${width} selo mostra principal mais extra`, chip === "550 g no total", chip);
+  await client.evaluate(`document.querySelector(".pill-btn").click()`);
+  await sleep(80);
+  const parts = await client.evaluate(`[...document.querySelectorAll(".flour-parts li")].map((li) => li.textContent.replace(/\s+/g, " ").trim())`);
+  check(`tela ${width} modal lista principal, extra e total`, parts.length === 3 && parts[0].startsWith("Farinha principal") && parts[2].startsWith("Total"), JSON.stringify(parts));
+  await client.evaluate(`document.querySelector("#flour-title").closest("dialog").close()`);
+
   await fresh(client, width);
   await client.evaluate(setFlour(700));
   await sleep(80);
@@ -471,7 +501,7 @@ async function scenario0084(client, width) {
   });
   await setWater(client, 20);
   const low = await waterState(client);
-  check(`0084 ${width} rótulo 20`, low.label === "20" && low.value === "20" && low.min === "20", JSON.stringify(low));
+  check(`0084 ${width} rótulo 20`, low.label === "20" && low.value === "20" && low.min === "0", JSON.stringify(low));
   const lowScroll = await client.evaluate(`document.documentElement.scrollWidth - document.documentElement.clientWidth`);
   check(`0084 ${width} sem rolagem em 20%`, lowScroll === 0, String(lowScroll));
   await pressSlider(client, "ArrowUp", "ArrowUp", 38);

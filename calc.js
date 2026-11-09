@@ -540,6 +540,8 @@
       row.fine = fine.includes(index + 1);
     });
 
+    // Farinha seca da receita: a principal mais as farinhas e amidos extras (sem a da alimentação do levain).
+    const extraFlour = ingredients.reduce((sum, item, index) => sum + (isExtraFlour(item) ? rows[index].grams : 0), 0);
     const totalFlour = flour + rows.reduce((sum, row) => sum + (row.addedFlour || 0), 0);
     const totalWater = rows.reduce((sum, row) => sum + row.water, 0);
     const totalWeight = flour + rows.reduce((sum, row) => sum + row.grams, 0);
@@ -555,6 +557,7 @@
 
     return {
       flour,
+      extraFlour,
       totalFlour,
       rows,
       levainOn,
@@ -630,6 +633,7 @@
     peakEstimate,
     isFerment,
     isDryYeast,
+    isExtraFlour,
     enrichedBread,
     gramsOf,
     balanceShown,

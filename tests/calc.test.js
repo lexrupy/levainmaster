@@ -494,3 +494,10 @@ test("farinha extra entra no divisor da hidratação", () => {
   assert.ok(Math.abs(r.hydration - (325 / 600) * 100) < 1e-9);
   assert.equal(r.totalFlour, 600);
 });
+
+test("extraFlour soma só farinhas e amidos extras", () => {
+  const state = Padeiro.defaultState();
+  state.ingredients.push({ id: "x", name: "Farinha de trigo", pct: 10, water: 0, role: "extra" });
+  state.ingredients.push({ id: "y", name: "Açúcar", pct: 10, water: 0, role: "extra" });
+  assert.equal(Padeiro.compute(state).extraFlour, 50);
+});

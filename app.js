@@ -377,6 +377,7 @@ createApp({
     const calGuideDialog = ref(null);
     const calGuideOverForm = ref(false);
     const breadDialog = ref(null);
+    const flourDialog = ref(null);
     const calStore = reactive(loadCalibrations());
     const configStore = reactive(loadConfig());
     const startingCal = calStore.items.find((item) => item.id === calStore.activeId) || null;
@@ -593,6 +594,29 @@ createApp({
     });
 
     const waterDiffers = computed(() => Math.abs(result.value.hydration - waterPct.value) >= 0.15);
+
+    // Farinha seca: a principal mais as farinhas e amidos extras (o selo "Farinha" do card de cima).
+    const flourParts = computed(() => {
+      const extras = result.value.rows
+        .filter((row) => state.ingredients.some((item) => item.id === row.id && Padeiro.isExtraFlour(item)))
+        .map((row) => ({ id: row.id, name: row.name, grams: row.shown }));
+      return [{ id: "main", name: "Farinha principal", grams: Math.round(Padeiro.num(state.flour)) }, ...extras];
+    });
+    const flourTotal = computed(() => flourParts.value.reduce((sum, part) => sum + part.grams, 0));
+
+    function openFlourDialog() {
+      const dialog = flourDialog.value;
+      if (dialog && !dialog.open) dialog.showModal();
+    }
+
+    function closeFlourDialog() {
+      const dialog = flourDialog.value;
+      if (dialog && dialog.open) dialog.close();
+    }
+
+    function onFlourDialogClick(event) {
+      if (event.target === flourDialog.value) closeFlourDialog();
+    }
 
     function formatG(value) {
       return gramsFormat.format(Math.round(Padeiro.num(value)));
@@ -2728,6 +2752,12 @@ createApp({
       calGuideDialog,
       calGuideOverForm,
       breadDialog,
+      flourDialog,
+      flourParts,
+      flourTotal,
+      openFlourDialog,
+      closeFlourDialog,
+      onFlourDialogClick,
       breadShown,
       breadRows,
       breadDetail,
