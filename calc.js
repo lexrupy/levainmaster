@@ -116,6 +116,8 @@
     { group: "Ovos, leite e gordura", name: "Adoçante culinário", water: 0, enrich: "açúcar" },
     { group: "Ovos, leite e gordura", name: "Mel", water: 17, enrich: "açúcar" },
     { group: "Ovos, leite e gordura", name: "Melado", water: 22, enrich: "açúcar" },
+    { group: "Ovos, leite e gordura", name: "Essência de baunilha", water: 80 },
+    { group: "Ovos, leite e gordura", name: "Essência de baunilha em pó", water: 0 },
   ];
 
   const MAIN_LIQUIDS = [

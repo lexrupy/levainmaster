@@ -501,3 +501,19 @@ test("extraFlour soma só farinhas e amidos extras", () => {
   state.ingredients.push({ id: "y", name: "Açúcar", pct: 10, water: 0, role: "extra" });
   assert.equal(Padeiro.compute(state).extraFlour, 50);
 });
+
+test("essência de baunilha líquida soma 80% de água sem enriquecer", () => {
+  const spec = Padeiro.ADDABLE.find((entry) => entry.name === "Essência de baunilha");
+  assert.equal(spec.water, 80);
+  assert.equal(spec.enrich, undefined);
+  const state = Padeiro.defaultState();
+  state.ingredients.push({ id: "v", name: spec.name, pct: 2, water: spec.water, role: "extra" });
+  const r = Padeiro.compute(state);
+  close(r.totalWater, 325 + 10 * 0.8, "água");
+});
+
+test("essência de baunilha em pó não soma água", () => {
+  const spec = Padeiro.ADDABLE.find((entry) => entry.name === "Essência de baunilha em pó");
+  assert.equal(spec.water, 0);
+  assert.equal(spec.enrich, undefined);
+});
