@@ -484,13 +484,8 @@ createApp({
 
     const waterItem = computed(() => state.ingredients.find((item) => item.role === "water") || null);
     const primaryLiquidName = computed(() => (waterItem.value ? waterItem.value.name : "Água"));
-    const primaryLiquidChoices = computed(() => {
-      const extraNames = new Set(
-        state.ingredients.filter((item) => item.role === "extra").map((item) => item.name)
-      );
-      const current = waterItem.value;
-      return Padeiro.MAIN_LIQUIDS.filter((liq) => !extraNames.has(liq.name) || (current && current.name === liq.name));
-    });
+    // Repetir é permitido (0134): o seletor oferece todos, mesmo os que já estão como extra.
+    const primaryLiquidChoices = computed(() => Padeiro.MAIN_LIQUIDS);
 
     function setPrimaryLiquid(name) {
       const water = state.ingredients.find((item) => item.role === "water");
