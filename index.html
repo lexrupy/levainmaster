@@ -434,7 +434,7 @@
           <label class="hint" for="sync-gist">Id do gist</label>
           <input id="sync-gist" type="text" v-model="syncStore.gistId" autocomplete="off" autocapitalize="off" spellcheck="false">
           <label class="hint" for="sync-token">Token clássico (escopo gist)</label>
-          <input id="sync-token" type="password" v-model="syncStore.token" autocomplete="off">
+          <input id="sync-token" type="text" v-model="syncStore.token" name="gist-token" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-bwignore>
           <div class="backup-actions">
             <button type="button" class="install" :disabled="syncing" @click="syncRecipes">{{ syncing ? "Sincronizando…" : "Sincronizar receitas" }}</button>
           </div>
