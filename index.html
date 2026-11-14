@@ -122,12 +122,14 @@
 
       <div v-for="(item, index) in state.ingredients" :key="item.id" :class="item.role === 'section' ? 'sec-head' : 'ing-block'">
       <template v-if="item.role === 'section'">
-        <div class="icon sec-bullet" aria-hidden="true"><span></span></div>
+        <div class="icon-order">
+          <button type="button" class="move-ing" :disabled="index === 0" @click="moveIngredient(item.id, -1)" aria-label="Mover seção para cima" title="Mover seção para cima"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 14 6-6 6 6"/></svg></button>
+          <div class="icon sec-bullet" aria-hidden="true"><span></span></div>
+          <button type="button" class="move-ing" :disabled="index === state.ingredients.length - 1" @click="moveIngredient(item.id, 1)" aria-label="Mover seção para baixo" title="Mover seção para baixo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 10 6 6 6-6"/></svg></button>
+        </div>
         <input v-if="editingSectionId === item.id" :id="'sec-name-' + item.id" class="sec-name" type="text" maxlength="60" v-model="item.name" @blur="settleSectionName(item)" @keydown.enter.prevent="$event.target.blur()" aria-label="Título da seção">
         <button v-else type="button" class="sec-title" @click="editSection(item.id)" :title="'Editar o título da seção ' + item.name">{{ item.name }}</button>
         <span v-if="editingSectionId !== item.id" class="sec-line" aria-hidden="true"></span>
-        <button type="button" class="move-ing" :disabled="index === 0" @click="moveIngredient(item.id, -1)" aria-label="Mover seção para cima" title="Mover seção para cima"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 14 6-6 6 6"/></svg></button>
-        <button type="button" class="move-ing" :disabled="index === state.ingredients.length - 1" @click="moveIngredient(item.id, 1)" aria-label="Mover seção para baixo" title="Mover seção para baixo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 10 6 6 6-6"/></svg></button>
         <button type="button" class="move-ing" @click="removeSection(item.id)" aria-label="Remover seção" title="Remover seção"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
       </template>
       <template v-else>
