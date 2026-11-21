@@ -518,9 +518,9 @@
         <img v-else-if="shareCardUrl" class="share-preview-image" :src="shareCardUrl" alt="Prévia do card compartilhável da receita">
         <p class="share-status" aria-live="polite">{{ shareStatus }}</p>
         <div class="share-actions">
-          <button type="button" class="levain-done" @click="shareRecipeCard" :disabled="sharingCard">Compartilhar receita</button>
-          <button type="button" class="install" @click="exportRecipe">Exportar receita JSON</button>
-          <button type="button" class="install" @click="exportRecipeText">Exportar receita TXT</button>
+          <button type="button" class="levain-done" @click="shareRecipeCard" :disabled="sharingCard" title="Compartilhar o card como imagem">Imagem</button>
+          <button type="button" class="install" @click="exportRecipe" title="Exportar a receita em JSON">JSON</button>
+          <button type="button" class="install" @click="exportRecipeText" title="Exportar a receita em texto">TXT</button>
         </div>
       </article>
     </dialog>

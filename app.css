@@ -768,9 +768,8 @@ label.kicker, .kicker, .section-label, .final-head span, .total-row span, .crumb
 .import-status { margin: 8px 0 0; color: var(--muted); font-size: 0.82rem; }
 .share-dialog article { width: min(760px, calc(100vw - 28px)); }
 .share-preview-image { display: block; width: min(100%, 540px); max-height: 58vh; margin: 12px auto; object-fit: contain; border-radius: 12px; background: var(--sand-bg); }
-.share-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.share-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
 .share-actions button { width: 100%; margin: 0; }
-@media (max-width: 420px) { .share-actions { grid-template-columns: 1fr; } }
 
 .menu {
   position: absolute;
