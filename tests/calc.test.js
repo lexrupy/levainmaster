@@ -517,3 +517,15 @@ test("essência de baunilha em pó não soma água", () => {
   assert.equal(spec.water, 0);
   assert.equal(spec.enrich, undefined);
 });
+
+test("a opção gravada na receita vale mais que a do aparelho", () => {
+  const state = Padeiro.defaultState();
+  state.ingredients[2].ferment = "levain";
+  state.ingredients[2].pct = 20;
+  state.levain = { L: 1, A: 1, F: 1 };
+  const off = Padeiro.compute({ ...state, includeLevain: false }, { includeLevain: true, includeSeed: true });
+  const on = Padeiro.compute({ ...state, includeLevain: true, includeSeed: false }, { includeLevain: false, includeSeed: true });
+  assert.equal(off.includeLevain, false);
+  assert.equal(on.includeLevain, true);
+  assert.notEqual(off.hydration, on.hydration);
+});

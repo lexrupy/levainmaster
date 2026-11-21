@@ -204,6 +204,10 @@ function normalizeState(raw) {
   raw.levain.F = Math.max(0, Padeiro.num(raw.levain.F));
   raw.recipeName = typeof raw.recipeName === "string" ? raw.recipeName.slice(0, 80) : "Minha Receita";
   raw.notes = typeof raw.notes === "string" ? raw.notes : "";
+  // As opções de hidratação vão com a receita. Sem elas (receita antiga), vale a configuração deste aparelho.
+  const deviceConfig = loadConfig();
+  raw.includeLevain = raw.includeLevain !== undefined ? !!raw.includeLevain : deviceConfig.includeLevain;
+  raw.includeSeed = raw.includeSeed !== undefined ? !!raw.includeSeed : deviceConfig.includeSeed;
   return raw;
 }
 
@@ -1128,6 +1132,13 @@ createApp({
       if (event.target === shareDialog.value) closeShareCard();
     }
 
+    // Diz o que entrou na hidratação, já que a opção vai com a receita.
+    function hydrationBasisText() {
+      if (!state.includeLevain) return "Hidratação sem a água e a farinha do levain.";
+      if (!state.includeSeed) return "Hidratação com a água e a farinha da alimentação do levain; isca fora.";
+      return "Hidratação com a alimentação do levain e a isca (50% água, 50% farinha).";
+    }
+
     async function exportRecipe() {
       const name = String(state.recipeName || "Minha Receita").trim() || "Minha Receita";
       const payload = {
@@ -1161,6 +1172,64 @@ createApp({
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       shareStatus.value = "Este navegador não oferece compartilhamento de arquivo. O JSON foi baixado.";
+    }
+
+    function recipeText() {
+      const name = String(state.recipeName || "Minha Receita").trim() || "Minha Receita";
+      const lines = [name.toUpperCase(), ""];
+      lines.push("Farinha: " + formatG(state.flour) + " g");
+      lines.push("Hidratação total: " + formatPct(result.value.hydration) + "%");
+      lines.push("Peso da massa: " + formatHalfG(result.value.totalWeight) + " g");
+      if (state.portions > 1) lines.push("Porções: " + state.portions + " de " + formatG(result.value.totalWeight / state.portions) + " g");
+      if (result.value.levainOn) lines.push(hydrationBasisText());
+      lines.push("", "INGREDIENTES");
+      state.ingredients.forEach((item) => {
+        if (item.role === "section") {
+          lines.push("", String(item.name || "").toUpperCase());
+          return;
+        }
+        const row = rowOf(item.id);
+        let line = "- " + item.name + ": " + formatRowG(row) + " g (" + formatPctFine(item.pct || 0) + "%)";
+        if (item.note) line += " — " + item.note;
+        lines.push(line);
+      });
+      if (result.value.levainOn) {
+        const lv = result.value.levain;
+        lines.push("", "LEVAIN", "Proporção L:A:F " + state.levain.L + ":" + state.levain.A + ":" + state.levain.F);
+        if (lv && lv.valid) {
+          lines.push(formatG(lv.seed) + " g isca + " + formatG(lv.water) + " g água + " + formatG(lv.flour) + " g farinha · hidratação " + formatPct(lv.hydration) + "%");
+        }
+      }
+      if (state.notes && state.notes.trim()) lines.push("", "OBSERVAÇÕES", state.notes);
+      return lines.join("\n") + "\n";
+    }
+
+    async function exportRecipeText() {
+      const name = String(state.recipeName || "Minha Receita").trim() || "Minha Receita";
+      const blob = new Blob([recipeText()], { type: "text/plain" });
+      const fileName = recipeFileName(name).replace(/\.png$/, ".txt");
+      if (typeof File !== "undefined" && navigator.share) {
+        const file = new File([blob], fileName, { type: "text/plain" });
+        if (!navigator.canShare || navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({ files: [file], title: name });
+            shareStatus.value = "Receita em texto enviada ao compartilhamento.";
+            return;
+          } catch (error) {
+            if (error && error.name === "AbortError") {
+              shareStatus.value = "Compartilhamento cancelado.";
+              return;
+            }
+          }
+        }
+      }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      shareStatus.value = "Este navegador não oferece compartilhamento de arquivo. O TXT foi baixado.";
     }
 
     function exportBackup() {
@@ -1773,7 +1842,7 @@ createApp({
       const imageY = 370;
       const imageH = 300;
       const levainBlockY = imageY + imageH + 30;
-      const levainBlockHeight = 272;
+      const levainBlockHeight = 304;
       const levainGap = 28;
       const top = levainBlockY + (hasLevain ? levainBlockHeight + levainGap : 0);
       const canvas = document.createElement("canvas");
@@ -1996,6 +2065,9 @@ createApp({
         ctx.textAlign = "left";
         ctx.font = "650 20px Outfit, sans-serif";
         ctx.fillText(profile ? profile.flavor : "—", scaleX, scaleY + 64);
+        ctx.fillStyle = "#8d7f70";
+        ctx.font = "500 16px Outfit, sans-serif";
+        ctx.fillText(hydrationBasisText(), scaleX, scaleY + 94);
       }
 
       const ingY = top;
@@ -2739,6 +2811,15 @@ createApp({
 
     watch(calStore, persistCalibrations, { deep: true });
 
+    // A escolha da receita aberta vira o padrão do aparelho para receitas sem a opção gravada.
+    watch(
+      () => [state.includeLevain, state.includeSeed],
+      ([levainOn, seedOn]) => {
+        configStore.includeLevain = !!levainOn;
+        configStore.includeSeed = !!seedOn;
+      }
+    );
+
     watch(
       configStore,
       () => {
@@ -2865,6 +2946,7 @@ createApp({
       sharePreviewLoading,
       shareCardUrl,
       exportRecipe,
+      exportRecipeText,
       importRecipeFile,
       importStatus,
       cardPreview,

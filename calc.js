@@ -481,13 +481,11 @@
   // Com includeSeed ligado (e includeLevain verdadeiro), 50% da isca conta como água e 50% como farinha.
   function compute(state, config) {
     const flour = Math.max(0, num(state.flour));
-    const includeLevain =
-      config && config.includeLevain !== undefined
-        ? !!config.includeLevain
-        : state && state.includeLevain !== undefined
-        ? !!state.includeLevain
-        : true;
-    const includeSeed = includeLevain && !!((config && config.includeSeed) || (state && state.includeSeed));
+    // A opção gravada na receita vale mais que a do aparelho; a do aparelho só cobre receitas sem ela.
+    const pick = (key, fallback) =>
+      state && state[key] !== undefined ? !!state[key] : config && config[key] !== undefined ? !!config[key] : fallback;
+    const includeLevain = pick("includeLevain", true);
+    const includeSeed = includeLevain && pick("includeSeed", false);
     // Seções ("section") são só títulos na lista: não entram nas contas.
     const ingredients = (Array.isArray(state.ingredients) ? state.ingredients : []).filter(
       (item) => item && typeof item === "object" && item.role !== "section"
