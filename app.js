@@ -1175,17 +1175,18 @@ createApp({
     }
 
     function recipeText() {
+      const title = (text) => [text, "=".repeat(Array.from(text).length)];
       const name = String(state.recipeName || "Minha Receita").trim() || "Minha Receita";
-      const lines = [name.toUpperCase(), ""];
+      const lines = [...title(name.toUpperCase()), ""];
       lines.push("Farinha: " + formatG(state.flour) + " g");
       lines.push("Hidratação total: " + formatPct(result.value.hydration) + "%");
       lines.push("Peso da massa: " + formatHalfG(result.value.totalWeight) + " g");
       if (state.portions > 1) lines.push("Porções: " + state.portions + " de " + formatG(result.value.totalWeight / state.portions) + " g");
       if (result.value.levainOn) lines.push(hydrationBasisText());
-      lines.push("", "INGREDIENTES");
+      lines.push("", ...title("INGREDIENTES"));
       state.ingredients.forEach((item) => {
         if (item.role === "section") {
-          lines.push("", String(item.name || "").toUpperCase());
+          lines.push("", ...title(String(item.name || "").toUpperCase()));
           return;
         }
         const row = rowOf(item.id);
@@ -1195,12 +1196,12 @@ createApp({
       });
       if (result.value.levainOn) {
         const lv = result.value.levain;
-        lines.push("", "LEVAIN", "Proporção L:A:F " + state.levain.L + ":" + state.levain.A + ":" + state.levain.F);
+        lines.push("", ...title("LEVAIN"), "Proporção L:A:F " + state.levain.L + ":" + state.levain.A + ":" + state.levain.F);
         if (lv && lv.valid) {
           lines.push(formatG(lv.seed) + " g isca + " + formatG(lv.water) + " g água + " + formatG(lv.flour) + " g farinha · hidratação " + formatPct(lv.hydration) + "%");
         }
       }
-      if (state.notes && state.notes.trim()) lines.push("", "OBSERVAÇÕES", state.notes);
+      if (state.notes && state.notes.trim()) lines.push("", ...title("OBSERVAÇÕES"), state.notes);
       return lines.join("\n") + "\n";
     }
 
