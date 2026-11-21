@@ -211,11 +211,18 @@ function normalizeState(raw) {
   return raw;
 }
 
+function withDeviceConfig(base) {
+  const config = loadConfig();
+  base.includeLevain = config.includeLevain;
+  base.includeSeed = config.includeSeed;
+  return base;
+}
+
 function loadState() {
   try {
-    return normalizeState(JSON.parse(localStorage.getItem(STORAGE_KEY) || "null")) || Padeiro.defaultState();
+    return normalizeState(JSON.parse(localStorage.getItem(STORAGE_KEY) || "null")) || withDeviceConfig(Padeiro.defaultState());
   } catch (error) {
-    return Padeiro.defaultState();
+    return withDeviceConfig(Padeiro.defaultState());
   }
 }
 
@@ -1573,6 +1580,8 @@ createApp({
       state.levain = saved.levain;
       state.portions = saved.portions;
       state.notes = saved.notes;
+      state.includeLevain = saved.includeLevain;
+      state.includeSeed = saved.includeSeed;
       state.recipeName = typeof recipe.name === "string" ? recipe.name.slice(0, 80) : saved.recipeName;
       notesOpen.value = !!state.notes;
       portionEditing.value = false;
@@ -1598,6 +1607,8 @@ createApp({
       state.levain = fresh.levain;
       state.portions = fresh.portions;
       state.notes = fresh.notes;
+      state.includeLevain = configStore.includeLevain;
+      state.includeSeed = configStore.includeSeed;
       state.recipeName = fresh.recipeName;
       notesOpen.value = false;
       portionEditing.value = false;
@@ -2811,15 +2822,6 @@ createApp({
     );
 
     watch(calStore, persistCalibrations, { deep: true });
-
-    // A escolha da receita aberta vira o padrão do aparelho para receitas sem a opção gravada.
-    watch(
-      () => [state.includeLevain, state.includeSeed],
-      ([levainOn, seedOn]) => {
-        configStore.includeLevain = !!levainOn;
-        configStore.includeSeed = !!seedOn;
-      }
-    );
 
     watch(
       configStore,

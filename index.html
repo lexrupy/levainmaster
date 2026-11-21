@@ -371,23 +371,24 @@
           <button type="button" class="del" @click="closeConfig" aria-label="Fechar">×</button>
         </header>
         <section class="about-cal" aria-labelledby="config-seed-title">
-          <h3 id="config-seed-title" class="kicker">Cálculo do levain</h3>
+          <h3 id="config-seed-title" class="kicker">Padrão da hidratação com levain</h3>
+          <p class="hint">Vale para receitas novas e para as que ainda não têm essa escolha. Cada receita pode mudá-la no modal do levain.</p>
           <ul class="cal-list">
             <li>
               <label>
-                <input type="checkbox" v-model="state.includeLevain" data-config-levain>
+                <input type="checkbox" v-model="configStore.includeLevain" data-config-levain>
                 Considerar levain na hidratação da massa
               </label>
             </li>
-            <li v-if="state.includeLevain">
+            <li v-if="configStore.includeLevain">
               <label>
-                <input type="checkbox" v-model="state.includeSeed" data-config-seed>
+                <input type="checkbox" v-model="configStore.includeSeed" data-config-seed>
                 Considerar água e farinha da isca nos cálculos
               </label>
             </li>
           </ul>
-          <p class="hint" v-if="!state.includeLevain">O levain entra no peso total da massa, mas nem a água nem a farinha dele alteram a hidratação calculada.</p>
-          <p class="hint" v-else-if="!state.includeSeed">A água e a farinha da alimentação entram na hidratação total. A isca fica de fora.</p>
+          <p class="hint" v-if="!configStore.includeLevain">O levain entra no peso total da massa, mas nem a água nem a farinha dele alteram a hidratação calculada.</p>
+          <p class="hint" v-else-if="!configStore.includeSeed">A água e a farinha da alimentação entram na hidratação total. A isca fica de fora.</p>
           <p class="hint" v-else>A água e a farinha da alimentação entram na hidratação, e a isca é considerada como 50% de água e 50% de farinha (100% de hidratação).</p>
           <p v-if="persistenceErrors.config" class="storage-inline" role="alert">Falha ao salvar as configurações. As alterações continuam disponíveis nesta sessão, mas podem se perder ao fechar o app.</p>
         </section>
@@ -769,8 +770,26 @@
         </section>
         <p class="hint">A hidratação do levain é a água dividida pela farinha desta alimentação. A isca não entra nessa conta.</p>
         <p class="hint" v-if="levainSim">Estas gramas não entram na receita. Mudar isca, água ou farinha recalcula a proporção.</p>
-        <p class="hint" v-else-if="result.levain && result.levain.valid">
-          <template v-if="!state.includeLevain">O levain está configurado para não entrar no cálculo da hidratação total da massa (ajustável em Configurações).</template>
+        <section v-if="!levainSim" class="about-cal" aria-labelledby="levain-hyd-title">
+          <h3 id="levain-hyd-title" class="kicker">Hidratação desta receita</h3>
+          <ul class="cal-list">
+            <li>
+              <label>
+                <input type="checkbox" v-model="state.includeLevain" data-levain-include>
+                Considerar a água e a farinha da alimentação na hidratação
+              </label>
+            </li>
+            <li v-if="state.includeLevain">
+              <label>
+                <input type="checkbox" v-model="state.includeSeed" data-levain-seed>
+                Considerar também a isca (50% água, 50% farinha)
+              </label>
+            </li>
+          </ul>
+          <p class="hint">Começa igual ao padrão de Configurações, mas vale só para esta receita.</p>
+        </section>
+        <p class="hint" v-if="!levainSim && result.levain && result.levain.valid">
+          <template v-if="!state.includeLevain">O levain entra no peso da massa, mas a água e a farinha dele não entram na hidratação total.</template>
           <template v-else>{{ formatG(result.levain.water + (state.includeSeed ? result.levain.seed / 2 : 0)) }} g de água e {{ formatG(result.levain.flour + (state.includeSeed ? result.levain.seed / 2 : 0)) }} g de farinha entram na hidratação total da massa.</template>
         </p>
         <div class="sheet-foot">
