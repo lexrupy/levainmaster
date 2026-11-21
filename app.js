@@ -1135,7 +1135,7 @@ createApp({
     // Diz o que entrou na hidratação, já que a opção vai com a receita.
     function hydrationBasisText() {
       if (!state.includeLevain) return "Hidratação sem a água e a farinha do levain.";
-      if (!state.includeSeed) return "Hidratação com a água e a farinha da alimentação do levain; isca fora.";
+      if (!state.includeSeed) return "Hidratação com a água e a farinha da alimentação do levain; água e farinha da isca desprezadas.";
       return "Hidratação com a alimentação do levain e a isca (50% água, 50% farinha).";
     }
 
