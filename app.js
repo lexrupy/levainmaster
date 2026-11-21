@@ -1175,7 +1175,7 @@ createApp({
     }
 
     function recipeText() {
-      const title = (text) => [text, "=".repeat(Array.from(text).length)];
+      const title = (text) => [text, "-".repeat(Array.from(text).length)];
       const name = String(state.recipeName || "Minha Receita").trim() || "Minha Receita";
       const lines = [...title(name.toUpperCase()), ""];
       lines.push("Farinha: " + formatG(state.flour) + " g");
