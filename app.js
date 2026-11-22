@@ -1185,7 +1185,7 @@ createApp({
       const title = (text, mark = "=") => [text, mark.repeat(Array.from(text).length)];
       const name = String(state.recipeName || "Minha Receita").trim() || "Minha Receita";
       const lines = [...title(name.toUpperCase()), ""];
-      lines.push("Farinha: " + formatG(state.flour) + " g");
+      lines.push("Farinha: " + formatG(state.flour) + " g" + (result.value.extraFlour > 0 ? " (" + formatG(flourTotal.value) + " g no total)" : ""));
       lines.push("Hidratação total: " + formatPct(result.value.hydration) + "%");
       lines.push("Peso da massa: " + formatHalfG(result.value.totalWeight) + " g");
       if (state.portions > 1) lines.push("Porções: " + state.portions + " de " + formatG(result.value.totalWeight / state.portions) + " g");
@@ -1966,7 +1966,7 @@ createApp({
       const statSpan = width - pad * 2;
       const statW = (statSpan - statGap * 2) / 3;
       const stats = [
-        ["FARINHA", formatG(result.value.flour) + " g"],
+        [result.value.extraFlour > 0 ? "FARINHA · " + formatG(flourTotal.value) + " g NO TOTAL" : "FARINHA", formatG(result.value.flour) + " g"],
         ["HIDRATAÇÃO TOTAL", formatPct(result.value.hydration) + "%"],
         ["PESO DA MASSA", formatHalfG(result.value.totalWeight) + " g"],
       ];
